@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
+import UnitsMap from './components/UnitsMap';
 
 type Unit = Database['public']['Tables']['units']['Row'];
 
@@ -238,9 +239,8 @@ const UnitsPage: React.FC = () => {
                 <div className="p-10 border-b border-white/5 flex justify-between items-center">
                     <h3 className="text-2xl font-bold font-serif text-off-white italic">Mapa de <span className="text-gold">Atuação</span></h3>
                 </div>
-                <div className="aspect-[21/9] bg-navy-light/30 flex items-center justify-center relative">
-                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/world-map.png')] bg-center bg-no-repeat bg-contain"></div>
-                    <p className="text-off-white/20 text-sm font-light italic z-10">Visualização de mapa interativo em desenvolvimento...</p>
+                <div className="aspect-[21/9] bg-navy-light/30 relative">
+                    <UnitsMap units={units} />
                 </div>
             </GlassCard>
         </div>

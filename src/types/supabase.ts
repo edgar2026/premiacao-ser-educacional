@@ -11,103 +11,109 @@ export type Database = {
         Tables: {
             awards: {
                 Row: {
-                    created_at: string | null
-                    description: string | null
                     id: string
-                    image_url: string | null
+                    created_at: string | null
                     name: string
+                    description: string | null
+                    image_url: string | null
+                    criteria: Json | null
+                    cycle_info: Json | null
                 }
                 Insert: {
-                    created_at?: string | null
-                    description?: string | null
                     id?: string
-                    image_url?: string | null
+                    created_at?: string | null
                     name: string
+                    description?: string | null
+                    image_url?: string | null
+                    criteria?: Json | null
+                    cycle_info?: Json | null
                 }
                 Update: {
-                    created_at?: string | null
-                    description?: string | null
                     id?: string
-                    image_url?: string | null
+                    created_at?: string | null
                     name?: string
+                    description?: string | null
+                    image_url?: string | null
+                    criteria?: Json | null
+                    cycle_info?: Json | null
                 }
                 Relationships: []
             }
             home_media: {
                 Row: {
-                    created_at: string | null
-                    description: string | null
-                    headline: string
                     id: string
+                    created_at: string | null
+                    headline: string
+                    description: string | null
                     image_url: string | null
-                    is_active: boolean | null
                     video_url: string | null
+                    is_active: boolean | null
                 }
                 Insert: {
-                    created_at?: string | null
-                    description?: string | null
-                    headline: string
                     id?: string
+                    created_at?: string | null
+                    headline: string
+                    description?: string | null
                     image_url?: string | null
-                    is_active?: boolean | null
                     video_url?: string | null
+                    is_active?: boolean | null
                 }
                 Update: {
-                    created_at?: string | null
-                    description?: string | null
-                    headline?: string
                     id?: string
+                    created_at?: string | null
+                    headline?: string
+                    description?: string | null
                     image_url?: string | null
-                    is_active?: boolean | null
                     video_url?: string | null
+                    is_active?: boolean | null
                 }
                 Relationships: []
             }
             honorees: {
                 Row: {
-                    award_id: string | null
-                    biography: string | null
-                    created_at: string | null
                     id: string
-                    initiatives: string | null
-                    is_published: boolean | null
-                    photo_url: string | null
+                    created_at: string | null
+                    type: string | null
                     professional_data: string | null
-                    recognitions: string | null
+                    biography: string | null
+                    photo_url: string | null
+                    video_url: string | null
+                    award_id: string | null
+                    is_published: boolean | null
                     stats: Json | null
                     timeline: Json | null
-                    type: string
-                    video_url: string | null
+                    initiatives: string | null
+                    recognitions: string | null
                 }
                 Insert: {
-                    award_id?: string | null
-                    biography?: string | null
-                    created_at?: string | null
                     id?: string
-                    initiatives?: string | null
-                    is_published?: boolean | null
-                    photo_url?: string | null
+                    created_at?: string | null
+                    type?: string | null
                     professional_data?: string | null
-                    recognitions?: string | null
+                    biography?: string | null
+                    photo_url?: string | null
+                    video_url?: string | null
+                    award_id?: string | null
+                    is_published?: boolean | null
                     stats?: Json | null
                     timeline?: Json | null
-                    type: string
-                    video_url?: string | null
+                    initiatives?: string | null
+                    recognitions?: string | null
                 }
                 Update: {
-                    award_id?: string | null
-                    biography?: string | null
-                    created_at?: string | null
                     id?: string
-                    initiatives?: string | null
-                    is_published?: boolean | null
-                    photo_url?: string | null
+                    created_at?: string | null
+                    type?: string | null
                     professional_data?: string | null
-                    recognitions?: string | null
+                    biography?: string | null
+                    photo_url?: string | null
+                    video_url?: string | null
+                    award_id?: string | null
+                    is_published?: boolean | null
                     stats?: Json | null
                     timeline?: Json | null
-                    type?: string
-                    video_url?: string | null
+                    initiatives?: string | null
+                    recognitions?: string | null
                 }
                 Relationships: [
                     {
@@ -116,27 +122,33 @@ export type Database = {
                         isOneToOne: false
                         referencedRelation: "awards"
                         referencedColumns: ["id"]
-                    }
+                    },
                 ]
             }
             units: {
                 Row: {
-                    created_at: string | null
                     id: string
-                    location: string
+                    created_at: string | null
                     name: string
+                    location: string
+                    latitude: number | null
+                    longitude: number | null
                 }
                 Insert: {
-                    created_at?: string | null
                     id?: string
-                    location: string
+                    created_at?: string | null
                     name: string
+                    location: string
+                    latitude?: number | null
+                    longitude?: number | null
                 }
                 Update: {
-                    created_at?: string | null
                     id?: string
-                    location?: string
+                    created_at?: string | null
                     name?: string
+                    location?: string
+                    latitude?: number | null
+                    longitude?: number | null
                 }
                 Relationships: []
             }
@@ -155,3 +167,7 @@ export type Database = {
         }
     }
 }
+
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
