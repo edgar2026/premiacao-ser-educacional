@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
+import VideoModal from '../../components/ui/VideoModal';
+import CertificateTemplate from './components/CertificateTemplate';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 
@@ -11,6 +13,7 @@ const HonoreePage: React.FC = () => {
     const [honoree, setHonoree] = useState<Honoree | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('A Jornada');
+    const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -32,6 +35,10 @@ const HonoreePage: React.FC = () => {
             setHonoree(data as any);
         }
         setIsLoading(false);
+    };
+
+    const handleDownloadCertificate = () => {
+        window.print();
     };
 
     if (isLoading) {
@@ -62,8 +69,16 @@ const HonoreePage: React.FC = () => {
     const awardName = (honoree as any).awards?.name || 'Prêmio de Excelência';
 
     return (
-        <div className="w-full mesh-gradient-premium min-h-screen">
-            <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="w-full mesh-gradient-premium min-h-screen print:bg-white print:mesh-gradient-none">
+            {/* Certificate Template for Printing */}
+            <CertificateTemplate
+                honoreeName={profData.name}
+                awardName={awardName}
+                role={profData.role || profData.external_role}
+                biography={honoree.biography || ''}
+            />
+
+            <div className="max-w-7xl mx-auto px-6 py-20 print:hidden">
                 {/* Breadcrumbs & Back Button */}
                 <div className="flex items-center justify-between mb-10 animate-fade-in">
                     <div className="flex flex-wrap gap-4 items-center">
@@ -100,25 +115,36 @@ const HonoreePage: React.FC = () => {
                                 dangerouslySetInnerHTML={{ __html: honoree.biography || '' }}
                             />
                             <div className="flex flex-wrap gap-6 mt-12 justify-center lg:justify-start">
-                                <button className="flex items-center gap-4 px-12 py-5 bg-gold text-navy-deep rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-105 transition-all">
+                                <button
+                                    onClick={handleDownloadCertificate}
+                                    className="flex items-center gap-4 px-12 py-5 bg-gold text-navy-deep rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-105 transition-all"
+                                >
                                     <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
                                     Baixar Certificado de Honra
                                 </button>
                                 {honoree.video_url && (
-                                    <a
-                                        href={honoree.video_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        onClick={() => setIsVideoModalOpen(true)}
                                         className="flex items-center gap-4 px-12 py-5 glass-card text-off-white rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white/5 transition-all"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">play_circle</span>
                                         Ver Homenagem
-                                    </a>
+                                    </button>
                                 )}
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Video Modal */}
+                {honoree.video_url && (
+                    <VideoModal
+                        isOpen={isVideoModalOpen}
+                        onClose={() => setIsVideoModalOpen(false)}
+                        videoSrc={honoree.video_url}
+                        title={`Homenagem: ${profData.name}`}
+                    />
+                )}
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
