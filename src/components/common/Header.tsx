@@ -80,42 +80,8 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                     >
                         Início
                     </Link>
-                    <Link
-                        to="/#premios"
-                        onClick={(e) => {
-                            if (window.location.pathname === '/') {
-                                e.preventDefault();
-                                const element = document.getElementById('premios');
-                                if (element) {
-                                    const headerOffset = 100;
-                                    const elementPosition = element.getBoundingClientRect().top;
-                                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                                    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                                }
-                            }
-                        }}
-                        className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/60 hover:text-gold transition-colors"
-                    >
-                        Prêmios
-                    </Link>
-                    <Link
-                        to="/#homenageados"
-                        onClick={(e) => {
-                            if (window.location.pathname === '/') {
-                                e.preventDefault();
-                                const element = document.getElementById('homenageados');
-                                if (element) {
-                                    const headerOffset = 100;
-                                    const elementPosition = element.getBoundingClientRect().top;
-                                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                                    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                                }
-                            }
-                        }}
-                        className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/60 hover:text-gold transition-colors"
-                    >
-                        Homenageados
-                    </Link>
+                    <Link to="/#premios" className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/60 hover:text-gold transition-colors">Prêmios</Link>
+                    <Link to="/#homenageados" className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/60 hover:text-gold transition-colors">Homenageados</Link>
                 </nav>
 
                 <div className="flex items-center gap-6">

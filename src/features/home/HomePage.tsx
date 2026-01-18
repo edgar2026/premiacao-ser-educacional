@@ -30,18 +30,10 @@ const HomePage: React.FC = () => {
     useEffect(() => {
         fetchData();
         if (hash) {
-            const id = hash.replace('#', '');
-            const element = document.getElementById(id);
+            const element = document.getElementById(hash.replace('#', ''));
             if (element) {
                 setTimeout(() => {
-                    const headerOffset = 100;
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
+                    element.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             }
         }
