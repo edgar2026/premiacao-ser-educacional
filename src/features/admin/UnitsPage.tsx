@@ -10,6 +10,10 @@ const UnitsPage: React.FC = () => {
     const navigate = useNavigate();
     const [units, setUnits] = useState<Unit[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
 
     useEffect(() => {
         fetchUnits();
@@ -46,8 +50,16 @@ const UnitsPage: React.FC = () => {
         }
     };
 
+    const filteredUnits = units.filter(unit =>
+        unit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        unit.location.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
+    const paginatedUnits = filteredUnits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     return (
-        <div className="space-y-12 animate-fade-in">
+        <div className="space-y-12 animate-fade-in pb-20">
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão Geográfica</span>
@@ -67,38 +79,156 @@ const UnitsPage: React.FC = () => {
                 </button>
             </div>
 
+            {/* Controls Bar */}
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] backdrop-blur-xl">
+                <div className="relative w-full md:max-w-md group">
+                    <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">search</span>
+                    <input
+                        type="text"
+                        placeholder="Buscar por nome ou localização..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 py-4 pl-16 pr-6 rounded-xl text-off-white outline-none focus:border-gold/30 transition-all"
+                    />
+                </div>
+
+                <div className="flex items-center gap-4 bg-white/5 p-1.5 rounded-xl border border-white/10">
+                    <button
+                        onClick={() => setViewMode('grid')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-gold text-navy-deep shadow-lg' : 'text-off-white/40 hover:text-off-white'}`}
+                    >
+                        <span className="material-symbols-outlined text-lg">grid_view</span>
+                        Grade
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-gold text-navy-deep shadow-lg' : 'text-off-white/40 hover:text-off-white'}`}
+                    >
+                        <span className="material-symbols-outlined text-lg">view_list</span>
+                        Lista
+                    </button>
+                </div>
+            </div>
+
             {isLoading ? (
                 <div className="flex justify-center py-20">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {units.map((unit) => (
-                        <GlassCard key={unit.id} className="p-8 rounded-[2.5rem] border-white/5 hover:border-gold/20 transition-all group relative">
-                            <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                    onClick={() => navigate(`/admin/unidades/${unit.id}/editar`)}
-                                    className="p-2 rounded-full bg-white/5 text-gold hover:bg-gold hover:text-navy-deep transition-all"
-                                >
-                                    <span className="material-symbols-outlined text-sm">edit</span>
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(unit.id)}
-                                    className="p-2 rounded-full bg-white/5 text-red-400 hover:bg-red-500 hover:text-white transition-all"
-                                >
-                                    <span className="material-symbols-outlined text-sm">delete</span>
-                                </button>
+                <div className="space-y-12">
+                    {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {paginatedUnits.map((unit) => (
+                                <GlassCard key={unit.id} className="p-8 rounded-[2.5rem] border-white/5 hover:border-gold/20 transition-all group relative">
+                                    <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => navigate(`/admin/unidades/${unit.id}/editar`)}
+                                            className="p-2 rounded-full bg-white/5 text-gold hover:bg-gold hover:text-navy-deep transition-all"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(unit.id)}
+                                            className="p-2 rounded-full bg-white/5 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                    <div className="size-12 rounded-2xl bg-gold/5 flex items-center justify-center mb-6 group-hover:bg-gold transition-all duration-500">
+                                        <span className="material-symbols-outlined text-gold group-hover:text-navy-deep">location_city</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-off-white font-serif mb-2">{unit.name}</h3>
+                                    <p className="text-off-white/40 text-[10px] uppercase tracking-widest mb-6">{unit.location}</p>
+                                </GlassCard>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="glass-card rounded-[2.5rem] border-white/5 overflow-hidden">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-white/5 border-b border-white/10">
+                                        <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Unidade</th>
+                                        <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Localização</th>
+                                        <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em] text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedUnits.map((unit) => (
+                                        <tr key={unit.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="size-10 rounded-xl bg-gold/5 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-navy-deep transition-all">
+                                                        <span className="material-symbols-outlined text-lg">location_city</span>
+                                                    </div>
+                                                    <span className="text-off-white font-serif italic text-lg">{unit.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="text-off-white/40 text-[10px] font-bold uppercase tracking-widest">{unit.location}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex justify-end gap-3">
+                                                    <button
+                                                        onClick={() => navigate(`/admin/unidades/${unit.id}/editar`)}
+                                                        className="size-10 rounded-xl bg-white/5 text-gold hover:bg-gold hover:text-navy-deep transition-all flex items-center justify-center"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(unit.id)}
+                                                        className="size-10 rounded-xl bg-white/5 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {filteredUnits.length === 0 && (
+                        <div className="py-20 text-center">
+                            <span className="material-symbols-outlined text-6xl text-white/5 mb-6">search_off</span>
+                            <p className="text-off-white/20 text-xl italic">Nenhuma unidade encontrada para sua busca.</p>
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-4 mt-12">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="size-12 rounded-xl glass-card border-white/10 flex items-center justify-center text-off-white disabled:opacity-20 disabled:cursor-not-allowed hover:border-gold/30 transition-all"
+                            >
+                                <span className="material-symbols-outlined">chevron_left</span>
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`size-12 rounded-xl font-bold text-[10px] transition-all ${currentPage === i + 1 ? 'bg-gold text-navy-deep shadow-lg' : 'glass-card border-white/10 text-off-white/40 hover:text-off-white'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
                             </div>
-                            <div className="size-12 rounded-2xl bg-gold/5 flex items-center justify-center mb-6 group-hover:bg-gold transition-all duration-500">
-                                <span className="material-symbols-outlined text-gold group-hover:text-navy-deep">location_city</span>
-                            </div>
-                            <h3 className="text-xl font-bold text-off-white font-serif mb-2">{unit.name}</h3>
-                            <p className="text-off-white/40 text-[10px] uppercase tracking-widest mb-6">{unit.location}</p>
-                        </GlassCard>
-                    ))}
-                    {units.length === 0 && (
-                        <div className="col-span-full py-20 text-center">
-                            <p className="text-off-white/20 italic">Nenhuma unidade cadastrada.</p>
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="size-12 rounded-xl glass-card border-white/10 flex items-center justify-center text-off-white disabled:opacity-20 disabled:cursor-not-allowed hover:border-gold/30 transition-all"
+                            >
+                                <span className="material-symbols-outlined">chevron_right</span>
+                            </button>
                         </div>
                     )}
                 </div>
