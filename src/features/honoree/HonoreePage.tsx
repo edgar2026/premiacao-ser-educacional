@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import VideoModal from '../../components/ui/VideoModal';
 import CertificateTemplate from './components/CertificateTemplate';
+import TimelineModal from './components/TimelineModal';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 
@@ -14,6 +15,7 @@ const HonoreePage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('A Jornada');
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+    const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -146,6 +148,14 @@ const HonoreePage: React.FC = () => {
                     />
                 )}
 
+                {/* Timeline Modal */}
+                <TimelineModal
+                    isOpen={isTimelineModalOpen}
+                    onClose={() => setIsTimelineModalOpen(false)}
+                    honoreeName={profData.name}
+                    timeline={timeline}
+                />
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                     {[
@@ -222,7 +232,10 @@ const HonoreePage: React.FC = () => {
                                     <p className="text-off-white/20 text-sm italic pl-4">Nenhum marco registrado.</p>
                                 )}
                             </div>
-                            <button className="w-full mt-16 py-5 glass-card rounded-2xl text-gold text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all duration-500">
+                            <button
+                                onClick={() => setIsTimelineModalOpen(true)}
+                                className="w-full mt-16 py-5 glass-card rounded-2xl text-gold text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all duration-500"
+                            >
                                 Ver Registro Completo
                             </button>
                         </div>
