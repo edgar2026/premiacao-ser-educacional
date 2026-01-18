@@ -1,0 +1,214 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #D4AF37;
+  --color-gold-light: #F7E7CE;
+  --color-navy-deep: #0A192F;
+  --color-navy-light: #112240;
+  --color-graphite: #1F2937;
+  --color-off-white: #F9FAFB;
+
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer utilities {
+
+  /* Premium Mesh Gradients */
+  .mesh-gradient-premium {
+    background-color: #0A192F;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(17, 34, 64, 0.8) 0%, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(10, 25, 47, 1) 0%, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(31, 41, 55, 0.5) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(10, 25, 47, 0.9) 0%, transparent 100%);
+    background-attachment: fixed;
+  }
+
+  /* Refined Glass Effects */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 0.5px solid rgba(212, 175, 55, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-panel {
+    background: rgba(10, 25, 47, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-header {
+    background: rgba(10, 25, 47, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 0.5px solid rgba(212, 175, 55, 0.2);
+  }
+
+  .premium-border {
+    border: 0.5px solid transparent;
+    background: linear-gradient(var(--color-navy-deep), var(--color-navy-deep)) padding-box,
+      linear-gradient(to right, var(--color-gold), transparent, var(--color-gold)) border-box;
+  }
+
+  /* Text Effects */
+  .text-gold-gradient {
+    background: linear-gradient(to right, #D4AF37, #F7E7CE, #D4AF37);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gold-glow {
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.3);
+    border-radius: 10px;
+  }
+}
+
+/* Global Styles */
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg,
+      #0A1628 0%,
+      #0D1B2A 25%,
+      #1B263B 50%,
+      #0D1B2A 75%,
+      #0A1628 100%);
+  background-attachment: fixed;
+  color: #F9FAFB;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-serif {
+  font-family: 'Playfair Display', serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+      #0A1628 0%,
+      #0D1B2A 25%,
+      #1B263B 50%,
+      #0D1B2A 75%,
+      #0A1628 100%);
+  background-attachment: fixed;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
