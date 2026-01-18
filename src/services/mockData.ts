@@ -3,11 +3,11 @@ import type { Honoree, Award, DashboardMetric, RankingUnit, PrizeCategory } from
 export const mockAwards: Award[] = [
     {
         id: '1',
-        title: 'Excelência em Pesquisa 2024',
+        title: 'Excelência em Pesquisa 2026',
         category: 'Pesquisa',
-        semester: '2024.1',
+        semester: '2026.1',
         unit: 'Recife - Matriz',
-        date: '2024-06-15',
+        date: '2026-06-15',
         description: 'Reconhecimento por contribuições significativas na área de Inteligência Artificial.'
     },
     {

@@ -292,10 +292,10 @@ const AwardRegistrationPage: React.FC = () => {
                             <h3 className="text-2xl font-serif italic text-off-white">Próximo Ciclo</h3>
                             <div className="bg-white/[0.02] p-8 rounded-[2rem] border border-white/5 space-y-6">
                                 <div className="space-y-2">
-                                    <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20">Edição (Ex: 2024.2)</label>
+                                    <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20">Edição (Ex: 2026.2)</label>
                                     <input
                                         className="w-full bg-white/5 border border-white/10 py-4 px-6 rounded-xl text-off-white text-lg font-serif italic outline-none focus:border-gold/30"
-                                        placeholder="Edição 2024.2"
+                                        placeholder="Edição 2026.2"
                                         value={formData.cycle_info.edition}
                                         onChange={(e) => updateCycleInfo('edition', e.target.value)}
                                     />

@@ -117,7 +117,7 @@ const LoginPage: React.FC = () => {
                 </GlassCard>
 
                 <p className="text-center mt-12 text-[10px] font-bold text-off-white/20 uppercase tracking-[0.3em]">
-                    © 2024 Ser Educacional • Sistema de Gestão de Mérito
+                    © 2026 Ser Educacional • Sistema de Gestão de Mérito
                 </p>
             </div>
         </div>

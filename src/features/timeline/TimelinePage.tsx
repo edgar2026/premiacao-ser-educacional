@@ -3,7 +3,7 @@ import GlassCard from '../../components/ui/GlassCard';
 
 const TimelinePage: React.FC = () => {
     const milestones = [
-        { year: '2024', title: 'Edição de Gala', description: 'Expansão para categorias internacionais e foco em IA na educação.' },
+        { year: '2026', title: 'Edição de Gala', description: 'Expansão para categorias internacionais e foco em IA na educação.' },
         { year: '2023', title: 'Década de Ouro', description: 'Celebração de 10 anos de premiações ininterruptas.' },
         { year: '2022', title: 'Inovação Pós-Pandemia', description: 'Reconhecimento de metodologias híbridas e resiliência acadêmica.' },
         { year: '2021', title: 'Transformação Digital', description: 'Foco total em tecnologias educacionais e alcance global.' },

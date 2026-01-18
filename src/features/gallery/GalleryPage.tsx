@@ -3,7 +3,7 @@ import React from 'react';
 const GalleryPage: React.FC = () => {
     const videos = [
         { id: 1, title: 'Manifesto de Excelência', duration: '04:20', thumbnail: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=2070' },
-        { id: 2, title: 'Cerimônia de Abertura 2024', duration: '12:45', thumbnail: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=2012' },
+        { id: 2, title: 'Cerimônia de Abertura 2026', duration: '12:45', thumbnail: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=2012' },
         { id: 3, title: 'Destaques Acadêmicos', duration: '08:15', thumbnail: 'https://images.unsplash.com/photo-1524178232363-1fb28f74b671?auto=format&fit=crop&q=80&w=2070' },
         { id: 4, title: 'Inovação e Gestão', duration: '06:30', thumbnail: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=2070' },
     ];

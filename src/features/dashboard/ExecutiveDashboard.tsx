@@ -25,7 +25,7 @@ const ExecutiveDashboard: React.FC = () => {
                         <div className="relative z-10">
                             <h3 className="text-6xl font-bold font-serif text-off-white mb-2 tracking-tighter">{metric.value}</h3>
                             <p className="text-off-white/30 text-[10px] font-medium uppercase tracking-widest">
-                                Métrica Consolidada 2024
+                                Métrica Consolidada 2026
                             </p>
                         </div>
                     </GlassCard>
