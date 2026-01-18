@@ -85,15 +85,13 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                 </nav>
 
                 <div className="flex items-center gap-6">
-                    <Link to="/login" className="hidden sm:block bg-white/5 hover:bg-white/10 text-off-white/80 px-6 py-2.5 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] transition-all border border-white/10">
-                        Portal Administrativo
+                    <Link
+                        to="/login"
+                        className="flex items-center justify-center size-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-off-white/40 hover:text-gold group"
+                        title="Portal Administrativo"
+                    >
+                        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-90">settings</span>
                     </Link>
-                    <div className="size-10 rounded-full border border-gold/30 p-0.5 shadow-lg shadow-gold/10 hover:scale-105 transition-transform cursor-pointer">
-                        <div
-                            className="w-full h-full rounded-full bg-cover bg-center"
-                            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA_AqWbczYAlxL9tQpcwcJC2Cj5nfz8MU-uMHq93Dye7LOCPJUKlpxdydhRssS1hDp1nSZYPg0Wp85tguyLORG9uSraCBmop57bod8y_4sqQO0WhJikw2s7NNSNFXmEra0FOC9_zu-0g-s3owwohT9afFKy61FqMP1bYoaDpcWSvsp-fmJlqjr7oTziybm7jzkEKiJ34nTCLQBSVZHxhXSKdj-EIivYJe4g9B1ICFfKPmD_Lk6DOtQe7ZAqMsPGelz3G5fXWGUhtwZ0')" }}
-                        ></div>
-                    </div>
                 </div>
             </div>
         </header>
