@@ -1,5 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 
 interface HeaderProps {
     variant?: 'public' | 'admin' | 'dashboard';
@@ -87,10 +87,10 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                 <div className="flex items-center gap-6">
                     <Link
                         to="/login"
-                        className="flex items-center justify-center size-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-off-white/40 hover:text-gold group"
+                        className="flex items-center justify-center size-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-off-white/60 hover:text-gold group"
                         title="Portal Administrativo"
                     >
-                        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-90">settings</span>
+                        <Settings className="size-5 transition-transform group-hover:rotate-90" />
                     </Link>
                 </div>
             </div>
