@@ -29,15 +29,20 @@ const HomePage: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-        if (hash) {
-            const element = document.getElementById(hash.replace('#', ''));
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading && hash) {
+            const id = hash.replace('#', '');
+            const element = document.getElementById(id);
             if (element) {
-                setTimeout(() => {
+                const timer = setTimeout(() => {
                     element.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
+                return () => clearTimeout(timer);
             }
         }
-    }, [hash]);
+    }, [isLoading, hash]);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -170,8 +175,11 @@ const HomePage: React.FC = () => {
                                             <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/10 to-transparent opacity-80 z-10"></div>
                                             <img
                                                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-[1.5s]"
-                                                src={honoree.photo_url || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=2071'}
+                                                src={honoree.photo_url || '/assets/default-fallback.png'}
                                                 alt={profData.name}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/assets/default-fallback.png';
+                                                }}
                                             />
                                             <div className="absolute bottom-6 left-6 right-6 z-20">
                                                 <span className="inline-block px-3 py-1 bg-gold/10 backdrop-blur-md border border-gold/20 rounded-full text-[8px] text-gold font-bold uppercase tracking-widest mb-3">

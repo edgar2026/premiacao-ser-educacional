@@ -58,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
     }
 
     return (
-        <header className="sticky top-0 z-50 w-full glass-header border-b border-white/5">
+        <header className="sticky top-0 z-50 w-full glass-header">
             <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Link to="/" className="flex items-center gap-4 group">
@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                             <img
                                 alt="Ser Educacional"
                                 className="h-full w-auto object-contain"
-                                src="/assets/logo-final.png"
+                                src="/assets/logo-ser.png"
                             />
                         </div>
                     </Link>
@@ -75,7 +75,12 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                 <nav className="hidden md:flex items-center gap-12">
                     <Link
                         to="/"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        onClick={(e) => {
+                            if (window.location.pathname === '/') {
+                                e.preventDefault();
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }}
                         className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/60 hover:text-gold transition-colors"
                     >
                         Início

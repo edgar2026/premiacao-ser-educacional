@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
                         <img
                             alt="Ser Educacional Logo"
                             className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-                            src="/assets/logo-final.png"
+                            src="/assets/logo-ser.png"
                         />
                     </div>
                 </div>

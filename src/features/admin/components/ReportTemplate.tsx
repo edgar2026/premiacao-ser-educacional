@@ -18,7 +18,7 @@ const ReportTemplate: React.FC<ReportTemplateProps> = ({ title, description, sta
             {/* Header */}
             <div className="flex justify-between items-start border-b-2 border-gold pb-8 mb-12">
                 <div>
-                    <img src="/assets/logo-final.png" alt="Ser Educacional" className="h-16 object-contain grayscale mb-4" />
+                    <img src="/assets/logo-ser.png" alt="Ser Educacional" className="h-16 object-contain grayscale mb-4" />
                     <h1 className="text-3xl font-serif font-bold text-navy-deep uppercase tracking-wider">{title}</h1>
                     <p className="text-sm text-navy-deep/60 font-medium uppercase tracking-widest">Relatório Estratégico • {date}</p>
                 </div>

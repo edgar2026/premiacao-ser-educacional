@@ -54,11 +54,14 @@ const HonoreesAdminPage: React.FC = () => {
             accessor: (h: Honoree) => (
                 <div className="flex items-center gap-5">
                     <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden">
-                        {h.photo_url ? (
-                            <img src={h.photo_url} alt="Foto" className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="material-symbols-outlined">person</span>
-                        )}
+                        <img
+                            src={h.photo_url || '/assets/default-fallback.png'}
+                            alt="Foto"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/assets/default-fallback.png';
+                            }}
+                        />
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-off-white font-serif italic text-lg leading-tight">

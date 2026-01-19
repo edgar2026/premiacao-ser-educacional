@@ -45,7 +45,7 @@ const LoginPage: React.FC = () => {
                         <img
                             alt="Ser Educacional"
                             className="h-full w-auto object-contain drop-shadow-[0_0_40px_rgba(212,175,55,0.4)]"
-                            src="/assets/logo-final.png"
+                            src="/assets/logo-ser.png"
                         />
                     </div>
                     <h1 className="text-4xl font-bold font-serif text-off-white italic mb-4">Acesso <span className="text-gold-gradient">Restrito</span></h1>

@@ -18,7 +18,7 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ honoreeName, 
             <div className="relative h-full flex flex-col items-center justify-between py-20 px-12 text-center">
                 {/* Header */}
                 <div className="space-y-8">
-                    <img src="/assets/logo-final.png" alt="Ser Educacional" className="h-24 mx-auto object-contain grayscale" />
+                    <img src="/assets/logo-ser.png" alt="Ser Educacional" className="h-24 mx-auto object-contain grayscale" />
                     <div className="space-y-2">
                         <h1 className="text-4xl font-serif font-bold uppercase tracking-[0.2em] text-gold">Certificado de Honra</h1>
                         <p className="text-sm font-bold uppercase tracking-[0.4em] opacity-40">Reconhecimento e Mérito</p>

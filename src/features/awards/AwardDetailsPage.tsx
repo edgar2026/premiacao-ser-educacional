@@ -176,7 +176,7 @@ const AwardDetailsPage: React.FC = () => {
                                             <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/20 to-transparent opacity-80 z-10"></div>
                                             <img
                                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-[2s]"
-                                                src={honoree.photo_url || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=2071'}
+                                                src={honoree.photo_url || '/assets/default-fallback.png'}
                                                 alt={profData.name}
                                             />
                                             <div className="absolute bottom-6 left-6 right-6 z-20">

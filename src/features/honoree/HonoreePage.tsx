@@ -102,7 +102,7 @@ const HonoreePage: React.FC = () => {
                             <div className="p-2 glass-card rounded-[2.5rem] border-white/10">
                                 <div
                                     className="bg-center bg-no-repeat aspect-square bg-cover rounded-[2rem] w-72 h-72 shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000"
-                                    style={{ backgroundImage: `url("${honoree.photo_url || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=2071'}")` }}
+                                    style={{ backgroundImage: `url("${honoree.photo_url || '/assets/default-fallback.png'}")` }}
                                 ></div>
                             </div>
                             <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[-20px] lg:translate-x-0 bg-gold text-navy-deep px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(212,175,55,0.4)] whitespace-nowrap">

@@ -117,8 +117,11 @@ const HonoreesGalleryPage: React.FC = () => {
                                             <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/20 to-transparent opacity-90 z-10"></div>
                                             <img
                                                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 transform group-hover:scale-110"
-                                                src={honoree.photo_url || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=2071'}
+                                                src={honoree.photo_url || '/assets/default-fallback.png'}
                                                 alt={profData.name}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/assets/default-fallback.png';
+                                                }}
                                             />
                                             <div className="absolute bottom-8 left-8 right-8 z-20">
                                                 <span className="inline-block px-4 py-1.5 bg-gold/10 backdrop-blur-md border border-gold/20 rounded-full text-[8px] text-gold font-bold uppercase tracking-widest mb-4">

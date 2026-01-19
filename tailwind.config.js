@@ -8,22 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary': '#135bec',
-        'royal-blue': '#0052cc',
-        'vibrant-blue': '#0047FF',
-        'sky-blue': '#00b4d8',
-        'soft-navy': '#1e3a8a',
-        'navy-vibrant': '#1e3a8a',
-        'accent-blue': '#00D1FF',
-        'deep-blue': '#0A2463',
+        'logo-bg': '#000d2c',
+        'navy-deep': '#051139',
+        'navy-light': '#0a1645',
         'gold': '#D4AF37',
         'prestige-gold': '#D4AF37',
-        'vibrant-cyan': '#00F0FF',
-        'soft-cyan': '#E0F7FA',
-        'corporate-navy': '#0a1128',
+        'primary': '#D4AF37', // Using gold as primary for a prestige look
+        'accent': '#F7E7CE',
       },
       fontFamily: {
-        'display': ['Manrope', 'sans-serif'],
+        'display': ['Inter', 'sans-serif'],
         'serif': ['Playfair Display', 'serif'],
       },
       borderRadius: {

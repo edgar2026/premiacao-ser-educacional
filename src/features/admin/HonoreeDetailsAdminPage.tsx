@@ -86,9 +86,12 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                     <div className="flex flex-col items-center text-center space-y-6">
                         <div className="size-48 rounded-[2rem] overflow-hidden border-2 border-gold/30 p-1">
                             <img
-                                src={honoree.photo_url || 'https://via.placeholder.com/400x500'}
+                                src={honoree.photo_url || '/assets/default-fallback.png'}
                                 alt={profData.name}
                                 className="w-full h-full object-cover rounded-[1.8rem]"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/assets/default-fallback.png';
+                                }}
                             />
                         </div>
                         <div>
