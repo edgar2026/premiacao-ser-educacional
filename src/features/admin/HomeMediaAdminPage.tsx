@@ -18,6 +18,9 @@ const HomeMediaAdminPage: React.FC = () => {
 
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [videoPreview, setVideoPreview] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     useEffect(() => {
         fetchHomeMedia();
@@ -35,6 +38,7 @@ const HomeMediaAdminPage: React.FC = () => {
         } else if (data) {
             setFormData(data);
             if (data.image_url) setImagePreview(data.image_url);
+            if (data.video_url) setVideoPreview(data.video_url);
         }
         setIsFetching(false);
     };
@@ -47,19 +51,33 @@ const HomeMediaAdminPage: React.FC = () => {
         }
     };
 
-    const uploadImage = async (file: File) => {
+    const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 100 * 1024 * 1024) { // 100MB limit
+                alert('O vídeo deve ter no máximo 100MB');
+                return;
+            }
+            setVideoFile(file);
+            setVideoPreview(URL.createObjectURL(file));
+            // Limpar o campo de URL se estiver fazendo upload
+            setFormData(prev => ({ ...prev, video_url: '' }));
+        }
+    };
+
+    const uploadFile = async (file: File, bucket: string) => {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-            .from('home_media')
+            .from(bucket)
             .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
         const { data } = supabase.storage
-            .from('home_media')
+            .from(bucket)
             .getPublicUrl(filePath);
 
         return data.publicUrl;
@@ -68,19 +86,27 @@ const HomeMediaAdminPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setUploadProgress(0);
 
         try {
             let finalImageUrl = formData.image_url;
+            let finalVideoUrl = formData.video_url;
 
             if (imageFile) {
-                finalImageUrl = await uploadImage(imageFile);
+                finalImageUrl = await uploadFile(imageFile, 'home_media');
+            }
+
+            if (videoFile) {
+                setUploadProgress(10);
+                finalVideoUrl = await uploadFile(videoFile, 'home_media');
+                setUploadProgress(100);
             }
 
             const payload = {
                 headline: formData.headline!,
                 description: formData.description,
                 image_url: finalImageUrl,
-                video_url: formData.video_url,
+                video_url: finalVideoUrl,
                 is_active: true
             };
 
@@ -99,10 +125,13 @@ const HomeMediaAdminPage: React.FC = () => {
 
             alert('Configuração salva com sucesso!');
             fetchHomeMedia();
+            setImageFile(null);
+            setVideoFile(null);
         } catch (error: any) {
             alert('Erro ao salvar configuração: ' + error.message);
         } finally {
             setIsLoading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -151,16 +180,65 @@ const HomeMediaAdminPage: React.FC = () => {
                             </div>
 
                             <div className="space-y-4">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Vídeo de Apresentação (URL)</label>
-                                <div className="relative group">
-                                    <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">play_circle</span>
-                                    <input
-                                        className="w-full bg-white/[0.03] border border-white/10 pl-16 pr-8 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
-                                        placeholder="https://youtube.com/watch?v=..."
-                                        value={formData.video_url || ''}
-                                        onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                                    />
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Vídeo de Apresentação</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* URL Input */}
+                                    <div className="space-y-4">
+                                        <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Link do YouTube ou Direto</label>
+                                        <div className="relative group">
+                                            <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">link</span>
+                                            <input
+                                                className="w-full bg-white/[0.03] border border-white/10 pl-16 pr-8 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
+                                                placeholder="https://youtube.com/watch?v=..."
+                                                value={formData.video_url || ''}
+                                                onChange={(e) => {
+                                                    setFormData({ ...formData, video_url: e.target.value });
+                                                    setVideoFile(null);
+                                                    setVideoPreview(null);
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* File Upload */}
+                                    <div className="space-y-4">
+                                        <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Ou Upload de Arquivo</label>
+                                        <div
+                                            className="relative border-2 border-dashed border-white/10 rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] flex items-center gap-4"
+                                            onClick={() => document.getElementById('home-video-upload')?.click()}
+                                        >
+                                            <span className="material-symbols-outlined text-2xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest truncate">
+                                                    {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo...')}
+                                                </p>
+                                                <p className="text-[8px] text-off-white/20 uppercase tracking-tighter">MP4, WebM (Máx 100MB)</p>
+                                            </div>
+                                            <input
+                                                id="home-video-upload"
+                                                type="file"
+                                                accept="video/*"
+                                                className="hidden"
+                                                onChange={handleVideoChange}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {uploadProgress > 0 && uploadProgress < 100 && (
+                                    <div className="mt-4 px-2">
+                                        <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest text-off-white/40 mb-2">
+                                            <span>Enviando vídeo...</span>
+                                            <span>{Math.round(uploadProgress)}%</span>
+                                        </div>
+                                        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gold transition-all duration-300"
+                                                style={{ width: `${uploadProgress}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </GlassCard>
                     </div>
