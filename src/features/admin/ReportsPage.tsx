@@ -13,6 +13,7 @@ const ReportsPage: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState<{ title: string; description: string } | null>(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -44,6 +45,7 @@ const ReportsPage: React.FC = () => {
     };
 
     const handleExportAll = async () => {
+        setIsExportModalOpen(false);
         setIsExporting(true);
         try {
             const [awards, honorees, units] = await Promise.all([
@@ -113,7 +115,7 @@ const ReportsPage: React.FC = () => {
                 </div>
                 <div className="flex gap-4">
                     <button
-                        onClick={handleExportAll}
+                        onClick={() => setIsExportModalOpen(true)}
                         disabled={isExporting}
                         className="bg-white/5 hover:bg-white/10 transition-all text-gold px-8 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 disabled:opacity-50 disabled:cursor-not-allowed group"
                     >
@@ -182,6 +184,37 @@ const ReportsPage: React.FC = () => {
                     </div>
                 </div>
             </GlassCard>
+
+            {/* Export Confirmation Modal */}
+            {isExportModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-navy-deep/90 backdrop-blur-xl" onClick={() => setIsExportModalOpen(false)}></div>
+                    <GlassCard className="relative w-full max-w-lg p-12 rounded-[3rem] border-gold/20 animate-scale-in text-center">
+                        <div className="size-24 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-8 border border-gold/20">
+                            <span className="material-symbols-outlined text-gold text-5xl">database</span>
+                        </div>
+                        <h3 className="text-3xl font-serif font-bold text-off-white italic mb-6">Confirmar <span className="text-gold">Exportação</span></h3>
+                        <p className="text-off-white/50 text-lg font-light leading-relaxed mb-10">
+                            Você está prestes a gerar um arquivo de backup contendo todos os dados de <span className="text-off-white font-medium">Premiações</span>, <span className="text-off-white font-medium">Homenageados</span> e <span className="text-off-white font-medium">Unidades</span> em formato JSON.
+                        </p>
+
+                        <div className="flex flex-col gap-4">
+                            <button
+                                onClick={handleExportAll}
+                                className="w-full bg-gold text-navy-deep py-5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                Confirmar e Baixar
+                            </button>
+                            <button
+                                onClick={() => setIsExportModalOpen(false)}
+                                className="w-full bg-white/5 text-off-white/40 py-5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-white/10 hover:text-off-white transition-all"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </GlassCard>
+                </div>
+            )}
 
             {/* Filter Modal */}
             {isFilterModalOpen && (
