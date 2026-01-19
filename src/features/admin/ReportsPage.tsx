@@ -16,6 +16,12 @@ const ReportsPage: React.FC = () => {
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState<{ title: string; description: string } | null>(null);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
+    const [filters, setFilters] = useState({
+        startDate: '',
+        endDate: '',
+        categories: [] as string[]
+    });
 
     useEffect(() => {
         fetchStats();
@@ -80,10 +86,25 @@ const ReportsPage: React.FC = () => {
 
     const handleGeneratePDF = (report: { title: string; description: string }) => {
         setSelectedReport(report);
+        setIsPreviewMode(false);
         // Wait for state update and render
         setTimeout(() => {
             window.print();
         }, 100);
+    };
+
+    const handlePreviewReport = (report: { title: string; description: string }) => {
+        setSelectedReport(report);
+        setIsPreviewMode(true);
+    };
+
+    const toggleCategory = (cat: string) => {
+        setFilters(prev => ({
+            ...prev,
+            categories: prev.categories.includes(cat)
+                ? prev.categories.filter(c => c !== cat)
+                : [...prev.categories, cat]
+        }));
     };
 
     const reportTypes = [
@@ -96,13 +117,42 @@ const ReportsPage: React.FC = () => {
     return (
         <div className="space-y-12 animate-fade-in pb-20">
             {/* Report Template for Printing */}
-            {selectedReport && (
+            {selectedReport && !isPreviewMode && (
                 <ReportTemplate
                     title={selectedReport.title}
                     description={selectedReport.description}
                     stats={stats}
                     date={new Date().toLocaleDateString('pt-BR')}
                 />
+            )}
+
+            {/* Report Preview Modal */}
+            {selectedReport && isPreviewMode && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-8 bg-navy-deep/95 backdrop-blur-2xl overflow-y-auto">
+                    <div className="absolute top-8 right-8 flex gap-4">
+                        <button
+                            onClick={() => handleGeneratePDF(selectedReport)}
+                            className="bg-gold text-navy-deep px-6 py-3 rounded-full font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all"
+                        >
+                            <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                            Imprimir PDF
+                        </button>
+                        <button
+                            onClick={() => setSelectedReport(null)}
+                            className="size-12 rounded-full bg-white/5 flex items-center justify-center text-off-white hover:bg-white/10 transition-all"
+                        >
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <div className="w-full max-w-[210mm] shadow-2xl shadow-black/50 mt-20">
+                        <ReportTemplate
+                            title={selectedReport.title}
+                            description={selectedReport.description}
+                            stats={stats}
+                            date={new Date().toLocaleDateString('pt-BR')}
+                        />
+                    </div>
+                </div>
             )}
 
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16 print:hidden">
@@ -153,7 +203,10 @@ const ReportsPage: React.FC = () => {
                                         >
                                             Gerar PDF <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
                                         </button>
-                                        <button className="text-off-white/30 text-[9px] font-bold uppercase tracking-[0.3em] flex items-center gap-2 hover:text-off-white transition-all">
+                                        <button
+                                            onClick={() => handlePreviewReport(report)}
+                                            className="text-off-white/30 text-[9px] font-bold uppercase tracking-[0.3em] flex items-center gap-2 hover:text-off-white transition-all"
+                                        >
                                             Visualizar <span className="material-symbols-outlined text-sm">visibility</span>
                                         </button>
                                     </div>
@@ -232,8 +285,18 @@ const ReportsPage: React.FC = () => {
                             <div className="space-y-4">
                                 <label className="text-[10px] font-bold text-gold uppercase tracking-[0.3em]">Período</label>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="date" className="bg-white/5 border border-white/10 p-4 rounded-xl text-off-white outline-none focus:border-gold/30" />
-                                    <input type="date" className="bg-white/5 border border-white/10 p-4 rounded-xl text-off-white outline-none focus:border-gold/30" />
+                                    <input
+                                        type="date"
+                                        value={filters.startDate}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                                        className="bg-white/5 border border-white/10 p-4 rounded-xl text-off-white outline-none focus:border-gold/30"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={filters.endDate}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                                        className="bg-white/5 border border-white/10 p-4 rounded-xl text-off-white outline-none focus:border-gold/30"
+                                    />
                                 </div>
                             </div>
 
@@ -241,7 +304,11 @@ const ReportsPage: React.FC = () => {
                                 <label className="text-[10px] font-bold text-gold uppercase tracking-[0.3em]">Categorias</label>
                                 <div className="flex flex-wrap gap-3">
                                     {['Pesquisa', 'Extensão', 'Gestão', 'Inovação'].map(cat => (
-                                        <button key={cat} className="px-6 py-3 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-off-white/40 hover:border-gold/30 hover:text-gold transition-all">
+                                        <button
+                                            key={cat}
+                                            onClick={() => toggleCategory(cat)}
+                                            className={`px-6 py-3 rounded-full border transition-all text-[10px] font-bold uppercase tracking-widest ${filters.categories.includes(cat) ? 'bg-gold border-gold text-navy-deep' : 'bg-white/5 border-white/10 text-off-white/40 hover:border-gold/30 hover:text-gold'}`}
+                                        >
                                             {cat}
                                         </button>
                                     ))}
@@ -251,9 +318,12 @@ const ReportsPage: React.FC = () => {
                             <button
                                 onClick={() => {
                                     setIsFilterModalOpen(false);
-                                    handleGeneratePDF({
+                                    const catText = filters.categories.length > 0 ? ` para as categorias ${filters.categories.join(', ')}` : '';
+                                    const dateText = filters.startDate && filters.endDate ? ` no período de ${new Date(filters.startDate).toLocaleDateString('pt-BR')} a ${new Date(filters.endDate).toLocaleDateString('pt-BR')}` : '';
+
+                                    handlePreviewReport({
                                         title: 'Relatório Customizado',
-                                        description: 'Relatório gerado com base nos filtros personalizados de categoria e período.'
+                                        description: `Relatório gerado com base nos filtros personalizados${catText}${dateText}.`
                                     });
                                 }}
                                 className="w-full bg-gold text-navy-deep py-5 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-[0.98] transition-all"
