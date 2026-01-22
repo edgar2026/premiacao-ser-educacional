@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import GlassCard from '../../components/ui/GlassCard';
+
 import VideoModal from '../../components/ui/VideoModal';
 import CertificateTemplate from './components/CertificateTemplate';
 import TimelineModal from './components/TimelineModal';
@@ -39,9 +39,7 @@ const HonoreePage: React.FC = () => {
         setIsLoading(false);
     };
 
-    const handleDownloadCertificate = () => {
-        window.print();
-    };
+
 
     if (isLoading) {
         return (
@@ -61,12 +59,7 @@ const HonoreePage: React.FC = () => {
     }
 
     const profData = honoree.professional_data ? JSON.parse(honoree.professional_data) : {};
-    const stats = (honoree.stats as any) || {
-        yearsOfService: '0',
-        totalAwards: '0',
-        projectsLed: '0',
-        units: '0'
-    };
+
     const timeline = (honoree.timeline as any[]) || [];
     const awardName = (honoree as any).awards?.name || 'Prêmio de Excelência';
 

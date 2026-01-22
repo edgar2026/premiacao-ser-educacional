@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import GlassCard from '../../components/ui/GlassCard';
+
 import { supabase } from '../../lib/supabase';
 
 interface Award {

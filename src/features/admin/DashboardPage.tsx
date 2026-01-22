@@ -3,10 +3,9 @@ import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, AreaChart, Area, Legend
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { parseISO } from 'date-fns';
 
 // Types
 interface Brand {
@@ -144,28 +143,7 @@ const DashboardPage: React.FC = () => {
         return metrics.byBrand.sort((a, b) => b.count - a.count);
     }, [metrics.byBrand]);
 
-    // Chart Data: Timeline
-    const timelineData = useMemo(() => {
-        const groups: { [key: string]: number } = {};
 
-        filteredHonorees.forEach(h => {
-            const date = parseISO(h.awarded_at);
-            let key = '';
-
-            if (periodType === 'month') {
-                key = format(date, 'MMM/yy', { locale: ptBR });
-            } else if (periodType === 'semester') {
-                const semester = date.getMonth() < 6 ? '1º Sem' : '2º Sem';
-                key = `${semester} ${date.getFullYear()}`;
-            } else {
-                key = date.getFullYear().toString();
-            }
-
-            groups[key] = (groups[key] || 0) + 1;
-        });
-
-        return Object.entries(groups).map(([name, count]) => ({ name, count }));
-    }, [filteredHonorees, periodType]);
 
     const handleExportJSON = () => {
         const data = {
