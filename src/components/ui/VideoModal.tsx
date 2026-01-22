@@ -20,7 +20,7 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose, videoSrc, titl
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-6xl animate-scale-in z-10">
+            <div className="relative w-full max-w-4xl animate-scale-in z-10">
                 <div className="flex items-center justify-between mb-6 px-4">
                     <h3 className="text-2xl md:text-3xl font-serif font-bold text-off-white italic">{title}</h3>
                     <button

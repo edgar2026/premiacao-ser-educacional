@@ -5,63 +5,71 @@ import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 
-type Award = Database['public']['Tables']['awards']['Row'];
+type Brand = Database['public']['Tables']['brands']['Row'];
 
-const AwardsAdminPage: React.FC = () => {
+const BrandsAdminPage: React.FC = () => {
     const navigate = useNavigate();
-    const [awards, setAwards] = useState<Award[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchAwards();
+        fetchBrands();
     }, []);
 
-    const fetchAwards = async () => {
+    const fetchBrands = async () => {
         setIsLoading(true);
         const { data, error } = await supabase
-            .from('awards')
+            .from('brands')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('name');
 
         if (error) {
-            console.error('Error fetching awards:', error);
+            console.error('Error fetching brands:', error);
         } else {
-            setAwards(data || []);
+            setBrands(data || []);
         }
         setIsLoading(false);
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir este prêmio?')) return;
+        // Check if brand has units
+        const { data: units } = await supabase
+            .from('units')
+            .select('id')
+            .eq('brand_id', id)
+            .limit(1);
+
+        if (units && units.length > 0) {
+            alert('Não é possível excluir esta marca pois ela possui unidades vinculadas.');
+            return;
+        }
+
+        if (!confirm('Tem certeza que deseja excluir esta marca?')) return;
 
         const { error } = await supabase
-            .from('awards')
+            .from('brands')
             .delete()
             .eq('id', id);
 
         if (error) {
-            alert('Erro ao excluir prêmio: ' + error.message);
+            alert('Erro ao excluir marca: ' + error.message);
         } else {
-            fetchAwards();
+            fetchBrands();
         }
     };
 
-    const columns: Column<Award>[] = [
+    const columns: Column<Brand>[] = [
         {
-            header: 'Prêmio',
-            accessor: (a: Award) => (
+            header: 'Marca',
+            accessor: (b: Brand) => (
                 <div className="flex items-center gap-5">
-                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden">
-                        {a.image_url ? (
-                            <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" />
-                        ) : (
-                            <span className="material-symbols-outlined">military_tech</span>
-                        )}
+                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg">
+                        <span className="material-symbols-outlined">corporate_fare</span>
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-bold text-off-white font-serif italic text-lg leading-tight">{a.name}</span>
-                        <span className="text-[10px] text-off-white/30 uppercase tracking-widest truncate max-w-[300px]">
-                            {a.description || 'Sem descrição'}
+                        <span className="font-bold text-off-white font-serif italic text-lg leading-tight">{b.name}</span>
+                        <span className="text-[10px] text-off-white/30 uppercase tracking-widest">
+                            Marca Institucional
                         </span>
                     </div>
                 </div>
@@ -69,22 +77,22 @@ const AwardsAdminPage: React.FC = () => {
         },
         {
             header: 'Data de Criação',
-            accessor: (a: Award) => new Date(a.created_at!).toLocaleDateString('pt-BR'),
+            accessor: (b: Brand) => new Date(b.created_at!).toLocaleDateString('pt-BR'),
             className: 'text-sm text-off-white/40 font-medium uppercase tracking-widest'
         }
     ];
 
-    const actions = (a: Award) => (
+    const actions = (b: Brand) => (
         <>
             <button
-                onClick={() => navigate(`/admin/premios/${a.id}/editar`)}
+                onClick={() => navigate(`/admin/marcas/${b.id}/editar`)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
                 title="Editar"
             >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
             <button
-                onClick={() => handleDelete(a.id)}
+                onClick={() => handleDelete(b.id)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
                 title="Excluir"
             >
@@ -97,18 +105,18 @@ const AwardsAdminPage: React.FC = () => {
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Honrarias</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Prêmios</h2>
+                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão Institucional</span>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Marcas</h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
-                        Administre as categorias e distinções de mérito institucional.
+                        Administre as marcas institucionais do grupo educacional.
                     </p>
                 </div>
                 <button
-                    onClick={() => navigate('/admin/premios/novo')}
+                    onClick={() => navigate('/admin/marcas/novo')}
                     className="bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep px-10 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] flex items-center gap-3"
                 >
                     <span className="material-symbols-outlined text-lg">add_circle</span>
-                    Novo Prêmio
+                    Nova Marca
                 </button>
             </div>
 
@@ -118,14 +126,14 @@ const AwardsAdminPage: React.FC = () => {
                 </div>
             ) : (
                 <DataTable
-                    data={awards}
+                    data={brands}
                     columns={columns}
                     actions={actions}
-                    searchPlaceholder="Buscar por nome ou descrição..."
+                    searchPlaceholder="Buscar por nome..."
                 />
             )}
         </div>
     );
 };
 
-export default AwardsAdminPage;
+export default BrandsAdminPage;

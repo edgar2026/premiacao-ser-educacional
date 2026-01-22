@@ -38,8 +38,8 @@ const AdminPanel: React.FC = () => {
     };
 
     return (
-        <div className="space-y-10 animate-fade-in p-10">
-            <div className="flex flex-wrap justify-between items-end gap-8">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Excelência</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">Painel de <span className="text-gold-gradient">Controle</span></h2>
@@ -47,21 +47,19 @@ const AdminPanel: React.FC = () => {
                         Supervisão central de honrarias e mérito institucional Ser Educacional.
                     </p>
                 </div>
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => navigate('/admin/homenageados/novo')}
-                        className="bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep px-8 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] group"
-                    >
-                        <span className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-lg">person_add</span>
-                            Novo Homenageado
-                        </span>
-                    </button>
-                </div>
+                <button
+                    onClick={() => navigate('/admin/homenageados/novo')}
+                    className="bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep px-8 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] group"
+                >
+                    <span className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-lg">person_add</span>
+                        Novo Homenageado
+                    </span>
+                </button>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-16 gap-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {isLoading ? (
                     <div className="col-span-full flex justify-center py-10">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold"></div>
@@ -74,7 +72,7 @@ const AdminPanel: React.FC = () => {
                     ].map((stat, i) => (
                         <GlassCard
                             key={i}
-                            className="p-10 rounded-[2.5rem] group border-white/5 cursor-pointer hover:border-gold/20 transition-all"
+                            className="p-8 rounded-3xl group border-white/5 cursor-pointer hover:border-gold/20 transition-all bg-gradient-to-br from-white/[0.02] to-transparent"
                             onClick={() => stat.link !== '#' && navigate(stat.link)}
                         >
                             <div className="flex justify-between items-start mb-6">
@@ -82,8 +80,8 @@ const AdminPanel: React.FC = () => {
                                 <span className="material-symbols-outlined text-gold/50 group-hover:text-gold transition-colors">{stat.icon}</span>
                             </div>
                             <div className="flex items-end gap-4">
-                                <span className="text-5xl font-bold font-serif text-off-white italic">{stat.value}</span>
-                                <span className="text-gold text-[10px] font-bold mb-2 px-3 py-1 rounded-full border border-gold/20 bg-gold/5 uppercase tracking-widest">
+                                <span className="text-4xl font-bold font-serif text-off-white italic">{stat.value}</span>
+                                <span className="text-gold text-[8px] font-bold mb-1 px-3 py-1 rounded-full border border-gold/20 bg-gold/5 uppercase tracking-widest">
                                     {stat.change}
                                 </span>
                             </div>
@@ -94,13 +92,13 @@ const AdminPanel: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                    <div className="flex justify-between items-center mb-8">
+                    <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-serif italic text-off-white">Atividades Recentes</h3>
                         <button
-                            onClick={() => navigate('/admin/relatorios')}
+                            onClick={() => navigate('/admin/dashboard')}
                             className="text-gold text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
                         >
-                            Ver Relatórios
+                            Ver Dashboard
                         </button>
                     </div>
                     <div className="space-y-6">
@@ -108,8 +106,8 @@ const AdminPanel: React.FC = () => {
                             { user: 'Admin Master', action: 'Acessou o painel', target: 'Gestão Central', time: 'Agora' },
                             { user: 'Sistema', action: 'Sincronização concluída', target: 'Supabase Cloud', time: 'Há 1 min' }
                         ].map((activity, i) => (
-                            <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                                <div className="size-10 rounded-full bg-gold/10 flex items-center justify-center text-gold">
+                            <div key={i} className="flex gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
+                                <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
                                     <span className="material-symbols-outlined text-lg">history</span>
                                 </div>
                                 <div>
@@ -123,10 +121,11 @@ const AdminPanel: React.FC = () => {
                 </GlassCard>
 
                 <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                    <div className="flex justify-between items-center mb-8">
+                    <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-serif italic text-off-white">Ações Rápidas</h3>
+                        <span className="material-symbols-outlined text-gold/30">bolt</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <button
                             onClick={() => navigate('/admin/homenageados/novo')}
                             className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
@@ -152,11 +151,11 @@ const AdminPanel: React.FC = () => {
                             <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Campus e polos</p>
                         </button>
                         <button
-                            onClick={() => navigate('/admin/relatorios')}
+                            onClick={() => navigate('/admin/dashboard')}
                             className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
                         >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">analytics</span>
-                            <p className="text-sm font-bold text-off-white">Relatórios</p>
+                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">dashboard</span>
+                            <p className="text-sm font-bold text-off-white">Dashboard</p>
                             <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Dados estratégicos</p>
                         </button>
                     </div>

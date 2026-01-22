@@ -144,19 +144,21 @@ const HomeMediaAdminPage: React.FC = () => {
     }
 
     return (
-        <div className="p-10 space-y-10 animate-fade-in max-w-5xl mx-auto">
-            <div className="space-y-4">
-                <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Identidade Visual</span>
-                <h2 className="text-5xl font-bold font-serif text-off-white italic">Mídia da <span className="text-gold-gradient">Home</span></h2>
-                <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
-                    Configure o conteúdo de destaque exibido na página inicial pública.
-                </p>
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+                <div className="space-y-4">
+                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Identidade Visual</span>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Mídia da <span className="text-gold-gradient">Home</span></h2>
+                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+                        Configure o conteúdo de destaque exibido na página inicial pública.
+                    </p>
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit} className="space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <div className="lg:col-span-2 space-y-8">
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-8">
+                    <div className="lg:col-span-2 space-y-10">
+                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-10 bg-gradient-to-br from-white/[0.02] to-transparent">
                             <div className="space-y-4">
                                 <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Headline Institucional</label>
                                 <input
@@ -243,8 +245,8 @@ const HomeMediaAdminPage: React.FC = () => {
                         </GlassCard>
                     </div>
 
-                    <div className="space-y-8">
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-6">
+                    <div className="space-y-10">
+                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-8 bg-gradient-to-br from-white/[0.02] to-transparent">
                             <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2 text-center">Imagem de Destaque</label>
                             <div
                                 className="relative aspect-[4/5] rounded-[2rem] bg-white/[0.03] border-2 border-dashed border-white/10 flex flex-col items-center justify-center overflow-hidden group hover:border-gold/30 transition-all cursor-pointer"

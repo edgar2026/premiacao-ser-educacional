@@ -90,18 +90,18 @@ const HomePage: React.FC = () => {
     return (
         <div className="w-full mesh-gradient-premium min-h-screen">
             {/* Hero Section */}
-            <section className="relative pt-16 pb-10 overflow-hidden">
-                <div className="max-w-6xl mx-auto px-6 text-center relative z-10 animate-fade-in">
-                    <span className="inline-block px-6 py-2 mb-8 text-[9px] font-bold tracking-[0.5em] text-gold uppercase border border-gold/20 rounded-full bg-navy-deep/40 backdrop-blur-2xl">
+            <section className="relative pt-16 pb-10">
+                <div className="max-w-6xl mx-auto px-6 sm:px-8 md:px-6 text-center relative z-10 animate-fade-in">
+                    <span className="inline-block px-4 sm:px-6 py-1.5 sm:py-2 mb-6 sm:mb-8 text-[7px] sm:text-[9px] font-bold tracking-[0.3em] sm:tracking-[0.5em] text-gold uppercase border border-gold/20 rounded-full bg-navy-deep/40 backdrop-blur-2xl">
                         EXCELÊNCIA E MERITOCRACIA
                     </span>
-                    <h1 className="font-black mb-10 leading-none tracking-tighter font-serif uppercase">
-                        <span className="text-off-white block text-xl md:text-3xl mb-2 opacity-70 tracking-[0.4em]">PREMIAÇÕES</span>
-                        <span className="text-gold-gradient gold-glow block text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[1.1]">
+                    <h1 className="font-black mb-10 leading-none font-serif uppercase max-w-full">
+                        <span className="text-off-white block text-xs sm:text-base md:text-xl lg:text-2xl xl:text-3xl mb-2 opacity-70 tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em] lg:tracking-[0.4em]">PREMIAÇÕES</span>
+                        <span className="text-gold-gradient gold-glow block text-[1.5rem] sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl leading-[1.1] tracking-tight sm:tracking-normal md:tracking-tight break-words">
                             {homeMedia?.headline || 'SER EDUCACIONAL'}
                         </span>
                     </h1>
-                    <p className="text-lg md:text-xl text-off-white/60 max-w-2xl mx-auto mb-12 leading-relaxed font-light italic">
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-off-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed font-light italic px-4">
                         {homeMedia?.description || 'Celebrando os pilares de nossa excelência, meritocracia e prestígio executivo em um ambiente vibrante de alta performance.'}
                     </p>
 
@@ -116,20 +116,18 @@ const HomePage: React.FC = () => {
             {/* Awards Categories */}
             <section className="py-20 relative" id="premios">
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-12">
-                        <div className="max-w-2xl">
-                            <h2 className="text-4xl md:text-5xl font-bold text-off-white font-serif uppercase">
-                                CONHEÇA OS <span className="text-gold-gradient italic pr-2">PRÊMIOS</span>
-                            </h2>
-                            <div className="h-1 w-24 bg-gold/50 rounded-full mt-6 mb-8"></div>
-                            <Link to="/premios" className="inline-flex items-center gap-4 px-8 py-3 glass-card text-gold text-[9px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all rounded-full border-gold/30">
-                                Ver Todos os Prêmios
-                                <span className="material-symbols-outlined text-sm">workspace_premium</span>
-                            </Link>
-                        </div>
-                        <p className="text-off-white/50 max-w-md text-lg font-light leading-relaxed italic">
+                    <div className="flex flex-col items-center text-center mb-16 gap-8">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-off-white font-serif uppercase px-2">
+                            CONHEÇA OS <span className="text-gold-gradient italic pr-2">PRÊMIOS</span>
+                        </h2>
+                        <div className="h-1 w-24 bg-gold/50 rounded-full"></div>
+                        <p className="text-off-white/50 max-w-2xl text-lg font-light leading-relaxed italic">
                             Categorias exclusivas que valorizam a inovação, a gestão de alta performance e a excelência acadêmica sob uma nova luz.
                         </p>
+                        <Link to="/premios" className="inline-flex items-center gap-4 px-10 py-4 glass-card text-gold text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all rounded-full border-gold/30">
+                            Ver Todos os Prêmios
+                            <span className="material-symbols-outlined text-sm">workspace_premium</span>
+                        </Link>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {awards.map((award) => (
@@ -152,13 +150,15 @@ const HomePage: React.FC = () => {
 
             {/* Honorees Gallery */}
             <section className="py-20" id="homenageados">
-                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-6 relative z-10">
                     <div className="text-center mb-12">
-                        <h2 className="text-5xl md:text-7xl font-bold mb-6 uppercase tracking-tighter text-off-white font-serif">
-                            NOSSOS <span className="text-gold-gradient italic">HOMENAGEADOS</span>
+                        <h2 className="font-bold mb-6 uppercase font-serif max-w-full">
+                            <span className="text-gold-gradient gold-glow block text-[1.5rem] sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl leading-[1.1] tracking-tight sm:tracking-normal md:tracking-tight break-words">
+                                NOSSOS HOMENAGEADOS
+                            </span>
                         </h2>
                         <p className="text-off-white/40 max-w-2xl mx-auto text-lg font-light italic mb-10">
-                            Conheça os líderes e acadêmicos que brilham através de dedicação inabalável com o futuro da educação.
+                            Conheça os visionários e personalidades que brilham através de dedicação inabalável ao progresso de suas áreas e da sociedade.
                         </p>
                         <Link to="/homenageados" className="inline-flex items-center gap-4 px-10 py-4 glass-card text-gold text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all rounded-full border-gold/30">
                             Ver Todos os Notáveis

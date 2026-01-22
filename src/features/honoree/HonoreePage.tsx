@@ -13,7 +13,7 @@ const HonoreePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [honoree, setHonoree] = useState<Honoree | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('A Jornada');
+    const [activeTab, setActiveTab] = useState('Iniciativas');
     const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
 
@@ -116,24 +116,17 @@ const HonoreePage: React.FC = () => {
                                 className="text-off-white/70 text-xl leading-relaxed font-light max-w-3xl italic prose prose-invert break-words"
                                 dangerouslySetInnerHTML={{ __html: honoree.biography || '' }}
                             />
-                            <div className="flex flex-wrap gap-6 mt-12 justify-center lg:justify-start">
-                                <button
-                                    onClick={handleDownloadCertificate}
-                                    className="flex items-center gap-4 px-12 py-5 bg-gold text-navy-deep rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-105 transition-all"
-                                >
-                                    <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
-                                    Baixar Certificado de Honra
-                                </button>
-                                {honoree.video_url && (
+                            {honoree.video_url && (
+                                <div className="flex justify-center lg:justify-start mt-12">
                                     <button
                                         onClick={() => setIsVideoModalOpen(true)}
-                                        className="flex items-center gap-4 px-12 py-5 glass-card text-off-white rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-white/5 transition-all"
+                                        className="flex items-center gap-4 px-12 py-5 bg-gold text-navy-deep rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-105 transition-all"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">play_circle</span>
                                         Ver Homenagem
                                     </button>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -156,26 +149,13 @@ const HonoreePage: React.FC = () => {
                     timeline={timeline}
                 />
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                    {[
-                        { label: 'Anos de Dedicação', value: stats.yearsOfService },
-                        { label: 'Láureas Recebidas', value: String(stats.totalAwards).padStart(2, '0'), color: 'text-gold' },
-                        { label: 'Projetos de Impacto', value: stats.projectsLed },
-                        { label: 'Unidades Lideradas', value: stats.units }
-                    ].map((stat, i) => (
-                        <GlassCard key={i} className="p-10 rounded-[2rem] flex flex-col items-center text-center group hover:bg-white/[0.05] transition-all duration-500 border-white/5">
-                            <span className="text-off-white/40 text-[9px] font-bold uppercase tracking-[0.3em] mb-4">{stat.label}</span>
-                            <p className={`text-6xl font-bold font-serif ${stat.color || 'text-off-white'} group-hover:scale-110 transition-transform duration-700`}>{stat.value}</p>
-                        </GlassCard>
-                    ))}
-                </div>
+
 
                 {/* Content Sections */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                     <div className="lg:col-span-2 space-y-12">
                         <div className="flex gap-12 border-b border-white/10 px-6">
-                            {['A Jornada', 'Iniciativas', 'Reconhecimentos'].map((tab) => (
+                            {['Iniciativas', 'Reconhecimentos'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
@@ -188,14 +168,10 @@ const HonoreePage: React.FC = () => {
                         </div>
                         <article className="glass-card p-12 md:p-16 rounded-[3rem] border-white/5">
                             <h3 className="font-serif text-4xl text-off-white mb-10 italic">
-                                {activeTab === 'A Jornada' && 'A Narrativa da Excelência'}
                                 {activeTab === 'Iniciativas' && 'Projetos & Impacto'}
                                 {activeTab === 'Reconhecimentos' && 'Láureas & Mérito'}
                             </h3>
                             <div className="space-y-10 text-off-white/60 leading-relaxed text-xl font-light italic prose prose-invert max-w-none break-words">
-                                {activeTab === 'A Jornada' && (
-                                    <div dangerouslySetInnerHTML={{ __html: honoree.biography || '' }} />
-                                )}
                                 {activeTab === 'Iniciativas' && (
                                     <div dangerouslySetInnerHTML={{ __html: honoree.initiatives || '<p>Informações sobre iniciativas em breve.</p>' }} />
                                 )}

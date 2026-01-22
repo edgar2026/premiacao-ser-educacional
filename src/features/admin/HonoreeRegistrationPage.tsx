@@ -25,12 +25,16 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [isFetching, setIsFetching] = useState(!!id);
     const [awards, setAwards] = useState<Award[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
+    const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
 
     const [formData, setFormData] = useState({
         type: 'interno' as 'interno' | 'externo',
         name: '',
         email: '',
         unit: '',
+        brand_id: '',
+        unit_id: '',
+        awarded_at: new Date().toISOString().split('T')[0],
         registration_id: '',
         role: '',
         years_at_company: '',
@@ -67,6 +71,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
     useEffect(() => {
         fetchAwards();
+        fetchBrands();
         fetchUnits();
         if (id) {
             fetchHonoree();
@@ -83,6 +88,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const fetchAwards = async () => {
         const { data } = await supabase.from('awards').select('*').order('name');
         setAwards(data || []);
+    };
+
+    const fetchBrands = async () => {
+        const { data } = await supabase.from('brands').select('*').order('name');
+        setBrands(data || []);
     };
 
     const fetchUnits = async () => {
@@ -115,6 +125,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 name: profData.name || '',
                 email: profData.email || '',
                 unit: profData.unit || '',
+                brand_id: data.brand_id || '',
+                unit_id: data.unit_id || '',
+                awarded_at: data.awarded_at || new Date().toISOString().split('T')[0],
                 registration_id: profData.registration_id || '',
                 role: profData.role || '',
                 years_at_company: profData.years_at_company || '',
@@ -245,6 +258,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 photo_url: finalPhotoUrl,
                 video_url: finalVideoUrl,
                 award_id: formData.award_id || null,
+                brand_id: formData.brand_id,
+                unit_id: formData.unit_id,
+                awarded_at: formData.awarded_at,
                 is_published: formData.is_published,
                 stats: formData.stats,
                 timeline: formData.timeline,
@@ -331,16 +347,17 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     }
 
     return (
-        <div className="p-10 max-w-6xl mx-auto space-y-12 animate-fade-in">
-            <div className="flex justify-between items-start">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <button
                         onClick={() => navigate('/admin/homenageados')}
-                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity"
+                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity mb-4"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Voltar para listagem
                     </button>
+                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">
                         {isEdit ? 'Editar' : 'Novo'} <span className="text-gold-gradient">Homenageado</span>
                     </h2>
@@ -349,7 +366,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
             <StepIndicator steps={steps} currentStep={currentStep} />
 
-            <GlassCard className="p-12 rounded-[3rem] border-white/10 shadow-2xl">
+            <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                 <div className="min-h-[400px]">
                     {(() => {
                         switch (currentStep) {
@@ -397,6 +414,16 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                 />
                                             </div>
+                                            <div className="space-y-4">
+                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Data da Premiação</label>
+                                                <input
+                                                    required
+                                                    className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg"
+                                                    type="date"
+                                                    value={formData.awarded_at}
+                                                    onChange={(e) => setFormData({ ...formData, awarded_at: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -426,15 +453,38 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                             {formData.type === 'interno' ? (
                                                 <>
                                                     <div className="space-y-4">
+                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Marca Institucional</label>
+                                                        <select
+                                                            required
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            value={formData.brand_id}
+                                                            onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
+                                                        >
+                                                            <option value="" className="bg-navy-deep">Selecione uma marca...</option>
+                                                            {brands.map(b => (
+                                                                <option key={b.id} value={b.id} className="bg-navy-deep">{b.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-4">
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
                                                         <select
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
-                                                            value={formData.unit}
-                                                            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                                                            required
+                                                            disabled={!formData.brand_id}
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
+                                                            value={formData.unit_id}
+                                                            onChange={(e) => {
+                                                                const selectedUnit = units.find(u => u.id === e.target.value);
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    unit_id: e.target.value,
+                                                                    unit: selectedUnit?.name || ''
+                                                                });
+                                                            }}
                                                         >
                                                             <option value="" className="bg-navy-deep">Selecione uma unidade...</option>
-                                                            {units.map(u => (
-                                                                <option key={u.id} value={u.name} className="bg-navy-deep">{u.name}</option>
+                                                            {units.filter(u => u.brand_id === formData.brand_id).map(u => (
+                                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
                                                             ))}
                                                         </select>
                                                     </div>
@@ -471,6 +521,42 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                 </>
                                             ) : (
                                                 <>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Marca Institucional</label>
+                                                        <select
+                                                            required
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            value={formData.brand_id}
+                                                            onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
+                                                        >
+                                                            <option value="" className="bg-navy-deep">Selecione uma marca...</option>
+                                                            {brands.map(b => (
+                                                                <option key={b.id} value={b.id} className="bg-navy-deep">{b.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
+                                                        <select
+                                                            required
+                                                            disabled={!formData.brand_id}
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
+                                                            value={formData.unit_id}
+                                                            onChange={(e) => {
+                                                                const selectedUnit = units.find(u => u.id === e.target.value);
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    unit_id: e.target.value,
+                                                                    unit: selectedUnit?.name || ''
+                                                                });
+                                                            }}
+                                                        >
+                                                            <option value="" className="bg-navy-deep">Selecione uma unidade...</option>
+                                                            {units.filter(u => u.brand_id === formData.brand_id).map(u => (
+                                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
                                                     <div className="space-y-4">
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Instituição / Empresa</label>
                                                         <input

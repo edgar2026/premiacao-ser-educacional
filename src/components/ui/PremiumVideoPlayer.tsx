@@ -39,6 +39,18 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
         }
     };
 
+    const toggleFullScreen = () => {
+        if (videoRef.current) {
+            if (videoRef.current.requestFullscreen) {
+                videoRef.current.requestFullscreen();
+            } else if ((videoRef.current as any).webkitRequestFullscreen) {
+                (videoRef.current as any).webkitRequestFullscreen();
+            } else if ((videoRef.current as any).msRequestFullscreen) {
+                (videoRef.current as any).msRequestFullscreen();
+            }
+        }
+    };
+
     if (youtubeId) {
         return (
             <div className={`relative group overflow-hidden rounded-[2.5rem] glass-card p-2 border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)] ${className}`}>
@@ -94,12 +106,21 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
                             </span>
                         </button>
 
-                        {/* Controle de Volume Direita */}
-                        <button onClick={toggleMute} className="text-white/80 hover:text-gold transition-colors">
-                            <span className="material-symbols-outlined text-2xl">
-                                {isMuted ? 'volume_off' : 'volume_up'}
-                            </span>
-                        </button>
+                        {/* Controle de Volume, Resolução e Tela Cheia Direita */}
+                        <div className="flex items-center gap-4">
+                            <button className="flex items-center gap-1 px-2 py-1 rounded border border-white/20 text-[10px] font-bold text-gold hover:bg-white/10 transition-colors">
+                                <span className="material-symbols-outlined text-sm">hd</span>
+                                HD
+                            </button>
+                            <button onClick={toggleMute} className="text-white/80 hover:text-gold transition-colors">
+                                <span className="material-symbols-outlined text-2xl">
+                                    {isMuted ? 'volume_off' : 'volume_up'}
+                                </span>
+                            </button>
+                            <button onClick={toggleFullScreen} className="text-white/80 hover:text-gold transition-colors">
+                                <span className="material-symbols-outlined text-2xl">fullscreen</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

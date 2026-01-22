@@ -51,19 +51,20 @@ const HonoreeDetailsAdminPage: React.FC = () => {
     const awardName = (honoree as any).awards?.name || 'Nenhum prêmio vinculado';
 
     return (
-        <div className="space-y-10 animate-fade-in pb-20">
-            <div className="flex justify-between items-start">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <button
                         onClick={() => navigate('/admin/homenageados')}
-                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity"
+                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity mb-4"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Voltar para listagem
                     </button>
+                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">Detalhes do <span className="text-gold-gradient">Homenageado</span></h2>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                     <Link
                         to={`/admin/homenageados/${id}/editar`}
                         className="bg-white/5 hover:bg-white/10 text-gold px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all"
@@ -82,7 +83,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Profile Overview */}
-                <GlassCard className="p-10 rounded-[3rem] border-white/10 lg:col-span-1">
+                <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent lg:col-span-1">
                     <div className="flex flex-col items-center text-center space-y-6">
                         <div className="size-48 rounded-[2rem] overflow-hidden border-2 border-gold/30 p-1">
                             <img
@@ -116,7 +117,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
                 {/* Professional Data & Bio */}
                 <div className="lg:col-span-2 space-y-10">
-                    <GlassCard className="p-10 rounded-[3rem] border-white/5">
+                    <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                         <h4 className="text-lg font-bold text-off-white uppercase tracking-widest mb-8 border-b border-white/5 pb-4">Dados Profissionais</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {honoree.type === 'interno' ? (
@@ -153,7 +154,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-10 rounded-[3rem] border-white/5">
+                    <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                         <h4 className="text-lg font-bold text-off-white uppercase tracking-widest mb-8 border-b border-white/5 pb-4">Biografia</h4>
                         <div
                             className="text-off-white/60 leading-relaxed italic prose prose-invert max-w-none break-words"
@@ -171,7 +172,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                     { label: 'Projetos de Impacto', value: stats.projectsLed || '0' },
                     { label: 'Unidades Lideradas', value: stats.units || '0' }
                 ].map((stat, i) => (
-                    <GlassCard key={i} className="p-8 rounded-[2rem] border-white/5 text-center">
+                    <GlassCard key={i} className="p-8 rounded-[2rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent text-center">
                         <p className="text-[9px] text-off-white/30 uppercase tracking-widest mb-2">{stat.label}</p>
                         <p className="text-4xl font-bold font-serif text-gold italic">{stat.value}</p>
                     </GlassCard>
@@ -180,7 +181,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Timeline */}
-                <GlassCard className="p-10 rounded-[3rem] border-white/5">
+                <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                     <h4 className="text-lg font-bold text-off-white uppercase tracking-widest mb-8 border-b border-white/5 pb-4">Linha do Tempo</h4>
                     <div className="space-y-6">
                         {timeline.map((item, i) => (
@@ -202,14 +203,14 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
                 {/* Extra Tabs Content */}
                 <div className="space-y-10">
-                    <GlassCard className="p-10 rounded-[3rem] border-white/5">
+                    <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                         <h4 className="text-lg font-bold text-off-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4">Iniciativas</h4>
                         <div
                             className="text-off-white/60 text-sm leading-relaxed prose prose-invert max-w-none break-words"
                             dangerouslySetInnerHTML={{ __html: honoree.initiatives || '<p className="text-off-white/20">Nenhuma iniciativa cadastrada.</p>' }}
                         />
                     </GlassCard>
-                    <GlassCard className="p-10 rounded-[3rem] border-white/5">
+                    <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
                         <h4 className="text-lg font-bold text-off-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4">Reconhecimentos</h4>
                         <div
                             className="text-off-white/60 text-sm leading-relaxed prose prose-invert max-w-none break-words"

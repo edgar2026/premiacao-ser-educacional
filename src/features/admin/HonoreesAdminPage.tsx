@@ -119,8 +119,8 @@ const HonoreesAdminPage: React.FC = () => {
     );
 
     return (
-        <div className="p-10 space-y-10 animate-fade-in">
-            <div className="flex flex-wrap justify-between items-end gap-8">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">Homenageados</h2>

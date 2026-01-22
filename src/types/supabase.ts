@@ -11,109 +11,136 @@ export type Database = {
         Tables: {
             awards: {
                 Row: {
-                    id: string
                     created_at: string | null
-                    name: string
-                    description: string | null
-                    image_url: string | null
                     criteria: Json | null
                     cycle_info: Json | null
+                    description: string | null
+                    id: string
+                    image_url: string | null
+                    name: string
                 }
                 Insert: {
-                    id?: string
                     created_at?: string | null
-                    name: string
-                    description?: string | null
-                    image_url?: string | null
                     criteria?: Json | null
                     cycle_info?: Json | null
+                    description?: string | null
+                    id?: string
+                    image_url?: string | null
+                    name: string
                 }
                 Update: {
-                    id?: string
                     created_at?: string | null
-                    name?: string
-                    description?: string | null
-                    image_url?: string | null
                     criteria?: Json | null
                     cycle_info?: Json | null
+                    description?: string | null
+                    id?: string
+                    image_url?: string | null
+                    name?: string
+                }
+                Relationships: []
+            }
+            brands: {
+                Row: {
+                    created_at: string | null
+                    id: string
+                    name: string
+                }
+                Insert: {
+                    created_at?: string | null
+                    id?: string
+                    name: string
+                }
+                Update: {
+                    created_at?: string | null
+                    id?: string
+                    name?: string
                 }
                 Relationships: []
             }
             home_media: {
                 Row: {
-                    id: string
                     created_at: string | null
-                    headline: string
                     description: string | null
+                    headline: string
+                    id: string
                     image_url: string | null
-                    video_url: string | null
                     is_active: boolean | null
+                    video_url: string | null
                 }
                 Insert: {
-                    id?: string
                     created_at?: string | null
-                    headline: string
                     description?: string | null
+                    headline: string
+                    id?: string
                     image_url?: string | null
-                    video_url?: string | null
                     is_active?: boolean | null
+                    video_url?: string | null
                 }
                 Update: {
-                    id?: string
                     created_at?: string | null
-                    headline?: string
                     description?: string | null
+                    headline?: string
+                    id?: string
                     image_url?: string | null
-                    video_url?: string | null
                     is_active?: boolean | null
+                    video_url?: string | null
                 }
                 Relationships: []
             }
             honorees: {
                 Row: {
-                    id: string
-                    created_at: string | null
-                    type: string | null
-                    professional_data: string | null
-                    biography: string | null
-                    photo_url: string | null
-                    video_url: string | null
                     award_id: string | null
+                    awarded_at: string
+                    biography: string | null
+                    brand_id: string
+                    created_at: string | null
+                    id: string
+                    initiatives: string | null
                     is_published: boolean | null
+                    photo_url: string | null
+                    professional_data: string | null
+                    recognitions: string | null
                     stats: Json | null
                     timeline: Json | null
-                    initiatives: string | null
-                    recognitions: string | null
+                    type: string | null
+                    unit_id: string
+                    video_url: string | null
                 }
                 Insert: {
-                    id?: string
-                    created_at?: string | null
-                    type?: string | null
-                    professional_data?: string | null
-                    biography?: string | null
-                    photo_url?: string | null
-                    video_url?: string | null
                     award_id?: string | null
+                    awarded_at: string
+                    biography?: string | null
+                    brand_id: string
+                    created_at?: string | null
+                    id?: string
+                    initiatives?: string | null
                     is_published?: boolean | null
+                    photo_url?: string | null
+                    professional_data?: string | null
+                    recognitions?: string | null
                     stats?: Json | null
                     timeline?: Json | null
-                    initiatives?: string | null
-                    recognitions?: string | null
+                    type?: string | null
+                    unit_id: string
+                    video_url?: string | null
                 }
                 Update: {
-                    id?: string
-                    created_at?: string | null
-                    type?: string | null
-                    professional_data?: string | null
-                    biography?: string | null
-                    photo_url?: string | null
-                    video_url?: string | null
                     award_id?: string | null
+                    awarded_at?: string
+                    biography?: string | null
+                    brand_id?: string
+                    created_at?: string | null
+                    id?: string
+                    initiatives?: string | null
                     is_published?: boolean | null
+                    photo_url?: string | null
+                    professional_data?: string | null
+                    recognitions?: string | null
                     stats?: Json | null
                     timeline?: Json | null
-                    initiatives?: string | null
-                    recognitions?: string | null
+                    type?: string | null
+                    unit_id?: string
+                    video_url?: string | null
                 }
                 Relationships: [
                     {
@@ -123,34 +150,59 @@ export type Database = {
                         referencedRelation: "awards"
                         referencedColumns: ["id"]
                     },
+                    {
+                        foreignKeyName: "honorees_brand_id_fkey"
+                        columns: ["brand_id"]
+                        isOneToOne: false
+                        referencedRelation: "brands"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "honorees_unit_id_fkey"
+                        columns: ["unit_id"]
+                        isOneToOne: false
+                        referencedRelation: "units"
+                        referencedColumns: ["id"]
+                    }
                 ]
             }
             units: {
                 Row: {
-                    id: string
+                    brand_id: string
                     created_at: string | null
-                    name: string
-                    location: string
+                    id: string
                     latitude: number | null
+                    location: string
                     longitude: number | null
+                    name: string
                 }
                 Insert: {
-                    id?: string
+                    brand_id: string
                     created_at?: string | null
-                    name: string
-                    location: string
+                    id?: string
                     latitude?: number | null
+                    location: string
                     longitude?: number | null
+                    name: string
                 }
                 Update: {
-                    id?: string
+                    brand_id?: string
                     created_at?: string | null
-                    name?: string
-                    location?: string
+                    id?: string
                     latitude?: number | null
+                    location?: string
                     longitude?: number | null
+                    name?: string
                 }
-                Relationships: []
+                Relationships: [
+                    {
+                        foreignKeyName: "units_brand_id_fkey"
+                        columns: ["brand_id"]
+                        isOneToOne: false
+                        referencedRelation: "brands"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
         }
         Views: {
@@ -167,7 +219,3 @@ export type Database = {
         }
     }
 }
-
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
-export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
-export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];

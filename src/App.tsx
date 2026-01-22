@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -7,7 +7,7 @@ import HonoreePage from './features/honoree/HonoreePage';
 import ExecutiveDashboard from './features/dashboard/ExecutiveDashboard';
 import AdminPanel from './features/admin/AdminPanel';
 import UnitsPage from './features/admin/UnitsPage';
-import ReportsPage from './features/admin/ReportsPage';
+import DashboardPage from './features/admin/DashboardPage';
 import AboutPage from './features/about/AboutPage';
 import TimelinePage from './features/timeline/TimelinePage';
 import GalleryPage from './features/gallery/GalleryPage';
@@ -24,6 +24,8 @@ import AwardsAdminPage from './features/admin/AwardsAdminPage';
 import AwardRegistrationPage from './features/admin/AwardRegistrationPage';
 import HomeMediaAdminPage from './features/admin/HomeMediaAdminPage';
 import UnitRegistrationPage from './features/admin/UnitRegistrationPage';
+import BrandsAdminPage from './features/admin/BrandsAdminPage';
+import BrandRegistrationPage from './features/admin/BrandRegistrationPage';
 import { AuthProvider } from './features/auth/AuthContext';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 
@@ -70,7 +72,11 @@ function App() {
               <Route path="unidades" element={<UnitsPage />} />
               <Route path="unidades/novo" element={<UnitRegistrationPage />} />
               <Route path="unidades/:id/editar" element={<UnitRegistrationPage />} />
-              <Route path="relatorios" element={<ReportsPage />} />
+              <Route path="marcas" element={<BrandsAdminPage />} />
+              <Route path="marcas/novo" element={<BrandRegistrationPage />} />
+              <Route path="marcas/:id/editar" element={<BrandRegistrationPage />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
           </Route>
         </Routes>

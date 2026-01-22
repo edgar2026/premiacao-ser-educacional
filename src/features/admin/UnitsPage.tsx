@@ -6,33 +6,45 @@ import type { Database } from '../../types/supabase';
 import UnitsMap from './components/UnitsMap';
 
 type Unit = Database['public']['Tables']['units']['Row'];
+type Brand = Database['public']['Tables']['brands']['Row'];
+
+interface UnitWithBrand extends Unit {
+    brands?: Brand;
+}
 
 const UnitsPage: React.FC = () => {
     const navigate = useNavigate();
-    const [units, setUnits] = useState<Unit[]>([]);
+    const [units, setUnits] = useState<UnitWithBrand[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedBrandId, setSelectedBrandId] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
 
     useEffect(() => {
-        fetchUnits();
+        fetchData();
     }, []);
 
-    const fetchUnits = async () => {
+    const fetchData = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
-            .from('units')
-            .select('*')
-            .order('name');
+        try {
+            const [unitsRes, brandsRes] = await Promise.all([
+                supabase.from('units').select('*, brands(*)').order('name'),
+                supabase.from('brands').select('*').order('name')
+            ]);
 
-        if (error) {
-            console.error('Error fetching units:', error);
-        } else {
-            setUnits(data || []);
+            if (unitsRes.error) throw unitsRes.error;
+            if (brandsRes.error) throw brandsRes.error;
+
+            setUnits(unitsRes.data || []);
+            setBrands(brandsRes.data || []);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     const handleDelete = async (id: string) => {
@@ -47,20 +59,22 @@ const UnitsPage: React.FC = () => {
             console.error('Error deleting unit:', error);
             alert('Erro ao excluir unidade');
         } else {
-            fetchUnits();
+            fetchData();
         }
     };
 
-    const filteredUnits = units.filter(unit =>
-        unit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        unit.location.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredUnits = units.filter(unit => {
+        const matchesSearch = unit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            unit.location.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesBrand = selectedBrandId === 'all' || unit.brand_id === selectedBrandId;
+        return matchesSearch && matchesBrand;
+    });
 
     const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
     const paginatedUnits = filteredUnits.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão Geográfica</span>
@@ -82,18 +96,34 @@ const UnitsPage: React.FC = () => {
 
             {/* Controls Bar */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white/[0.02] border border-white/5 p-6 rounded-[2rem] backdrop-blur-xl">
-                <div className="relative w-full md:max-w-md group">
-                    <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">search</span>
-                    <input
-                        type="text"
-                        placeholder="Buscar por nome ou localização..."
-                        value={searchQuery}
+                <div className="flex flex-1 gap-4 w-full">
+                    <div className="relative flex-1 group">
+                        <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">search</span>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nome ou localização..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full bg-white/5 border border-white/10 py-4 pl-16 pr-6 rounded-xl text-off-white outline-none focus:border-gold/30 transition-all"
+                        />
+                    </div>
+
+                    <select
+                        value={selectedBrandId}
                         onChange={(e) => {
-                            setSearchQuery(e.target.value);
+                            setSelectedBrandId(e.target.value);
                             setCurrentPage(1);
                         }}
-                        className="w-full bg-white/5 border border-white/10 py-4 pl-16 pr-6 rounded-xl text-off-white outline-none focus:border-gold/30 transition-all"
-                    />
+                        className="bg-white/5 border border-white/10 px-6 py-4 rounded-xl text-off-white outline-none focus:border-gold/30 transition-all text-xs font-bold uppercase tracking-widest"
+                    >
+                        <option value="all">Todas as Marcas</option>
+                        {brands.map(brand => (
+                            <option key={brand.id} value={brand.id}>{brand.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="flex items-center gap-4 bg-white/5 p-1.5 rounded-xl border border-white/10">
@@ -141,8 +171,11 @@ const UnitsPage: React.FC = () => {
                                     <div className="size-12 rounded-2xl bg-gold/5 flex items-center justify-center mb-6 group-hover:bg-gold transition-all duration-500">
                                         <span className="material-symbols-outlined text-gold group-hover:text-navy-deep">location_city</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-off-white font-serif mb-2">{unit.name}</h3>
-                                    <p className="text-off-white/40 text-[10px] uppercase tracking-widest mb-6">{unit.location}</p>
+                                    <div className="space-y-1 mb-6">
+                                        <span className="text-[8px] font-bold text-gold uppercase tracking-[0.3em]">{unit.brands?.name || 'Sem Marca'}</span>
+                                        <h3 className="text-xl font-bold text-off-white font-serif">{unit.name}</h3>
+                                    </div>
+                                    <p className="text-off-white/40 text-[10px] uppercase tracking-widest">{unit.location}</p>
                                 </GlassCard>
                             ))}
                         </div>
@@ -152,6 +185,7 @@ const UnitsPage: React.FC = () => {
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Unidade</th>
+                                        <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Marca</th>
                                         <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em]">Localização</th>
                                         <th className="px-8 py-6 text-[10px] font-bold text-gold uppercase tracking-[0.2em] text-right">Ações</th>
                                     </tr>
@@ -166,6 +200,9 @@ const UnitsPage: React.FC = () => {
                                                     </div>
                                                     <span className="text-off-white font-serif italic text-lg">{unit.name}</span>
                                                 </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="text-gold text-[10px] font-bold uppercase tracking-widest">{unit.brands?.name || '-'}</span>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className="text-off-white/40 text-[10px] font-bold uppercase tracking-widest">{unit.location}</span>

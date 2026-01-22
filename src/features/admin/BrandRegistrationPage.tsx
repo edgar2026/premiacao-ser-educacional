@@ -1,0 +1,121 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import GlassCard from '../../components/ui/GlassCard';
+import { supabase } from '../../lib/supabase';
+
+const BrandRegistrationPage: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const isEdit = Boolean(id);
+
+    const [name, setName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(!!id);
+
+    useEffect(() => {
+        if (id) {
+            fetchBrand();
+        }
+    }, [id]);
+
+    const fetchBrand = async () => {
+        const { data, error } = await supabase
+            .from('brands')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) {
+            console.error('Error fetching brand:', error);
+            alert('Erro ao carregar marca');
+            navigate('/admin/marcas');
+        } else if (data) {
+            setName(data.name);
+        }
+        setIsFetching(false);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        const brandData = { name };
+
+        try {
+            if (isEdit && id) {
+                const { error } = await supabase
+                    .from('brands')
+                    .update(brandData)
+                    .eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('brands')
+                    .insert([brandData]);
+                if (error) throw error;
+            }
+
+            navigate('/admin/marcas');
+        } catch (error: any) {
+            console.error('Error saving brand:', error);
+            alert('Erro ao salvar marca: ' + error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isFetching) {
+        return (
+            <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+                <div className="space-y-4">
+                    <button
+                        onClick={() => navigate('/admin/marcas')}
+                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity mb-4"
+                    >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        Voltar para marcas
+                    </button>
+                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão Institucional</span>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">
+                        {isEdit ? 'Editar' : 'Nova'} <span className="text-gold-gradient">Marca</span>
+                    </h2>
+                </div>
+            </div>
+
+            <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="space-y-4">
+                        <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Nome da Marca</label>
+                        <input
+                            required
+                            className="w-full bg-white/[0.03] border border-white/10 px-8 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
+                            placeholder="Ex: UNINASSAU"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="pt-6">
+                        <button
+                            disabled={isLoading}
+                            className="w-full bg-gold hover:bg-gold-light text-navy-deep py-6 rounded-2xl font-bold text-[11px] uppercase tracking-[0.4em] shadow-2xl shadow-gold/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Salvando...' : isEdit ? 'Atualizar Marca' : 'Cadastrar Marca'}
+                        </button>
+                    </div>
+                </form>
+            </GlassCard>
+        </div>
+    );
+};
+
+export default BrandRegistrationPage;

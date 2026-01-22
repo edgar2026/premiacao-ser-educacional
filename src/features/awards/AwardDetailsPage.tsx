@@ -104,60 +104,6 @@ const AwardDetailsPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Criteria & Info */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-20">
-                    <GlassCard className="lg:col-span-2 p-12 rounded-[3rem] border-white/5">
-                        <h3 className="font-serif text-3xl text-off-white mb-8 italic">Critérios de Seleção</h3>
-                        <div className="space-y-6">
-                            {(award.criteria && award.criteria.length > 0 ? award.criteria : [
-                                { title: 'Impacto Institucional', desc: 'Ações que geram valor tangível para a unidade e para o grupo como um todo.' },
-                                { title: 'Inovação e Criatividade', desc: 'Capacidade de propor soluções fora da caixa para desafios complexos.' },
-                                { title: 'Liderança Inspiradora', desc: 'Habilidade de motivar equipes e cultivar talentos internos.' },
-                                { title: 'Consistência de Resultados', desc: 'Manutenção de altos padrões de performance ao longo do ciclo avaliativo.' }
-                            ]).map((item: any, i: number) => (
-                                <div key={i} className="flex gap-6 group">
-                                    <div className="size-10 rounded-full bg-gold/10 flex items-center justify-center shrink-0 border border-gold/20 text-gold font-bold text-xs">
-                                        {i + 1}
-                                    </div>
-                                    <div>
-                                        <h4 className="text-off-white font-bold mb-1 uppercase tracking-widest text-xs">{item.title}</h4>
-                                        <p className="text-off-white/40 text-sm font-light italic">{item.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </GlassCard>
-
-                    <div className="space-y-8">
-                        {award.cycle_info && award.cycle_info.edition && (
-                            <GlassCard className="p-10 rounded-[2.5rem] border-white/5 bg-gold/5">
-                                <span className="text-[9px] font-bold text-gold uppercase tracking-[0.3em] mb-4 block">Próximo Ciclo</span>
-                                <h4 className="text-2xl font-bold text-off-white font-serif mb-2 italic">{award.cycle_info.edition}</h4>
-                                <p className="text-off-white/40 text-sm mb-6 font-light">{award.cycle_info.description}</p>
-                                {award.cycle_info.button_text && (
-                                    <button
-                                        onClick={() => award.cycle_info?.button_link && window.open(award.cycle_info.button_link, '_blank')}
-                                        className="w-full py-4 bg-gold text-navy-deep rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] hover:scale-105 transition-all"
-                                    >
-                                        {award.cycle_info.button_text}
-                                    </button>
-                                )}
-                            </GlassCard>
-                        )}
-
-                        <GlassCard className="p-10 rounded-[2.5rem] border-white/5">
-                            <h4 className="text-lg font-bold text-off-white font-serif mb-4 italic">Documentação</h4>
-                            <ul className="space-y-4">
-                                {['Regulamento Geral', 'Manual de Identidade', 'Guia de Premiação'].map(item => (
-                                    <li key={item} className="flex items-center justify-between text-[10px] font-bold text-off-white/40 uppercase tracking-widest hover:text-gold cursor-pointer transition-colors">
-                                        {item}
-                                        <span className="material-symbols-outlined text-sm">download</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </GlassCard>
-                    </div>
-                </div>
 
                 {/* Featured Honorees in this Category */}
                 <div className="space-y-12">
