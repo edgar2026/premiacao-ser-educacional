@@ -105,6 +105,7 @@ export type Database = {
                     type: string | null
                     unit_id: string
                     video_url: string | null
+                    regional_id: string | null
                 }
                 Insert: {
                     award_id?: string | null
@@ -141,6 +142,7 @@ export type Database = {
                     type?: string | null
                     unit_id?: string
                     video_url?: string | null
+                    regional_id?: string | null
                 }
                 Relationships: [
                     {
@@ -163,8 +165,33 @@ export type Database = {
                         isOneToOne: false
                         referencedRelation: "units"
                         referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "honorees_regional_id_fkey"
+                        columns: ["regional_id"]
+                        isOneToOne: false
+                        referencedRelation: "regionals"
+                        referencedColumns: ["id"]
                     }
                 ]
+            }
+            regionals: {
+                Row: {
+                    created_at: string | null
+                    id: string
+                    name: string
+                }
+                Insert: {
+                    created_at?: string | null
+                    id?: string
+                    name: string
+                }
+                Update: {
+                    created_at?: string | null
+                    id?: string
+                    name?: string
+                }
+                Relationships: []
             }
             units: {
                 Row: {
@@ -175,6 +202,7 @@ export type Database = {
                     location: string
                     longitude: number | null
                     name: string
+                    regional_id: string | null
                 }
                 Insert: {
                     brand_id: string
@@ -184,6 +212,7 @@ export type Database = {
                     location: string
                     longitude?: number | null
                     name: string
+                    regional_id?: string | null
                 }
                 Update: {
                     brand_id?: string
@@ -193,6 +222,7 @@ export type Database = {
                     location?: string
                     longitude?: number | null
                     name?: string
+                    regional_id?: string | null
                 }
                 Relationships: [
                     {
@@ -200,6 +230,13 @@ export type Database = {
                         columns: ["brand_id"]
                         isOneToOne: false
                         referencedRelation: "brands"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "units_regional_id_fkey"
+                        columns: ["regional_id"]
+                        isOneToOne: false
+                        referencedRelation: "regionals"
                         referencedColumns: ["id"]
                     }
                 ]

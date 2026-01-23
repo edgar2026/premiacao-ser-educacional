@@ -7,6 +7,7 @@ import type { Database } from '../../types/supabase';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
+    regionals?: { name: string } | null;
 };
 
 const HonoreesAdminPage: React.FC = () => {
@@ -22,7 +23,7 @@ const HonoreesAdminPage: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('honorees')
-            .select('*, awards!honorees_award_id_fkey(name)')
+            .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -73,6 +74,11 @@ const HonoreesAdminPage: React.FC = () => {
                     </div>
                 </div>
             )
+        },
+        {
+            header: 'Regional',
+            accessor: (h: Honoree) => h.regionals?.name || 'Sem Regional',
+            className: 'text-sm text-off-white/40 font-medium uppercase tracking-widest'
         },
         {
             header: 'Prêmio Vinculado',

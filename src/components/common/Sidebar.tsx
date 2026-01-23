@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
         { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
-        { to: '/admin/marcas', icon: 'corporate_fare', label: 'Marcas' },
+        { to: '/admin/geografia', icon: 'map', label: 'Gestão Geográfica' },
         { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
         { to: '/admin/unidades', icon: 'school', label: 'Unidades' },
         { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
             {/* Mobile Hamburger Button */}
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden fixed top-4 left-4 z-50 size-12 rounded-xl bg-navy-deep/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-gold hover:bg-navy-deep transition-all shadow-lg"
+                className="lg:hidden fixed top-4 left-4 z-50 size-12 rounded-xl bg-navy-deep/90 backdrop-blur-md border border-white/10 flex items-center justify-center text-gold hover:bg-navy-deep transition-all shadow-lg no-print"
                 aria-label="Abrir menu"
             >
                 <span className="material-symbols-outlined text-2xl">menu</span>
@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
 
             {/* Sidebar */}
             <aside className={`
-                w-72 flex-shrink-0 flex flex-col justify-between py-8 
+                w-72 flex-shrink-0 flex flex-col justify-between py-8 no-print
                 ${variant === 'dashboard' ? 'glass-sidebar' : 'glass-panel h-screen sticky top-0 rounded-r-[3rem] my-0 shadow-2xl'}
                 
                 ${/* Mobile styles */ ''}

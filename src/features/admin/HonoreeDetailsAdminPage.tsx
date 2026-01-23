@@ -22,7 +22,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('honorees')
-            .select('*, awards!honorees_award_id_fkey(name)')
+            .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .eq('id', id)
             .single();
 
@@ -49,6 +49,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
     const stats = (honoree.stats as any) || {};
     const timeline = (honoree.timeline as any[]) || [];
     const awardName = (honoree as any).awards?.name || 'Nenhum prêmio vinculado';
+    const regionalName = (honoree as any).regionals?.name || 'Sem Regional';
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
@@ -111,6 +112,10 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 <span className="text-off-white/30 uppercase tracking-widest">Prêmio</span>
                                 <span className="text-gold font-bold">{awardName}</span>
                             </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-off-white/30 uppercase tracking-widest">Regional</span>
+                                <span className="text-off-white font-bold">{regionalName}</span>
+                            </div>
                         </div>
                     </div>
                 </GlassCard>
@@ -122,6 +127,10 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {honoree.type === 'interno' ? (
                                 <>
+                                    <div>
+                                        <p className="text-[10px] text-off-white/30 uppercase tracking-widest mb-1">Regional</p>
+                                        <p className="text-off-white font-medium">{regionalName}</p>
+                                    </div>
                                     <div>
                                         <p className="text-[10px] text-off-white/30 uppercase tracking-widest mb-1">Unidade</p>
                                         <p className="text-off-white font-medium">{profData.unit}</p>
@@ -137,6 +146,10 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 </>
                             ) : (
                                 <>
+                                    <div>
+                                        <p className="text-[10px] text-off-white/30 uppercase tracking-widest mb-1">Regional</p>
+                                        <p className="text-off-white font-medium">{regionalName}</p>
+                                    </div>
                                     <div>
                                         <p className="text-[10px] text-off-white/30 uppercase tracking-widest mb-1">Instituição</p>
                                         <p className="text-off-white font-medium">{profData.institution}</p>

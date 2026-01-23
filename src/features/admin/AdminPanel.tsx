@@ -68,7 +68,7 @@ const AdminPanel: React.FC = () => {
                     [
                         { label: 'Homenageados', value: stats.honorees, icon: 'groups', change: 'Live', link: '/admin/homenageados' },
                         { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios' },
-                        { label: 'Unidades', value: stats.units, icon: 'location_city', change: 'Live', link: '/admin/unidades' }
+                        { label: 'Geografia', value: stats.units, icon: 'map', change: 'Live', link: '/admin/geografia' }
                     ].map((stat, i) => (
                         <GlassCard
                             key={i}
@@ -143,12 +143,12 @@ const AdminPanel: React.FC = () => {
                             <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Gestão de honrarias</p>
                         </button>
                         <button
-                            onClick={() => navigate('/admin/unidades')}
+                            onClick={() => navigate('/admin/geografia')}
                             className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
                         >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">location_city</span>
-                            <p className="text-sm font-bold text-off-white">Gerenciar Unidades</p>
-                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Campus e polos</p>
+                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">map</span>
+                            <p className="text-sm font-bold text-off-white">Gestão Geográfica</p>
+                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Regionais, Marcas e Unidades</p>
                         </button>
                         <button
                             onClick={() => navigate('/admin/dashboard')}

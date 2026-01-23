@@ -11,6 +11,7 @@ import getCroppedImg from '../../utils/cropImage';
 
 type Award = Database['public']['Tables']['awards']['Row'];
 type Unit = Database['public']['Tables']['units']['Row'];
+type Regional = Database['public']['Tables']['regionals']['Row'];
 
 interface HonoreeRegistrationPageProps {
     isEdit?: boolean;
@@ -26,6 +27,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [awards, setAwards] = useState<Award[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
     const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+    const [regionals, setRegionals] = useState<Regional[]>([]);
 
     const [formData, setFormData] = useState({
         type: 'interno' as 'interno' | 'externo',
@@ -34,6 +36,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         unit: '',
         brand_id: '',
         unit_id: '',
+        regional_id: '',
         awarded_at: new Date().toISOString().split('T')[0],
         registration_id: '',
         role: '',
@@ -73,6 +76,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         fetchAwards();
         fetchBrands();
         fetchUnits();
+        fetchRegionals();
         if (id) {
             fetchHonoree();
         }
@@ -98,6 +102,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const fetchUnits = async () => {
         const { data } = await supabase.from('units').select('*').order('name');
         setUnits(data || []);
+    };
+
+    const fetchRegionals = async () => {
+        const { data } = await supabase.from('regionals').select('*').order('name');
+        setRegionals(data || []);
     };
 
     const fetchHonoree = async () => {
@@ -127,6 +136,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 unit: profData.unit || '',
                 brand_id: data.brand_id || '',
                 unit_id: data.unit_id || '',
+                regional_id: data.regional_id || '',
                 awarded_at: data.awarded_at || new Date().toISOString().split('T')[0],
                 registration_id: profData.registration_id || '',
                 role: profData.role || '',
@@ -260,6 +270,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 award_id: formData.award_id || null,
                 brand_id: formData.brand_id,
                 unit_id: formData.unit_id,
+                regional_id: formData.regional_id || null,
                 awarded_at: formData.awarded_at,
                 is_published: formData.is_published,
                 stats: formData.stats,
@@ -467,6 +478,19 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                         </select>
                                                     </div>
                                                     <div className="space-y-4">
+                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Regional</label>
+                                                        <select
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            value={formData.regional_id}
+                                                            onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
+                                                        >
+                                                            <option value="" className="bg-navy-deep">Selecione uma regional...</option>
+                                                            {regionals.map(r => (
+                                                                <option key={r.id} value={r.id} className="bg-navy-deep">{r.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-4">
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
                                                         <select
                                                             required
@@ -532,6 +556,19 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                             <option value="" className="bg-navy-deep">Selecione uma marca...</option>
                                                             {brands.map(b => (
                                                                 <option key={b.id} value={b.id} className="bg-navy-deep">{b.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Regional</label>
+                                                        <select
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            value={formData.regional_id}
+                                                            onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
+                                                        >
+                                                            <option value="" className="bg-navy-deep">Selecione uma regional...</option>
+                                                            {regionals.map(r => (
+                                                                <option key={r.id} value={r.id} className="bg-navy-deep">{r.name}</option>
                                                             ))}
                                                         </select>
                                                     </div>
