@@ -1,41 +1,104 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
+import { useUser, useAuth as useClerkAuth, useOrganization } from '@clerk/clerk-react';
 import { supabase } from '../../lib/supabase';
 
+const REQUIRED_ORG_ID = import.meta.env.VITE_CLERK_ORGANIZATION_ID;
+
+interface Profile {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+    primeiro_acesso: boolean;
+    username: string | null;
+    organization_id: string | null;
+}
+
 interface AuthContextType {
-    user: User | null;
+    user: any | null;
+    profile: Profile | null;
     loading: boolean;
+    isAuthorized: boolean;
     signOut: () => Promise<void>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const { user, isLoaded: isUserLoaded } = useUser();
+    const { organization, isLoaded: isOrgLoaded } = useOrganization();
+    const { signOut: clerkSignOut } = useClerkAuth();
+    const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isAuthorized, setIsAuthorized] = useState(false);
+
+    const fetchProfile = async (userId: string, email: string, clerkOrgId?: string) => {
+        try {
+            // 1. Verifica restrição de organização se configurada
+            if (REQUIRED_ORG_ID && clerkOrgId !== REQUIRED_ORG_ID) {
+                console.warn(`[Auth] Usuário não pertence à organização obrigatória: ${REQUIRED_ORG_ID}`);
+                setIsAuthorized(false);
+                setProfile(null);
+                return;
+            }
+
+            setIsAuthorized(true);
+
+            // 2. Busca ou sincroniza perfil no Supabase
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .or(`id.eq.${userId},username.eq.${email}`)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (data) {
+                // Sincroniza organization_id se necessário
+                if (clerkOrgId && data.organization_id !== clerkOrgId) {
+                    await supabase
+                        .from('profiles')
+                        .update({ organization_id: clerkOrgId })
+                        .eq('id', data.id);
+                }
+                setProfile({ ...data, organization_id: clerkOrgId || data.organization_id });
+            } else {
+                setProfile(null);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            setProfile(null);
+        }
+    };
+
+    const refreshProfile = async () => {
+        if (user) {
+            await fetchProfile(user.id, user.primaryEmailAddress?.emailAddress || '', organization?.id);
+        }
+    };
 
     useEffect(() => {
-        // Check active sessions and sets the user
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        // Listen for changes on auth state (logged in, signed out, etc.)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
+        if (isUserLoaded && isOrgLoaded) {
+            if (user) {
+                fetchProfile(user.id, user.primaryEmailAddress?.emailAddress || '', organization?.id)
+                    .finally(() => setLoading(false));
+            } else {
+                setProfile(null);
+                setIsAuthorized(false);
+                setLoading(false);
+            }
+        }
+    }, [user, isUserLoaded, organization, isOrgLoaded]);
 
     const signOut = async () => {
-        await supabase.auth.signOut();
+        await clerkSignOut();
+        setProfile(null);
+        setIsAuthorized(false);
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut }}>
+        <AuthContext.Provider value={{ user, profile, loading, isAuthorized, signOut, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

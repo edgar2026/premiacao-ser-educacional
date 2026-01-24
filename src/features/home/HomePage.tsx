@@ -294,7 +294,7 @@ const HomePage: React.FC = () => {
                     <div className="flex flex-col items-center text-center mb-20 gap-6">
                         <span className="text-gold text-[10px] font-bold uppercase tracking-[0.5em] mb-2">Performance & Reconhecimento</span>
                         <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold text-off-white font-serif uppercase tracking-tight">
-                            PREMIAÇÕES <span className="text-gold-gradient italic pr-2">DISTRIBUÍDAS</span>
+                            PREMIAÇÕES <span className="text-gold-gradient italic pr-2">ENTREGUES</span>
                         </h2>
                         <div className="h-1 w-32 bg-gold/30 rounded-full"></div>
                         <p className="text-off-white/40 max-w-3xl text-xl font-light leading-relaxed italic">

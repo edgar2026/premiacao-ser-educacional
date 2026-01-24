@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { OrganizationSwitcher } from '@clerk/clerk-react';
 import { useAuth } from '../../features/auth/AuthContext';
 
 interface SidebarProps {
@@ -8,7 +9,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
     const navigate = useNavigate();
-    const { signOut } = useAuth();
+    const { signOut, user, profile } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     interface SidebarLink {
@@ -111,6 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
                     </nav>
                 </div>
                 <div className="px-6 flex flex-col gap-4">
+
                     {variant === 'dashboard' ? (
                         <div className="p-4 rounded-2xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
                             <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest mb-1">Dica do Sistema</p>
@@ -119,11 +121,18 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
                     ) : (
                         <div className="glass-card p-4 rounded-2xl flex items-center gap-3 bg-white/10">
                             <div className="size-10 rounded-full border-2 border-white/50 overflow-hidden shadow-lg">
-                                <img alt="Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMzxYcUQNZxOGOzfzAGQJ1veHo1hN84QUYbJ44t5URgJujaznSIEv3Ie0RuihBgoHvvYRwAxLNw0esVokRLIq1aJWo0swGP67izF3yxzC9j19MebEyzNBmg-1lD3t3-H8c-id-KtatqWRgz6xSHyQ8XbNMwzMY1yb7pgl8mGh3IhNAxt5B79a0Cbn2PmYo0mssLChqjanM9AyUMznL-yaC11FNjHqxn4aFTb_oCfx0XDUBdOj5YE1fcLjol53OaWxtFdKrwObZ8E3x" />
+                                <img
+                                    alt="Avatar"
+                                    src={user?.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDMzxYcUQNZxOGOzfzAGQJ1veHo1hN84QUYbJ44t5URgJujaznSIEv3Ie0RuihBgoHvvYRwAxLNw0esVokRLIq1aJWo0swGP67izF3yxzC9j19MebEyzNBmg-1lD3t3-H8c-id-KtatqWRgz6xSHyQ8XbNMwzMY1yb7pgl8mGh3IhNAxt5B79a0Cbn2PmYo0mssLChqjanM9AyUMznL-yaC11FNjHqxn4aFTb_oCfx0XDUBdOj5YE1fcLjol53OaWxtFdKrwObZ8E3x"}
+                                />
                             </div>
                             <div className="flex-1 overflow-hidden">
-                                <p className="text-xs font-black truncate text-white">Admin Master</p>
-                                <p className="text-[10px] text-soft-cyan/80 truncate uppercase tracking-tighter">Gestão Ser Educacional</p>
+                                <p className="text-xs font-black truncate text-white">
+                                    {profile?.full_name || user?.fullName || "Usuário"}
+                                </p>
+                                <p className="text-[10px] text-soft-cyan/80 truncate uppercase tracking-tighter">
+                                    {profile?.role || "Gestão Ser Educacional"}
+                                </p>
                             </div>
                         </div>
                     )}

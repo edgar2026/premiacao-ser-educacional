@@ -12,6 +12,8 @@ import TimelinePage from './features/timeline/TimelinePage';
 import GalleryPage from './features/gallery/GalleryPage';
 import PartnersPage from './features/partners/PartnersPage';
 import LoginPage from './features/auth/LoginPage';
+import FirstAccessPage from './features/auth/FirstAccessPage';
+import UpdatePasswordPage from './features/auth/UpdatePasswordPage';
 import AwardDetailsPage from './features/awards/AwardDetailsPage';
 import AwardsGalleryPage from './features/awards/AwardsGalleryPage';
 import HonoreesGalleryPage from './features/honoree/HonoreesGalleryPage';
@@ -33,6 +35,7 @@ function App() {
         <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/redefinir-senha" element={<UpdatePasswordPage />} />
 
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />}>
@@ -54,6 +57,7 @@ function App() {
 
           {/* Admin Routes */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/primeiro-acesso" element={<FirstAccessPage />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminPanel />} />
               <Route path="homenageados" element={<HonoreesAdminPage />} />
