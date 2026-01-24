@@ -4,6 +4,7 @@ import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import UnitsMap from './components/UnitsMap';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type Unit = Database['public']['Tables']['units']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
@@ -22,6 +23,11 @@ const UnitsPage: React.FC = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -47,20 +53,27 @@ const UnitsPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir esta unidade?')) return;
+    const handleDeleteClick = (id: string) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
 
         const { error } = await supabase
             .from('units')
             .delete()
-            .eq('id', id);
+            .eq('id', itemToDelete);
 
         if (error) {
             console.error('Error deleting unit:', error);
-            alert('Erro ao excluir unidade');
+            setAlertMessage('Erro ao excluir unidade: ' + error.message);
+            setIsAlertModalOpen(true);
         } else {
             fetchData();
         }
+        setItemToDelete(null);
     };
 
     const filteredUnits = units.filter(unit => {
@@ -162,7 +175,7 @@ const UnitsPage: React.FC = () => {
                                             <span className="material-symbols-outlined text-sm">edit</span>
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(unit.id)}
+                                            onClick={() => handleDeleteClick(unit.id)}
                                             className="p-2 rounded-full bg-white/5 text-red-400 hover:bg-red-500 hover:text-white transition-all"
                                         >
                                             <span className="material-symbols-outlined text-sm">delete</span>
@@ -216,7 +229,7 @@ const UnitsPage: React.FC = () => {
                                                         <span className="material-symbols-outlined text-lg">edit</span>
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(unit.id)}
+                                                        onClick={() => handleDeleteClick(unit.id)}
                                                         className="size-10 rounded-xl bg-white/5 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
                                                     >
                                                         <span className="material-symbols-outlined text-lg">delete</span>
@@ -280,6 +293,27 @@ const UnitsPage: React.FC = () => {
                     <UnitsMap units={units} />
                 </div>
             </GlassCard>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Excluir Unidade"
+                message="Tem certeza que deseja excluir esta unidade? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title="Aviso"
+                message={alertMessage}
+                confirmLabel="OK"
+                type="warning"
+            />
         </div>
     );
 };

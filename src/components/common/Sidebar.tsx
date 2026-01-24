@@ -19,20 +19,18 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
     }
 
     const dashboardLinks: SidebarLink[] = [
+        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
         { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
         { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
-        { to: '/admin/unidades', icon: 'school', label: 'Gestão de Unidades' },
-        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
     ];
 
     const adminLinks: SidebarLink[] = [
+        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
         { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
         { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
-        { to: '/admin/geografia', icon: 'map', label: 'Gestão Geográfica' },
+        { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
         { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
-        { to: '/admin/unidades', icon: 'school', label: 'Unidades' },
-        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
     ];
 
     const links: SidebarLink[] = variant === 'dashboard' ? dashboardLinks : adminLinks;

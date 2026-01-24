@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type Award = Database['public']['Tables']['awards']['Row'];
 type Unit = Database['public']['Tables']['units']['Row'];
@@ -71,6 +72,20 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [tempPhotoUrl, setTempPhotoUrl] = useState<string | null>(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
+    useEffect(() => {
+        return () => {
+            if (videoPreview && videoPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(videoPreview);
+            }
+            if (photoPreview && photoPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(photoPreview);
+            }
+        };
+    }, [videoPreview, photoPreview]);
 
     useEffect(() => {
         fetchAwards();
@@ -154,6 +169,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 recognitions: data.recognitions || ''
             });
             if (data.photo_url) setPhotoPreview(data.photo_url);
+            if (data.video_url) setVideoPreview(data.video_url);
         }
         setIsFetching(false);
     };
@@ -206,17 +222,20 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         }
     };
 
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
+
     const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 100 * 1024 * 1024) { // 100MB limit
-                alert('O vídeo deve ter no máximo 100MB');
+                showAlert('O vídeo deve ter no máximo 100MB', 'Arquivo muito grande');
                 return;
             }
             setVideoFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setVideoPreview(reader.result as string);
-            reader.readAsDataURL(file);
+            setVideoPreview(URL.createObjectURL(file));
         }
     };
 
@@ -295,7 +314,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
             navigate('/admin/homenageados');
         } catch (error: any) {
             console.error('Erro detalhado:', error);
-            alert('Erro ao salvar homenageado: ' + (error.message || 'Erro desconhecido') + '\n\nVerifique se todos os campos obrigatórios estão preenchidos.');
+            showAlert(
+                'Erro ao salvar homenageado: ' + (error.message || 'Erro desconhecido') + '\n\nVerifique se todos os campos obrigatórios estão preenchidos.',
+                'Erro ao Salvar',
+                'danger'
+            );
         } finally {
             setIsLoading(false);
         }
@@ -657,10 +680,24 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                         onClick={() => document.getElementById('video-upload')?.click()}
                                                     >
                                                         {videoPreview ? (
-                                                            <div className="relative">
+                                                            <div className="relative group/video">
                                                                 <video src={videoPreview} className="w-full rounded-xl" controls />
+                                                                <div className="absolute top-4 right-4 flex gap-2 z-30">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setIsConfirmModalOpen(true);
+                                                                        }}
+                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-xl"
+                                                                        title="Remover vídeo"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Excluir Vídeo</span>
+                                                                    </button>
+                                                                </div>
                                                                 <div className="mt-4 text-center">
-                                                                    <span className="text-gold font-bold text-xs uppercase tracking-widest">Clique para alterar</span>
+                                                                    <span className="text-gold font-bold text-xs uppercase tracking-widest">Clique para alterar o arquivo</span>
                                                                 </div>
                                                             </div>
                                                         ) : (
@@ -1002,6 +1039,32 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                     color: rgba(255, 255, 255, 0.4) !important;
                 }
             `}</style>
+
+            <ConfirmModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={() => {
+                    setVideoFile(null);
+                    setVideoPreview(null);
+                    setFormData({ ...formData, video_url: '' });
+                    setUploadProgress(0);
+                }}
+                title="Remover Vídeo"
+                message="Tem certeza que deseja remover este vídeo de homenagem? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Remover"
+                cancelLabel="Manter Vídeo"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };

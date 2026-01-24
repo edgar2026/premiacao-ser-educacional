@@ -7,6 +7,7 @@ interface Award {
     id: string;
     name: string;
     description: string;
+    image_url?: string;
 }
 
 const AwardsGalleryPage: React.FC = () => {
@@ -78,8 +79,21 @@ const AwardsGalleryPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {filteredAwards.map((award) => (
                         <GlassCard key={award.id} className="p-10 rounded-[2.5rem] flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500 border-white/5 bg-white/[0.02]">
-                            <div className="size-14 mb-8 rounded-2xl bg-gold/5 flex items-center justify-center group-hover:bg-gold transition-all duration-500 border border-gold/10">
-                                <span className="material-symbols-outlined text-gold group-hover:text-navy-deep text-2xl">workspace_premium</span>
+                            <div className="size-24 mb-8 rounded-2xl overflow-hidden bg-gold/5 flex items-center justify-center group-hover:bg-gold/10 transition-all duration-500 border border-gold/10">
+                                {award.image_url ? (
+                                    <img
+                                        src={award.image_url}
+                                        alt={award.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            target.parentElement!.innerHTML = '<span class="material-symbols-outlined text-gold text-4xl">workspace_premium</span>';
+                                        }}
+                                    />
+                                ) : (
+                                    <span className="material-symbols-outlined text-gold group-hover:text-navy-deep text-4xl">workspace_premium</span>
+                                )}
                             </div>
                             <h3 className="text-2xl font-bold mb-4 text-off-white font-serif">{award.name}</h3>
                             <p className="text-off-white/40 text-sm leading-relaxed mb-8 font-light line-clamp-3">

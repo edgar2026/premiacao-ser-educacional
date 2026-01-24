@@ -78,8 +78,9 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
                     ref={videoRef}
                     src={src}
                     poster={poster}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     onClick={togglePlay}
+                    controls
                 />
 
                 {/* Botão Play/Pause no Centro */}

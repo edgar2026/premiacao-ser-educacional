@@ -4,6 +4,7 @@ import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type Award = Database['public']['Tables']['awards']['Row'];
 
@@ -11,6 +12,10 @@ const AwardsAdminPage: React.FC = () => {
     const navigate = useNavigate();
     const [awards, setAwards] = useState<Award[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         fetchAwards();
@@ -31,19 +36,26 @@ const AwardsAdminPage: React.FC = () => {
         setIsLoading(false);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Tem certeza que deseja excluir este prêmio?')) return;
+    const handleDeleteClick = (id: string) => {
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
 
         const { error } = await supabase
             .from('awards')
             .delete()
-            .eq('id', id);
+            .eq('id', itemToDelete);
 
         if (error) {
-            alert('Erro ao excluir prêmio: ' + error.message);
+            setAlertMessage('Erro ao excluir prêmio: ' + error.message);
+            setIsAlertModalOpen(true);
         } else {
             fetchAwards();
         }
+        setItemToDelete(null);
     };
 
     const columns: Column<Award>[] = [
@@ -84,7 +96,7 @@ const AwardsAdminPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
             <button
-                onClick={() => handleDelete(a.id)}
+                onClick={() => handleDeleteClick(a.id)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
                 title="Excluir"
             >
@@ -124,6 +136,27 @@ const AwardsAdminPage: React.FC = () => {
                     searchPlaceholder="Buscar por nome ou descrição..."
                 />
             )}
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Excluir Prêmio"
+                message="Tem certeza que deseja excluir este prêmio? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title="Aviso"
+                message={alertMessage}
+                confirmLabel="OK"
+                type="warning"
+            />
         </div>
     );
 };

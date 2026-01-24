@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type HomeMedia = Database['public']['Tables']['home_media']['Row'];
 
@@ -22,9 +23,17 @@ const HomeMediaAdminPage: React.FC = () => {
     const [videoPreview, setVideoPreview] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
     useEffect(() => {
         fetchHomeMedia();
     }, []);
+
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
 
     const fetchHomeMedia = async () => {
         const { data, error } = await supabase
@@ -55,7 +64,7 @@ const HomeMediaAdminPage: React.FC = () => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 100 * 1024 * 1024) { // 100MB limit
-                alert('O vídeo deve ter no máximo 100MB');
+                showAlert('O vídeo deve ter no máximo 100MB', 'Arquivo muito grande');
                 return;
             }
             setVideoFile(file);
@@ -123,12 +132,12 @@ const HomeMediaAdminPage: React.FC = () => {
                 if (error) throw error;
             }
 
-            alert('Configuração salva com sucesso!');
+            showAlert('Configuração salva com sucesso!', 'Sucesso', 'info');
             fetchHomeMedia();
             setImageFile(null);
             setVideoFile(null);
         } catch (error: any) {
-            alert('Erro ao salvar configuração: ' + error.message);
+            showAlert('Erro ao salvar configuração: ' + error.message, 'Erro', 'danger');
         } finally {
             setIsLoading(false);
             setUploadProgress(0);
@@ -205,24 +214,41 @@ const HomeMediaAdminPage: React.FC = () => {
                                     {/* File Upload */}
                                     <div className="space-y-4">
                                         <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Ou Upload de Arquivo</label>
-                                        <div
-                                            className="relative border-2 border-dashed border-white/10 rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] flex items-center gap-4"
-                                            onClick={() => document.getElementById('home-video-upload')?.click()}
-                                        >
-                                            <span className="material-symbols-outlined text-2xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest truncate">
-                                                    {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo...')}
-                                                </p>
-                                                <p className="text-[8px] text-off-white/20 uppercase tracking-tighter">MP4, WebM (Máx 100MB)</p>
+                                        <div className="relative group/video-container">
+                                            <div
+                                                className="relative border-2 border-dashed border-white/10 rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer bg-white/[0.02] flex items-center gap-4"
+                                                onClick={() => document.getElementById('home-video-upload')?.click()}
+                                            >
+                                                <span className="material-symbols-outlined text-2xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest truncate">
+                                                        {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo...')}
+                                                    </p>
+                                                    <p className="text-[8px] text-off-white/20 uppercase tracking-tighter">MP4, WebM (Máx 100MB)</p>
+                                                </div>
+                                                <input
+                                                    id="home-video-upload"
+                                                    type="file"
+                                                    accept="video/*"
+                                                    className="hidden"
+                                                    onChange={handleVideoChange}
+                                                />
                                             </div>
-                                            <input
-                                                id="home-video-upload"
-                                                type="file"
-                                                accept="video/*"
-                                                className="hidden"
-                                                onChange={handleVideoChange}
-                                            />
+                                            {(videoFile || (videoPreview && !formData.video_url)) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setVideoFile(null);
+                                                        setVideoPreview(null);
+                                                        setFormData(prev => ({ ...prev, video_url: '' }));
+                                                    }}
+                                                    className="absolute -top-2 -right-2 size-8 rounded-full bg-red-500/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg z-10"
+                                                    title="Remover vídeo"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">close</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -290,6 +316,16 @@ const HomeMediaAdminPage: React.FC = () => {
                     </div>
                 </div>
             </form>
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };

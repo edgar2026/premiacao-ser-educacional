@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import GlassCard from '../../components/ui/GlassCard';
 import type { Database } from '../../types/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type Regional = Database['public']['Tables']['regionals']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
@@ -17,6 +18,12 @@ const GeographicRegistrationPage: React.FC = () => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editType, setEditType] = useState<'regional' | 'brand' | 'unit' | null>(null);
     const [formData, setFormData] = useState({ name: '', location: '', brandId: '', regionalId: '' });
+
+    // Modal States
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{ type: 'regional' | 'brand' | 'unit', id: string } | null>(null);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'info' });
 
     useEffect(() => {
         fetchData();
@@ -41,21 +48,26 @@ const GeographicRegistrationPage: React.FC = () => {
         }
     };
 
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
+
     const handleSave = async (type: 'regional' | 'brand' | 'unit') => {
         try {
             // Validação básica
             if (!formData.name.trim()) {
-                alert('Por favor, preencha o nome.');
+                showAlert('Por favor, preencha o nome.');
                 return;
             }
 
             if (type === 'unit') {
                 if (!formData.location.trim()) {
-                    alert('Por favor, preencha a localização.');
+                    showAlert('Por favor, preencha a localização.');
                     return;
                 }
                 if (!formData.brandId) {
-                    alert('Por favor, selecione uma marca.');
+                    showAlert('Por favor, selecione uma marca.');
                     return;
                 }
             }
@@ -92,7 +104,7 @@ const GeographicRegistrationPage: React.FC = () => {
             // Mostrar mensagem de sucesso
             const action = editingId ? 'atualizado' : 'cadastrado';
             const typeLabel = type === 'regional' ? 'Regional' : type === 'brand' ? 'Marca' : 'Unidade';
-            alert(`${typeLabel} ${action} com sucesso!`);
+            showAlert(`${typeLabel} ${action} com sucesso!`, 'Sucesso', 'info');
 
             resetForm();
             fetchData();
@@ -101,24 +113,30 @@ const GeographicRegistrationPage: React.FC = () => {
 
             // Mensagens de erro mais específicas
             if (error.code === '23505') {
-                alert('Erro: Já existe um registro com esse nome.');
+                showAlert('Erro: Já existe um registro com esse nome.');
             } else if (error.code === '23503') {
-                alert('Erro: Referência inválida. Verifique se todos os dados relacionados existem.');
+                showAlert('Erro: Referência inválida. Verifique se todos os dados relacionados existem.');
             } else {
-                alert('Erro ao salvar: ' + (error.message || 'Erro desconhecido'));
+                showAlert('Erro ao salvar: ' + (error.message || 'Erro desconhecido'));
             }
         }
     };
 
-    const handleDelete = async (type: 'regional' | 'brand' | 'unit', id: string) => {
-        if (!confirm('Tem certeza que deseja excluir?')) return;
+    const handleDeleteClick = (type: 'regional' | 'brand' | 'unit', id: string) => {
+        setItemToDelete({ type, id });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            const { error } = await supabase.from(type === 'regional' ? 'regionals' : type === 'brand' ? 'brands' : 'units').delete().eq('id', id);
+            const { error } = await supabase.from(itemToDelete.type === 'regional' ? 'regionals' : itemToDelete.type === 'brand' ? 'brands' : 'units').delete().eq('id', itemToDelete.id);
             if (error) throw error;
             fetchData();
         } catch (error: any) {
-            alert('Erro ao excluir: ' + error.message);
+            showAlert('Erro ao excluir: ' + error.message);
         }
+        setItemToDelete(null);
     };
 
     const resetForm = () => {
@@ -151,7 +169,7 @@ const GeographicRegistrationPage: React.FC = () => {
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Administração Central</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Gestão <span className="text-gold-gradient">Geográfica</span></h2>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Gestão <span className="text-gold-gradient">Regional</span></h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
                         Configure regionais, marcas e unidades em um único lugar.
                     </p>
@@ -192,7 +210,7 @@ const GeographicRegistrationPage: React.FC = () => {
                                 <span className="text-off-white font-medium">{reg.name}</span>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={() => startEdit('regional', reg)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                    <button onClick={() => handleDelete('regional', reg.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                    <button onClick={() => handleDeleteClick('regional', reg.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                 </div>
                             </div>
                         ))}
@@ -232,7 +250,7 @@ const GeographicRegistrationPage: React.FC = () => {
                                 <span className="text-off-white font-medium">{brand.name}</span>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={() => startEdit('brand', brand)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                    <button onClick={() => handleDelete('brand', brand.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                    <button onClick={() => handleDeleteClick('brand', brand.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                 </div>
                             </div>
                         ))}
@@ -298,7 +316,7 @@ const GeographicRegistrationPage: React.FC = () => {
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => startEdit('unit', unit)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                        <button onClick={() => handleDelete('unit', unit.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                        <button onClick={() => handleDeleteClick('unit', unit.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                     </div>
                                 </div>
                             </div>
@@ -306,6 +324,27 @@ const GeographicRegistrationPage: React.FC = () => {
                     </div>
                 </GlassCard>
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Excluir Registro"
+                message="Tem certeza que deseja excluir este registro? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type === 'warning' ? 'warning' : 'info'}
+            />
         </div>
     );
 };

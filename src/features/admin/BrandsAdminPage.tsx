@@ -4,6 +4,7 @@ import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 type Brand = Database['public']['Tables']['brands']['Row'];
 
@@ -11,6 +12,10 @@ const BrandsAdminPage: React.FC = () => {
     const navigate = useNavigate();
     const [brands, setBrands] = useState<Brand[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
 
     useEffect(() => {
         fetchBrands();
@@ -31,7 +36,7 @@ const BrandsAdminPage: React.FC = () => {
         setIsLoading(false);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDeleteClick = async (id: string) => {
         // Check if brand has units
         const { data: units } = await supabase
             .from('units')
@@ -40,22 +45,30 @@ const BrandsAdminPage: React.FC = () => {
             .limit(1);
 
         if (units && units.length > 0) {
-            alert('Não é possível excluir esta marca pois ela possui unidades vinculadas.');
+            setAlertMessage('Não é possível excluir esta marca pois ela possui unidades vinculadas.');
+            setIsAlertModalOpen(true);
             return;
         }
 
-        if (!confirm('Tem certeza que deseja excluir esta marca?')) return;
+        setItemToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!itemToDelete) return;
 
         const { error } = await supabase
             .from('brands')
             .delete()
-            .eq('id', id);
+            .eq('id', itemToDelete);
 
         if (error) {
-            alert('Erro ao excluir marca: ' + error.message);
+            setAlertMessage('Erro ao excluir marca: ' + error.message);
+            setIsAlertModalOpen(true);
         } else {
             fetchBrands();
         }
+        setItemToDelete(null);
     };
 
     const columns: Column<Brand>[] = [
@@ -92,7 +105,7 @@ const BrandsAdminPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
             <button
-                onClick={() => handleDelete(b.id)}
+                onClick={() => handleDeleteClick(b.id)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
                 title="Excluir"
             >
@@ -132,6 +145,27 @@ const BrandsAdminPage: React.FC = () => {
                     searchPlaceholder="Buscar por nome..."
                 />
             )}
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Excluir Marca"
+                message="Tem certeza que deseja excluir esta marca? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title="Aviso"
+                message={alertMessage}
+                confirmLabel="OK"
+                type="warning"
+            />
         </div>
     );
 };

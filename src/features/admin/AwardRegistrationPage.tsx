@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const AwardRegistrationPage: React.FC = () => {
     const { id } = useParams();
@@ -18,11 +19,19 @@ const AwardRegistrationPage: React.FC = () => {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
     useEffect(() => {
         if (id) {
             fetchAward();
         }
     }, [id]);
+
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
 
     const fetchAward = async () => {
         const { data, error } = await supabase
@@ -33,7 +42,8 @@ const AwardRegistrationPage: React.FC = () => {
 
         if (error) {
             console.error('Error fetching award:', error);
-            navigate('/admin/premios');
+            showAlert('Erro ao carregar prêmio', 'Erro', 'danger');
+            setTimeout(() => navigate('/admin/premios'), 2000);
         } else {
             setFormData({
                 name: data.name,
@@ -103,7 +113,7 @@ const AwardRegistrationPage: React.FC = () => {
 
             navigate('/admin/premios');
         } catch (error: any) {
-            alert('Erro ao salvar prêmio: ' + error.message);
+            showAlert('Erro ao salvar prêmio: ' + error.message, 'Erro', 'danger');
         } finally {
             setIsLoading(false);
         }
@@ -212,6 +222,16 @@ const AwardRegistrationPage: React.FC = () => {
                     </div>
                 </form>
             </GlassCard>
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };

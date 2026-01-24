@@ -8,7 +8,7 @@ const AdminPanel: React.FC = () => {
     const [stats, setStats] = useState({
         honorees: '0',
         awards: '0',
-        units: '0'
+        regionals: '0'
     });
     const [isLoading, setIsLoading] = useState(true);
 
@@ -19,16 +19,16 @@ const AdminPanel: React.FC = () => {
     const fetchStats = async () => {
         setIsLoading(true);
         try {
-            const [honoreesRes, awardsRes, unitsRes] = await Promise.all([
+            const [honoreesRes, awardsRes, regionalsRes] = await Promise.all([
                 supabase.from('honorees').select('*', { count: 'exact', head: true }),
                 supabase.from('awards').select('*', { count: 'exact', head: true }),
-                supabase.from('units').select('*', { count: 'exact', head: true })
+                supabase.from('regionals').select('*', { count: 'exact', head: true })
             ]);
 
             setStats({
                 honorees: (honoreesRes.count || 0).toString(),
                 awards: (awardsRes.count || 0).toString(),
-                units: (unitsRes.count || 0).toString()
+                regionals: (regionalsRes.count || 0).toString()
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -68,7 +68,7 @@ const AdminPanel: React.FC = () => {
                     [
                         { label: 'Homenageados', value: stats.honorees, icon: 'groups', change: 'Live', link: '/admin/homenageados' },
                         { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios' },
-                        { label: 'Geografia', value: stats.units, icon: 'map', change: 'Live', link: '/admin/geografia' }
+                        { label: 'Regional', value: stats.regionals, icon: 'map', change: 'Live', link: '/admin/geografia' }
                     ].map((stat, i) => (
                         <GlassCard
                             key={i}
@@ -147,7 +147,7 @@ const AdminPanel: React.FC = () => {
                             className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
                         >
                             <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">map</span>
-                            <p className="text-sm font-bold text-off-white">Gestão Geográfica</p>
+                            <p className="text-sm font-bold text-off-white">Gestão Regional</p>
                             <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Regionais, Marcas e Unidades</p>
                         </button>
                         <button

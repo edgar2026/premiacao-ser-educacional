@@ -7,6 +7,7 @@ interface Award {
     id: string;
     name: string;
     description: string;
+    image_url?: string;
     criteria?: { title: string; desc: string }[];
     cycle_info?: {
         edition: string;
@@ -92,8 +93,21 @@ const AwardDetailsPage: React.FC = () => {
                 <div className="relative glass-card rounded-[3rem] p-12 md:p-20 mb-16 overflow-hidden border-white/5">
                     <div className="absolute -top-24 -right-24 size-96 bg-gold/10 rounded-full blur-[100px] pointer-events-none"></div>
                     <div className="relative z-10 flex flex-col md:flex-row gap-12 items-center md:items-start">
-                        <div className="size-24 md:size-32 rounded-[2rem] bg-gold/5 flex items-center justify-center border border-gold/20 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
-                            <span className="material-symbols-outlined text-gold text-5xl md:text-6xl">workspace_premium</span>
+                        <div className="size-32 md:size-48 rounded-[2rem] overflow-hidden bg-gold/5 flex items-center justify-center border border-gold/20 shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+                            {award.image_url ? (
+                                <img
+                                    src={award.image_url}
+                                    alt={award.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        target.parentElement!.innerHTML = '<span class="material-symbols-outlined text-gold text-6xl">workspace_premium</span>';
+                                    }}
+                                />
+                            ) : (
+                                <span className="material-symbols-outlined text-gold text-5xl md:text-6xl">workspace_premium</span>
+                            )}
                         </div>
                         <div className="flex-1 text-center md:text-left">
                             <h1 className="font-serif text-5xl md:text-7xl text-off-white font-bold mb-6 italic">{award.name}</h1>

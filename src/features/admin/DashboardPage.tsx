@@ -6,6 +6,7 @@ import {
     PieChart, Pie, Cell, Legend, LabelList
 } from 'recharts';
 import { parseISO } from 'date-fns';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 // Types
 interface Brand {
@@ -50,13 +51,16 @@ const DashboardPage: React.FC = () => {
     const [regionals, setRegionals] = useState<Regional[]>([]);
     const [honorees, setHonorees] = useState<Honoree[]>([]);
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
     // Global Filters State
     const [filters, setFilters] = useState({
         regionalId: 'all',
         brandId: 'all',
         unitId: 'all',
         awardId: 'all',
-        year: new Date().getFullYear(),
+        year: 'all' as number | 'all',
         periodType: 'year' as 'month' | 'semester' | 'year'
     });
 
@@ -108,6 +112,11 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
+
     // Helper to apply filters
     const getFilteredHonorees = (filters: any) => {
         let filtered = [...honorees];
@@ -133,6 +142,8 @@ const DashboardPage: React.FC = () => {
                 const awardedDate = parseISO(h.awarded_at);
                 const year = filters.year;
                 const periodType = filters.periodType;
+
+                if (year === 'all') return true;
 
                 if (periodType === 'month') {
                     const now = new Date();
@@ -215,36 +226,105 @@ const DashboardPage: React.FC = () => {
 
     const rankingData = useMemo(() => {
         const filtered = getFilteredHonorees(filters);
-        const byAward: { [key: string]: { name: string; count: number } } = {};
+        const byAward: {
+            [key: string]: {
+                name: string;
+                count: number;
+                regionals: { [key: string]: { name: string; count: number } };
+                units: { [key: string]: { name: string; count: number } };
+                brands: { [key: string]: { name: string; count: number } };
+            }
+        } = {};
 
         filtered.forEach(h => {
             const award = awards.find(a => a.id === h.award_id);
+            const unit = units.find(u => u.id === h.unit_id);
+            const brand = brands.find(b => b.id === h.brand_id);
+            const regional = regionals.find(r => r.id === unit?.regional_id);
+
             if (award) {
-                if (!byAward[award.id]) byAward[award.id] = { name: award.name, count: 0 };
+                if (!byAward[award.id]) {
+                    byAward[award.id] = { name: award.name, count: 0, regionals: {}, units: {}, brands: {} };
+                }
                 byAward[award.id].count++;
+
+                if (regional) {
+                    if (!byAward[award.id].regionals[regional.id]) {
+                        byAward[award.id].regionals[regional.id] = { name: regional.name, count: 0 };
+                    }
+                    byAward[award.id].regionals[regional.id].count++;
+                }
+
+                if (unit) {
+                    if (!byAward[award.id].units[unit.id]) {
+                        byAward[award.id].units[unit.id] = { name: unit.name, count: 0 };
+                    }
+                    byAward[award.id].units[unit.id].count++;
+                }
+
+                if (brand) {
+                    if (!byAward[award.id].brands[brand.id]) {
+                        byAward[award.id].brands[brand.id] = { name: brand.name, count: 0 };
+                    }
+                    byAward[award.id].brands[brand.id].count++;
+                }
             }
         });
 
         return Object.values(byAward).sort((a, b) => b.count - a.count).slice(0, 5);
-    }, [honorees, filters, awards]);
+    }, [honorees, filters, awards, units, regionals, brands]);
 
     const regionalRankingData = useMemo(() => {
         const filtered = getFilteredHonorees(filters);
-        const byRegional: { [key: string]: { name: string; count: number } } = {};
+        const byRegional: {
+            [key: string]: {
+                name: string;
+                count: number;
+                brands: { [key: string]: { name: string; count: number } };
+                units: { [key: string]: { name: string; count: number } };
+                awards: { [key: string]: { name: string; count: number } };
+            }
+        } = {};
 
         filtered.forEach(h => {
             const unit = units.find(u => u.id === h.unit_id);
+            const brand = brands.find(b => b.id === h.brand_id);
+            const award = awards.find(a => a.id === h.award_id);
+
             if (unit && unit.regional_id) {
                 const regional = regionals.find(r => r.id === unit.regional_id);
                 if (regional) {
-                    if (!byRegional[regional.id]) byRegional[regional.id] = { name: regional.name, count: 0 };
+                    if (!byRegional[regional.id]) {
+                        byRegional[regional.id] = { name: regional.name, count: 0, brands: {}, units: {}, awards: {} };
+                    }
                     byRegional[regional.id].count++;
+
+                    if (brand) {
+                        if (!byRegional[regional.id].brands[brand.id]) {
+                            byRegional[regional.id].brands[brand.id] = { name: brand.name, count: 0 };
+                        }
+                        byRegional[regional.id].brands[brand.id].count++;
+                    }
+
+                    if (unit) {
+                        if (!byRegional[regional.id].units[unit.id]) {
+                            byRegional[regional.id].units[unit.id] = { name: unit.name, count: 0 };
+                        }
+                        byRegional[regional.id].units[unit.id].count++;
+                    }
+
+                    if (award) {
+                        if (!byRegional[regional.id].awards[award.id]) {
+                            byRegional[regional.id].awards[award.id] = { name: award.name, count: 0 };
+                        }
+                        byRegional[regional.id].awards[award.id].count++;
+                    }
                 }
             }
         });
 
         return Object.values(byRegional).sort((a, b) => b.count - a.count);
-    }, [honorees, filters, regionals, units]);
+    }, [honorees, filters, regionals, units, brands, awards]);
 
     const handleExportJSON = () => {
         const data = {
@@ -269,7 +349,7 @@ const DashboardPage: React.FC = () => {
     const handleExportPDF = async () => {
         const element = document.getElementById('report-content');
         if (!element) {
-            alert('Erro: Conteúdo do relatório não encontrado.');
+            showAlert('Erro: Conteúdo do relatório não encontrado.', 'Erro', 'danger');
             return;
         }
 
@@ -323,7 +403,7 @@ const DashboardPage: React.FC = () => {
             await worker.save();
         } catch (error: any) {
             console.error('Erro detalhado ao gerar PDF:', error);
-            alert(`Erro ao gerar PDF: ${error?.message || 'Erro de processamento'}. Tente novamente ou use Ctrl+P.`);
+            showAlert(`Erro ao gerar PDF: ${error?.message || 'Erro de processamento'}. Tente novamente ou use Ctrl+P.`, 'Erro ao gerar PDF', 'danger');
         } finally {
             element.style.cssText = originalStyle;
             setIsExporting(false);
@@ -489,19 +569,22 @@ const DashboardPage: React.FC = () => {
                                 </select>
                                 <div className="flex gap-1 bg-navy-deep rounded-lg border border-white/10 p-0.5">
                                     <select
-                                        className="bg-transparent text-off-white text-[10px] outline-none px-1"
+                                        className="bg-navy-deep border border-white/10 text-off-white text-[10px] outline-none px-1 rounded cursor-pointer hover:border-gold/50 transition-colors"
+                                        style={{ backgroundColor: '#0A1128', color: 'white' }}
                                         value={filters.year}
-                                        onChange={(e) => setFilters({ ...filters, year: Number(e.target.value) })}
+                                        onChange={(e) => setFilters({ ...filters, year: e.target.value === 'all' ? 'all' : Number(e.target.value) })}
                                     >
-                                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                                            <option key={y} value={y}>{y}</option>
+                                        <option value="all" style={{ backgroundColor: '#0A1128', color: 'white' }}>Todos os Anos</option>
+                                        {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                                            <option key={y} value={y} style={{ backgroundColor: '#0A1128', color: 'white' }}>{y}</option>
                                         ))}
                                     </select>
                                     {(['month', 'semester', 'year'] as const).map(p => (
                                         <button
                                             key={p}
                                             onClick={() => setFilters({ ...filters, periodType: p })}
-                                            className={`px-2 py-1 rounded-md text-[8px] font-bold uppercase transition-all ${filters.periodType === p ? 'bg-gold text-navy-deep' : 'text-off-white/40 hover:text-off-white'}`}
+                                            disabled={filters.year === 'all' && (p === 'month' || p === 'semester')}
+                                            className={`px-2 py-1 rounded-md text-[8px] font-bold uppercase transition-all ${filters.periodType === p ? 'bg-gold text-navy-deep' : 'text-off-white/40 hover:text-off-white'} ${(filters.year === 'all' && (p === 'month' || p === 'semester')) ? 'opacity-20 cursor-not-allowed' : ''}`}
                                         >
                                             {p === 'month' ? 'Mês' : p === 'semester' ? 'Sem' : 'Ano'}
                                         </button>
@@ -655,8 +738,8 @@ const DashboardPage: React.FC = () => {
                             </div>
                             <div className="space-y-4">
                                 {rankingData.length > 0 ? (
-                                    rankingData.map((award, i) => (
-                                        <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-gold/30 transition-all">
+                                    rankingData.map((award: any, i: number) => (
+                                        <div key={i} className="relative flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-gold/30 transition-all hover:bg-white/[0.05]">
                                             <div className="flex items-center gap-6">
                                                 <span className="text-2xl font-serif italic text-gold/20 group-hover:text-gold transition-colors">#{(i + 1).toString().padStart(2, '0')}</span>
                                                 <div title={award.name}>
@@ -667,6 +750,78 @@ const DashboardPage: React.FC = () => {
                                             <div className="text-right">
                                                 <p className="text-xl font-bold text-gold">{award.count}</p>
                                                 <p className="text-[9px] text-off-white/20 uppercase tracking-tighter">Láureas</p>
+                                            </div>
+
+                                            {/* Expanded Hover Detail Panel */}
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-6 w-[600px] p-10 bg-navy-deep/98 backdrop-blur-3xl border border-gold/40 rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.9)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 z-[100] pointer-events-none">
+                                                <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
+                                                    <div>
+                                                        <h4 className="text-2xl font-serif italic text-gold mb-1">{award.name}</h4>
+                                                        <p className="text-[10px] text-off-white/40 uppercase tracking-[0.3em]">Detalhamento Completo de Distribuição</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-4xl font-bold text-off-white font-serif italic">{award.count}</span>
+                                                        <p className="text-[8px] text-gold uppercase tracking-widest font-bold">Láureas Totais</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-6">
+                                                    {/* Regionais */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">public</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Regionais</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(award.regionals).sort((a: any, b: any) => b.count - a.count).map((reg: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{reg.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{reg.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Marcas */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">hub</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Marcas</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(award.brands).sort((a: any, b: any) => b.count - a.count).map((brand: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{brand.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{brand.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Unidades */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">location_city</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Unidades</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(award.units).sort((a: any, b: any) => b.count - a.count).map((unit: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{unit.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{unit.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                                                    <p className="text-[8px] text-off-white/20 uppercase tracking-widest italic">Análise baseada no período de {filters.year === 'all' ? 'todo o histórico' : filters.year}</p>
+                                                    <div className="flex gap-2">
+                                                        <span className="size-1.5 rounded-full bg-gold animate-pulse"></span>
+                                                        <span className="size-1.5 rounded-full bg-gold/50"></span>
+                                                        <span className="size-1.5 rounded-full bg-gold/20"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
@@ -687,14 +842,85 @@ const DashboardPage: React.FC = () => {
                             </div>
                             <div className="space-y-4">
                                 {regionalRankingData.length > 0 ? (
-                                    regionalRankingData.map((reg, i) => (
-                                        <div key={i} className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-gold/30 transition-all">
+                                    regionalRankingData.map((reg: any, i: number) => (
+                                        <div key={i} className="relative flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-gold/30 transition-all hover:bg-white/[0.05]">
                                             <div className="flex items-center gap-4">
                                                 <span className="text-xl font-serif italic text-gold/20 group-hover:text-gold transition-colors">#{(i + 1).toString().padStart(2, '0')}</span>
                                                 <span className="text-off-white font-medium">{reg.name}</span>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-lg font-bold text-gold">{reg.count}</p>
+                                            </div>
+
+                                            {/* Expanded Hover Detail Panel */}
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-6 w-[600px] p-10 bg-navy-deep/98 backdrop-blur-3xl border border-gold/40 rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.9)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 z-[100] pointer-events-none">
+                                                <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
+                                                    <div>
+                                                        <h4 className="text-2xl font-serif italic text-gold mb-1">{reg.name}</h4>
+                                                        <p className="text-[10px] text-off-white/40 uppercase tracking-[0.3em]">Performance Regional Detalhada</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-4xl font-bold text-off-white font-serif italic">{reg.count}</span>
+                                                        <p className="text-[8px] text-gold uppercase tracking-widest font-bold">Total</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-6">
+                                                    {/* Marcas */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">hub</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Marcas</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(reg.brands).sort((a: any, b: any) => b.count - a.count).map((brand: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{brand.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{brand.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Unidades */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">location_city</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Unidades</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(reg.units).sort((a: any, b: any) => b.count - a.count).map((unit: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{unit.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{unit.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Prêmios */}
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="material-symbols-outlined text-gold/60 text-xs">military_tech</span>
+                                                            <p className="text-[9px] font-bold text-gold/80 uppercase tracking-widest">Prêmios</p>
+                                                        </div>
+                                                        <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                                            {Object.values(reg.awards).sort((a: any, b: any) => b.count - a.count).map((award: any, idx: number) => (
+                                                                <div key={idx} className="flex justify-between items-center bg-white/[0.03] p-2.5 rounded-xl border border-white/5 hover:bg-white/[0.06] transition-colors">
+                                                                    <p className="text-[10px] text-off-white/80 truncate pr-2">{award.name}</p>
+                                                                    <p className="text-[10px] font-bold text-gold">{award.count}</p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
+                                                    <p className="text-[8px] text-off-white/20 uppercase tracking-widest italic">Dados consolidados por regional</p>
+                                                    <div className="flex gap-2">
+                                                        <span className="size-1.5 rounded-full bg-gold/50"></span>
+                                                        <span className="size-1.5 rounded-full bg-gold/30"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
@@ -939,6 +1165,15 @@ const DashboardPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };

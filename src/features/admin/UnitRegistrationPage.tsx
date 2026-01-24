@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const UnitRegistrationPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -18,6 +19,9 @@ const UnitRegistrationPage: React.FC = () => {
     const [newBrandName, setNewBrandName] = useState('');
     const [isCreatingBrand, setIsCreatingBrand] = useState(false);
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
     useEffect(() => {
         const init = async () => {
             await fetchBrands();
@@ -29,6 +33,11 @@ const UnitRegistrationPage: React.FC = () => {
         };
         init();
     }, [id]);
+
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
 
     const fetchBrands = async () => {
         const { data, error } = await supabase
@@ -52,8 +61,8 @@ const UnitRegistrationPage: React.FC = () => {
 
         if (error) {
             console.error('Error fetching unit:', error);
-            alert('Erro ao carregar unidade');
-            navigate('/admin/unidades');
+            showAlert('Erro ao carregar unidade', 'Erro', 'danger');
+            setTimeout(() => navigate('/admin/unidades'), 2000);
         } else if (data) {
             setName(data.name);
             setLocation(data.location);
@@ -89,7 +98,7 @@ const UnitRegistrationPage: React.FC = () => {
             navigate('/admin/unidades');
         } catch (error: any) {
             console.error('Error saving unit:', error);
-            alert('Erro ao salvar unidade: ' + error.message);
+            showAlert('Erro ao salvar unidade: ' + error.message, 'Erro', 'danger');
         } finally {
             setIsLoading(false);
         }
@@ -116,7 +125,7 @@ const UnitRegistrationPage: React.FC = () => {
             setShowBrandModal(false);
         } catch (error: any) {
             console.error('Error creating brand:', error);
-            alert('Erro ao criar marca: ' + error.message);
+            showAlert('Erro ao criar marca: ' + error.message, 'Erro', 'danger');
         } finally {
             setIsCreatingBrand(false);
         }
@@ -266,6 +275,16 @@ const UnitRegistrationPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };

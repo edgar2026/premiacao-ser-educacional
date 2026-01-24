@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const BrandRegistrationPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -12,11 +13,19 @@ const BrandRegistrationPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(!!id);
 
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
     useEffect(() => {
         if (id) {
             fetchBrand();
         }
     }, [id]);
+
+    const showAlert = (message: string, title = 'Aviso', type: 'warning' | 'danger' | 'info' = 'warning') => {
+        setAlertConfig({ title, message, type });
+        setIsAlertModalOpen(true);
+    };
 
     const fetchBrand = async () => {
         const { data, error } = await supabase
@@ -27,8 +36,8 @@ const BrandRegistrationPage: React.FC = () => {
 
         if (error) {
             console.error('Error fetching brand:', error);
-            alert('Erro ao carregar marca');
-            navigate('/admin/marcas');
+            showAlert('Erro ao carregar marca', 'Erro', 'danger');
+            setTimeout(() => navigate('/admin/marcas'), 2000);
         } else if (data) {
             setName(data.name);
         }
@@ -58,7 +67,7 @@ const BrandRegistrationPage: React.FC = () => {
             navigate('/admin/marcas');
         } catch (error: any) {
             console.error('Error saving brand:', error);
-            alert('Erro ao salvar marca: ' + error.message);
+            showAlert('Erro ao salvar marca: ' + error.message, 'Erro', 'danger');
         } finally {
             setIsLoading(false);
         }
@@ -114,6 +123,16 @@ const BrandRegistrationPage: React.FC = () => {
                     </div>
                 </form>
             </GlassCard>
+
+            <ConfirmModal
+                isOpen={isAlertModalOpen}
+                onClose={() => setIsAlertModalOpen(false)}
+                onConfirm={() => setIsAlertModalOpen(false)}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                confirmLabel="OK"
+                type={alertConfig.type}
+            />
         </div>
     );
 };
