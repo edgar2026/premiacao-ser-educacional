@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import GlassCard from '../../components/ui/GlassCard';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from './AuthContext';
 import { sendPasswordChangedEmail } from '../../utils/notifications';
 import { translateClerkError } from '../../utils/clerkTranslations';
@@ -14,7 +13,7 @@ const FirstAccessPage: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { profile, refreshProfile } = useAuth();
+    const { profile } = useAuth();
     const navigate = useNavigate();
 
     const handleBackToLogin = async () => {

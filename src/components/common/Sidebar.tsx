@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { OrganizationSwitcher } from '@clerk/clerk-react';
 import { useAuth } from '../../features/auth/AuthContext';
 
 interface SidebarProps {
