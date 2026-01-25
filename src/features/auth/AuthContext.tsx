@@ -46,11 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setIsAuthorized(true);
 
             // 2. Busca ou sincroniza perfil no Supabase
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .or(`id.eq.${userId},username.eq.${email}`)
-                .maybeSingle();
+            // Verifica se o userId é um UUID válido para evitar erro de sintaxe no Postgres
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+
+            let query = supabase.from('profiles').select('*');
+
+            if (isUuid) {
+                query = query.or(`id.eq.${userId},username.eq.${email}`);
+            } else {
+                query = query.eq('username', email);
+            }
+
+            const { data, error } = await query.maybeSingle();
 
             if (error) throw error;
 

@@ -637,17 +637,26 @@ const DashboardPage: React.FC = () => {
 
                     {/* Charts Row 1 */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 print-break-inside-avoid">
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                            <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
-                                <h3 className="text-xl font-serif italic text-off-white">Premiações por Unidade (Top 10)</h3>
-                                <div className="flex gap-2 no-print opacity-50 cursor-not-allowed pointer-events-none">
+                        <GlassCard className="p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-white/5">
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-6 md:mb-10">
+                                <h3 className="text-lg md:text-xl font-serif italic text-off-white">Premiações por Unidade (Top 10)</h3>
+                                <div className="hidden md:flex gap-2 no-print opacity-50 cursor-not-allowed pointer-events-none">
                                     <span className="text-[9px] text-off-white/40 uppercase tracking-widest">Filtros Globais Ativos</span>
                                 </div>
                             </div>
-                            <div className="h-[400px] w-full">
+                            <div className="h-[300px] md:h-[400px] w-full">
                                 {barChartData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={barChartData} layout="vertical" margin={{ left: 60, right: 60 }}>
+                                        <BarChart
+                                            data={barChartData}
+                                            layout="vertical"
+                                            margin={{
+                                                left: window.innerWidth < 768 ? -20 : 60,
+                                                right: window.innerWidth < 768 ? 20 : 60,
+                                                top: 5,
+                                                bottom: 5
+                                            }}
+                                        >
                                             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
                                             <XAxis type="number" hide />
                                             <YAxis
@@ -655,8 +664,8 @@ const DashboardPage: React.FC = () => {
                                                 type="category"
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tick={{ fill: '#ffffff80', fontSize: 11, fontWeight: 500 }}
-                                                width={150}
+                                                tick={{ fill: '#ffffff80', fontSize: window.innerWidth < 768 ? 9 : 11, fontWeight: 500 }}
+                                                width={window.innerWidth < 768 ? 100 : 150}
                                             />
                                             <Tooltip
                                                 cursor={{ fill: '#ffffff05' }}
@@ -665,8 +674,8 @@ const DashboardPage: React.FC = () => {
                                                 formatter={(value: any) => [value, 'Prêmios']}
                                                 labelStyle={{ color: '#ffffff40', marginBottom: '4px' }}
                                             />
-                                            <Bar dataKey="count" fill="#D4AF37" radius={[0, 10, 10, 0]} barSize={20}>
-                                                <LabelList dataKey="count" position="right" fill="#D4AF37" fontSize={12} fontWeight="bold" offset={10} />
+                                            <Bar dataKey="count" fill="#D4AF37" radius={[0, 10, 10, 0]} barSize={window.innerWidth < 768 ? 12 : 20}>
+                                                <LabelList dataKey="count" position="right" fill="#D4AF37" fontSize={window.innerWidth < 768 ? 10 : 12} fontWeight="bold" offset={10} />
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -678,14 +687,14 @@ const DashboardPage: React.FC = () => {
                             </div>
                         </GlassCard>
 
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                            <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
-                                <h3 className="text-xl font-serif italic text-off-white">Distribuição por Marca</h3>
-                                <div className="flex gap-2 no-print opacity-50 cursor-not-allowed pointer-events-none">
+                        <GlassCard className="p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-white/5">
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-6 md:mb-10">
+                                <h3 className="text-lg md:text-xl font-serif italic text-off-white">Distribuição por Marca</h3>
+                                <div className="hidden md:flex gap-2 no-print opacity-50 cursor-not-allowed pointer-events-none">
                                     <span className="text-[9px] text-off-white/40 uppercase tracking-widest">Filtros Globais Ativos</span>
                                 </div>
                             </div>
-                            <div className="h-[400px] w-full flex items-center">
+                            <div className="h-[300px] md:h-[400px] w-full flex items-center">
                                 {pieChartData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
@@ -693,12 +702,12 @@ const DashboardPage: React.FC = () => {
                                                 data={pieChartData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={70}
-                                                outerRadius={120}
+                                                innerRadius={window.innerWidth < 768 ? 50 : 70}
+                                                outerRadius={window.innerWidth < 768 ? 80 : 120}
                                                 paddingAngle={5}
                                                 dataKey="count"
-                                                label={({ name, value }) => `${name}: ${value}`}
-                                                labelLine={{ stroke: '#ffffff20' }}
+                                                label={window.innerWidth < 768 ? false : ({ name, value }) => `${name}: ${value}`}
+                                                labelLine={window.innerWidth >= 768}
                                             >
                                                 {pieChartData.map((_, index) => (
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
