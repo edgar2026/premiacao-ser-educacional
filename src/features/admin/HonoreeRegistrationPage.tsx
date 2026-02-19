@@ -674,55 +674,73 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                                             <div className="lg:col-span-2 space-y-8">
                                                 <div className="space-y-4">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Vídeo de Homenagem (Upload)</label>
-                                                    <div
-                                                        className="border-2 border-dashed border-white/10 rounded-2xl p-8 hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] overflow-hidden relative"
-                                                        onClick={() => document.getElementById('video-upload')?.click()}
-                                                    >
-                                                        {videoPreview ? (
-                                                            <div className="relative group/video">
-                                                                <video src={videoPreview} className="w-full rounded-xl" controls />
-                                                                <div className="absolute top-4 right-4 flex gap-2 z-30">
+                                                    <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Vídeo de Homenagem (Premium)</label>
+
+                                                    {videoPreview ? (
+                                                        <div className="space-y-4">
+                                                            {/* Video Player Container */}
+                                                            <div className="relative rounded-[2rem] overflow-hidden bg-black shadow-2xl border border-white/10 aspect-video group/video-container">
+                                                                <video
+                                                                    src={videoPreview}
+                                                                    className="w-full h-full object-contain"
+                                                                    controls
+                                                                />
+
+                                                                {/* Floating Controls Overlay */}
+                                                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover/video-container:opacity-100 transition-opacity z-10">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => document.getElementById('video-upload')?.click()}
+                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-gold/20 hover:border-gold/30 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                                                        Alterar
+                                                                    </button>
                                                                     <button
                                                                         type="button"
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             setIsConfirmModalOpen(true);
                                                                         }}
-                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-xl"
-                                                                        title="Remover vídeo"
+                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 backdrop-blur-md text-red-400 border border-red-500/30 hover:bg-red-500 transition-all text-[10px] font-bold uppercase tracking-widest"
                                                                     >
                                                                         <span className="material-symbols-outlined text-sm">delete</span>
-                                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Excluir Vídeo</span>
+                                                                        Remover
                                                                     </button>
                                                                 </div>
-                                                                <div className="mt-4 text-center">
-                                                                    <span className="text-gold font-bold text-xs uppercase tracking-widest">Clique para alterar o arquivo</span>
+                                                            </div>
+                                                            <p className="text-center text-[10px] text-off-white/20 uppercase tracking-[0.2em]">Preview do vídeo selecionado</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            className="aspect-video border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] relative"
+                                                            onClick={() => document.getElementById('video-upload')?.click()}
+                                                        >
+                                                            <div className="text-center p-8">
+                                                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
+                                                                    <span className="material-symbols-outlined text-4xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
                                                                 </div>
+                                                                <p className="text-xs font-bold text-off-white/40 uppercase tracking-[0.2em] mb-1">Upload de Vídeo</p>
+                                                                <p className="text-[10px] text-off-white/20 uppercase tracking-widest">MP4, WebM ou MOV (máx. 100MB)</p>
                                                             </div>
-                                                        ) : (
-                                                            <div className="text-center">
-                                                                <span className="material-symbols-outlined text-5xl text-off-white/10 group-hover:text-gold transition-colors mb-4 block">videocam</span>
-                                                                <p className="text-xs font-bold text-off-white/30 uppercase tracking-widest">
-                                                                    Upload de vídeo<br />MP4, WebM ou MOV (máx. 100MB)
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                        <input
-                                                            id="video-upload"
-                                                            type="file"
-                                                            accept="video/mp4,video/webm,video/quicktime"
-                                                            className="hidden"
-                                                            onChange={handleVideoChange}
-                                                        />
-                                                    </div>
+                                                        </div>
+                                                    )}
+
+                                                    <input
+                                                        id="video-upload"
+                                                        type="file"
+                                                        accept="video/mp4,video/webm,video/quicktime"
+                                                        className="hidden"
+                                                        onChange={handleVideoChange}
+                                                    />
+
                                                     {uploadProgress > 0 && uploadProgress < 100 && (
-                                                        <div className="mt-4">
-                                                            <div className="flex justify-between text-xs text-off-white/40 mb-2">
-                                                                <span>Enviando vídeo...</span>
+                                                        <div className="p-4 rounded-xl bg-gold/5 border border-gold/10 animate-pulse">
+                                                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-gold mb-2">
+                                                                <span>Preparando arquivo...</span>
                                                                 <span>{Math.round(uploadProgress)}%</span>
                                                             </div>
-                                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                                                                 <div
                                                                     className="h-full bg-gold transition-all duration-300"
                                                                     style={{ width: `${uploadProgress}%` }}
@@ -944,22 +962,30 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
             {/* Image Cropper Modal */}
             {isCropping && tempPhotoUrl && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-deep/90 backdrop-blur-xl animate-fade-in">
-                    <div className="w-full max-w-4xl h-[80vh] flex flex-col glass-card rounded-[3rem] border-white/10 overflow-hidden shadow-2xl">
-                        <div className="p-8 border-b border-white/5 flex justify-between items-center">
-                            <div>
-                                <h3 className="text-2xl font-serif italic text-off-white">Ajustar Fotografia</h3>
-                                <p className="text-off-white/40 text-xs uppercase tracking-widest mt-1">Enquadre o rosto para garantir o padrão premium</p>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-2xl animate-fade-in">
+                    <div className="w-full max-w-4xl max-h-[96vh] flex flex-col bg-navy-deep rounded-[1.5rem] md:rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl relative shadow-gold/5">
+
+                        {/* Header Compacto */}
+                        <div className="p-3 md:p-5 border-b border-white/5 flex justify-between items-center bg-navy-deep/95 shrink-0">
+                            <div className="space-y-0.5">
+                                <h3 className="text-lg md:text-xl font-serif italic text-white leading-tight">
+                                    Ajuste de Fotografia
+                                </h3>
+                                <p className="text-gold/80 text-[9px] uppercase tracking-widest font-bold hidden sm:block">
+                                    PADRÃO DE QUALIDADE PREMIUM
+                                </p>
                             </div>
                             <button
                                 onClick={() => setIsCropping(false)}
-                                className="size-10 rounded-full bg-white/5 flex items-center justify-center text-off-white/40 hover:text-red-400 transition-colors"
+                                className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/10"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined text-xl">close</span>
                             </button>
                         </div>
 
-                        <div className="flex-1 relative bg-black/20">
+                        {/* Cropper Area */}
+                        <div className="relative w-full h-[35vh] md:h-[40vh] min-h-[250px] bg-black overflow-hidden flex-grow shadow-inner">
+
                             <Cropper
                                 image={tempPhotoUrl}
                                 crop={crop}
@@ -968,14 +994,32 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 onCropChange={setCrop}
                                 onCropComplete={onCropComplete}
                                 onZoomChange={setZoom}
+                                style={{
+                                    containerStyle: {
+                                        width: '100%',
+                                        height: '100%',
+                                    }
+                                }}
                             />
                         </div>
 
-                        <div className="p-10 border-t border-white/5 space-y-8 bg-navy-deep/50">
-                            <div className="space-y-4">
-                                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-gold/50">
-                                    <span>Zoom</span>
-                                    <span>{Math.round(zoom * 100)}%</span>
+                        {/* Footer Compacto */}
+                        <div className="p-4 md:p-6 border-t border-white/5 bg-navy-deep/98 shrink-0">
+
+                            {/* Zoom Slider */}
+                            <div className="max-w-md mx-auto w-full space-y-3 mb-4">
+                                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-sm font-bold">zoom_out</span>
+                                        ZOOM
+                                    </span>
+                                    <span className="text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20 font-bold">
+                                        {Math.round(zoom * 100)}%
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                        MÁX
+                                        <span className="material-symbols-outlined text-sm font-bold">zoom_in</span>
+                                    </span>
                                 </div>
                                 <input
                                     type="range"
@@ -983,24 +1027,25 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                     min={1}
                                     max={3}
                                     step={0.1}
-                                    aria-labelledby="Zoom"
                                     onChange={(e) => setZoom(Number(e.target.value))}
-                                    className="w-full accent-gold bg-white/5 h-1 rounded-full appearance-none cursor-pointer"
+                                    className="w-full accent-gold bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer"
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-6">
+                            {/* Actions Buttons */}
+                            <div className="flex justify-center sm:justify-end items-center gap-3">
                                 <button
                                     onClick={() => setIsCropping(false)}
-                                    className="px-10 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/40 hover:text-off-white transition-colors"
+                                    className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white bg-white/5 border border-white/10 transition-all font-sans"
                                 >
                                     Descartar
                                 </button>
                                 <button
                                     onClick={handleCropSave}
-                                    className="px-12 py-4 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-105 transition-all"
+                                    className="px-8 py-2.5 bg-gradient-to-r from-gold to-yellow-500 text-navy-deep rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-gold/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
                                 >
-                                    Confirmar Ajuste
+                                    <span className="material-symbols-outlined text-sm font-black">done</span>
+                                    Finalizar Ajuste
                                 </button>
                             </div>
                         </div>
