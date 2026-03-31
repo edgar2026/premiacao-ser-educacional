@@ -47,20 +47,38 @@ const HomeMediaAdminPage: React.FC = () => {
     };
 
     const fetchHomeMedia = async () => {
-        const { data, error } = await supabase
-            .from('home_media')
-            .select('*')
-            .eq('is_active', true)
-            .maybeSingle();
+        setIsFetching(true);
+        try {
+            const { data, error } = await supabase
+                .from('home_media')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-        if (error) {
-            console.error('Error fetching home media:', error);
-        } else if (data) {
-            setFormData(data);
-            if (data.image_url) setImagePreview(data.image_url);
-            if (data.video_url) setVideoPreview(data.video_url);
+            if (error) {
+                console.error('Error fetching home media:', error);
+                showAlert('Erro ao buscar dados: ' + error.message, 'Erro', 'danger');
+            } else if (data) {
+                console.log('Home media loaded:', data);
+                setFormData(data);
+                if (data.image_url) {
+                    setImagePreview(data.image_url);
+                    console.log('Image preview set:', data.image_url);
+                }
+                if (data.video_url) {
+                    setVideoPreview(data.video_url);
+                    console.log('Video preview set:', data.video_url);
+                }
+            } else {
+                console.log('No active home media found.');
+            }
+        } catch (err: any) {
+            console.error('Unexpected error fetching media:', err);
+        } finally {
+            setIsFetching(false);
         }
-        setIsFetching(false);
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,8 +121,10 @@ const HomeMediaAdminPage: React.FC = () => {
         return data.publicUrl;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+        if (e && e.preventDefault) e.preventDefault();
+        
+        console.log('Submit initiated. Form data:', formData);
         setIsLoading(true);
         setUploadProgress(0);
 
@@ -113,42 +133,68 @@ const HomeMediaAdminPage: React.FC = () => {
             let finalVideoUrl = formData.video_url;
 
             if (imageFile) {
+                console.log('Uploading image file...');
                 finalImageUrl = await uploadFile(imageFile, 'home_media');
+                console.log('Image uploaded successfully:', finalImageUrl);
             }
 
             if (videoFile) {
+                console.log('Uploading video file...');
                 setUploadProgress(10);
                 finalVideoUrl = await uploadFile(videoFile, 'home_media');
                 setUploadProgress(100);
+                console.log('Video uploaded successfully:', finalVideoUrl);
             }
 
             const payload = {
-                headline: formData.headline!,
-                description: formData.description,
-                image_url: finalImageUrl,
-                video_url: finalVideoUrl,
-                is_active: true
+                headline: formData.headline || 'Premiações Ser Educacional',
+                description: formData.description || '',
+                image_url: finalImageUrl || '',
+                video_url: finalVideoUrl || '',
+                is_active: true,
+                updated_at: new Date().toISOString()
             };
 
+            console.log('Prepared payload:', payload);
+
+            let result;
             if (formData.id) {
-                const { error } = await supabase
+                console.log('Updating existing record ID:', formData.id);
+                result = await supabase
                     .from('home_media')
                     .update(payload)
                     .eq('id', formData.id);
-                if (error) throw error;
             } else {
-                const { error } = await supabase
+                console.log('No ID found, inserting new record...');
+                // First, deactivate any existing active records to ensure only one is active
+                await supabase
+                    .from('home_media')
+                    .update({ is_active: false })
+                    .eq('is_active', true);
+                    
+                result = await supabase
                     .from('home_media')
                     .insert([payload]);
-                if (error) throw error;
             }
 
-            showAlert('Configuração salva com sucesso!', 'Sucesso', 'info');
-            fetchHomeMedia();
-            setImageFile(null);
-            setVideoFile(null);
+            if (result.error) {
+                console.error('Supabase operation error:', result.error);
+                throw result.error;
+            }
+
+            console.log('Supabase operation success. Refreshing data...');
+            showAlert('Configuração salva com sucesso! Os dados foram atualizados no banco de dados.', 'Sucesso', 'info');
+            
+            // Wait a bit before fetching to let DB settle
+            setTimeout(() => {
+                fetchHomeMedia();
+                setImageFile(null);
+                setVideoFile(null);
+            }, 500);
+
         } catch (error: any) {
-            showAlert('Erro ao salvar configuração: ' + error.message, 'Erro', 'danger');
+            console.error('Final error in handleSubmit:', error);
+            showAlert('Erro ao salvar configuração: ' + (error.message || 'Erro desconhecido'), 'Erro', 'danger');
         } finally {
             setIsLoading(false);
             setUploadProgress(0);
