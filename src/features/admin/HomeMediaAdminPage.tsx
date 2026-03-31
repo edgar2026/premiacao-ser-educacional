@@ -162,7 +162,8 @@ const HomeMediaAdminPage: React.FC = () => {
                 result = await supabase
                     .from('home_media')
                     .update(payload)
-                    .eq('id', formData.id);
+                    .eq('id', formData.id)
+                    .select();
             } else {
                 console.log('No ID found, inserting new record...');
                 // First, deactivate any existing active records to ensure only one is active
@@ -173,12 +174,18 @@ const HomeMediaAdminPage: React.FC = () => {
                     
                 result = await supabase
                     .from('home_media')
-                    .insert([payload]);
+                    .insert([payload])
+                    .select();
             }
 
             if (result.error) {
                 console.error('Supabase operation error:', result.error);
                 throw result.error;
+            }
+
+            if (!result.data || result.data.length === 0) {
+                console.error('Silently failed: 0 rows affected by Supabase operation (likely due to RLS).');
+                throw new Error('Falha silenciosa do Supabase: nenhuma linha afetada. Verifique se as permissões (RLS) deste usuário permitem Inserir/Atualizar na tabela home_media.');
             }
 
             console.log('Supabase operation success. Refreshing data...');
