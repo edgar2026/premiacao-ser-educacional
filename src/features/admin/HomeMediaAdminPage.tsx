@@ -151,8 +151,7 @@ const HomeMediaAdminPage: React.FC = () => {
                 description: formData.description || '',
                 image_url: finalImageUrl || '',
                 video_url: finalVideoUrl || '',
-                is_active: true,
-                updated_at: new Date().toISOString()
+                is_active: true
             };
 
             console.log('Prepared payload:', payload);
