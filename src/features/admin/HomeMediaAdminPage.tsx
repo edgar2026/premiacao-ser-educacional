@@ -3,6 +3,7 @@ import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import PremiumVideoPlayer from '../../components/ui/PremiumVideoPlayer';
 
 type HomeMedia = Database['public']['Tables']['home_media']['Row'];
 
@@ -25,6 +26,16 @@ const HomeMediaAdminPage: React.FC = () => {
 
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ title: 'Aviso', message: '', type: 'warning' as 'warning' | 'danger' | 'info' });
+
+    // Helper to detect video type for preview
+    const getYouTubeId = (url: string) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const youtubeId = getYouTubeId(formData.video_url || '');
 
     useEffect(() => {
         fetchHomeMedia();
@@ -154,13 +165,30 @@ const HomeMediaAdminPage: React.FC = () => {
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+            <div className="flex flex-wrap justify-between items-center gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Identidade Visual</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">Mídia da <span className="text-gold-gradient">Home</span></h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
                         Configure o conteúdo de destaque exibido na página inicial pública.
                     </p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => window.open('/', '_blank')}
+                        className="px-8 py-4 rounded-full border border-white/10 text-off-white text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-all flex items-center gap-2"
+                    >
+                        Ver Site <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                        className="bg-gold hover:bg-gold-light transition-all text-navy-deep px-10 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                        <span className="material-symbols-outlined text-sm">done_all</span>
+                    </button>
                 </div>
             </div>
 
@@ -197,9 +225,11 @@ const HomeMediaAdminPage: React.FC = () => {
                                     <div className="space-y-4">
                                         <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Link do YouTube ou Direto</label>
                                         <div className="relative group">
-                                            <span className="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-off-white/20 group-focus-within:text-gold transition-colors">link</span>
+                                            <span className={`material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${formData.video_url ? 'text-gold' : 'text-off-white/20'}`}>
+                                                {youtubeId ? 'smart_display' : 'link'}
+                                            </span>
                                             <input
-                                                className="w-full bg-white/[0.03] border border-white/10 pl-16 pr-8 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
+                                                className="w-full bg-white/[0.03] border border-white/10 pl-16 pr-24 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
                                                 placeholder="https://youtube.com/watch?v=..."
                                                 value={formData.video_url || ''}
                                                 onChange={(e) => {
@@ -208,6 +238,24 @@ const HomeMediaAdminPage: React.FC = () => {
                                                     setVideoPreview(null);
                                                 }}
                                             />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                                {formData.video_url && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const id = getYouTubeId(formData.video_url || '');
+                                                            if (id) {
+                                                                showAlert('YouTube detectado com sucesso!', 'Link Válido', 'info');
+                                                            } else {
+                                                                showAlert('Link reconhecido. Certifique-se que seja um link direto para o arquivo de vídeo.', 'Link Direto', 'info');
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1.5 rounded-lg bg-gold/10 text-gold text-[8px] font-bold uppercase tracking-widest hover:bg-gold/20 transition-all border border-gold/20"
+                                                    >
+                                                        Testar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -216,13 +264,13 @@ const HomeMediaAdminPage: React.FC = () => {
                                         <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Ou Upload de Arquivo</label>
                                         <div className="relative group/video-container">
                                             <div
-                                                className="relative border-2 border-dashed border-white/10 rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer bg-white/[0.02] flex items-center gap-4"
+                                                className={`relative border-2 border-dashed rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer bg-white/[0.02] flex items-center gap-4 ${videoFile || (videoPreview && !formData.video_url) ? 'border-gold/30' : 'border-white/10'}`}
                                                 onClick={() => document.getElementById('home-video-upload')?.click()}
                                             >
-                                                <span className="material-symbols-outlined text-2xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
+                                                <span className={`material-symbols-outlined text-2xl transition-colors ${videoFile || (videoPreview && !formData.video_url) ? 'text-gold' : 'text-off-white/20'}`}>videocam</span>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest truncate">
-                                                        {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo...')}
+                                                        {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo local...')}
                                                     </p>
                                                     <p className="text-[8px] text-off-white/20 uppercase tracking-tighter">MP4, WebM (Máx 100MB)</p>
                                                 </div>
@@ -252,6 +300,28 @@ const HomeMediaAdminPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Video Preview Area */}
+                                {(formData.video_url || videoPreview) && (
+                                    <div className="mt-8 space-y-4 animate-fade-in">
+                                        <div className="flex items-center justify-between px-2">
+                                            <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold/60">Preview do Vídeo</label>
+                                            <span className="text-[8px] font-bold text-off-white/20 uppercase tracking-widest">
+                                                {youtubeId ? 'Modo: YouTube' : 'Modo: Arquivo/Direto'}
+                                            </span>
+                                        </div>
+                                        <div className="relative group rounded-[2rem] overflow-hidden border border-white/5 bg-navy-deep/20 shadow-2xl">
+                                            <PremiumVideoPlayer
+                                                src={videoPreview || formData.video_url || ''}
+                                                poster={imagePreview || formData.image_url || undefined}
+                                                className="w-full"
+                                            />
+                                            <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                                                <span className="px-3 py-1 bg-navy-deep/60 backdrop-blur-md rounded-full text-[8px] font-black text-gold uppercase tracking-[0.2em] border border-gold/20">Amostra Admin</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {uploadProgress > 0 && uploadProgress < 100 && (
                                     <div className="mt-4 px-2">
