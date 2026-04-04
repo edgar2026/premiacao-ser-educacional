@@ -3,14 +3,28 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
+import { useAuth } from '../auth/AuthContext';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
-type Honoree = Database['public']['Tables']['honorees']['Row'];
+// Extend the Database type to include the approval fields until types are regenerated
+type HonoreeRow = Database['public']['Tables']['honorees']['Row'];
+interface Honoree extends HonoreeRow {
+    approval_status?: 'pending' | 'approved' | 'rejected';
+    rejection_reason?: string | null;
+}
 
 const HonoreeDetailsAdminPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { profile } = useAuth();
     const navigate = useNavigate();
     const [honoree, setHonoree] = useState<Honoree | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+    const isDirector = profile?.role === 'diretor';
 
     useEffect(() => {
         if (id) {
@@ -35,6 +49,69 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         setIsLoading(false);
     };
 
+    const handleApprove = async () => {
+        if (!honoree) return;
+        setIsUpdating(true);
+        try {
+            const { error } = await supabase
+                .from('honorees')
+                .update({
+                    approval_status: 'approved',
+                    rejection_reason: null
+                })
+                .eq('id', honoree.id);
+
+            if (error) throw error;
+            await fetchHonoree();
+        } catch (err) {
+            console.error('Error approving:', err);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!honoree || !rejectionReason.trim()) return;
+        setIsUpdating(true);
+        try {
+            const { error } = await supabase
+                .from('honorees')
+                .update({
+                    approval_status: 'rejected',
+                    rejection_reason: rejectionReason,
+                    is_published: false
+                })
+                .eq('id', honoree.id);
+
+            if (error) throw error;
+            setIsRejectionModalOpen(false);
+            setRejectionReason('');
+            await fetchHonoree();
+        } catch (err) {
+            console.error('Error rejecting:', err);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleTogglePublish = async () => {
+        if (!honoree) return;
+        setIsUpdating(true);
+        try {
+            const { error } = await supabase
+                .from('honorees')
+                .update({ is_published: !honoree.is_published })
+                .eq('id', honoree.id);
+
+            if (error) throw error;
+            await fetchHonoree();
+        } catch (err) {
+            console.error('Error toggling publish:', err);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center py-20">
@@ -53,7 +130,8 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+            {/* Header Content */}
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-4">
                 <div className="space-y-4">
                     <button
                         onClick={() => navigate('/admin/homenageados')}
@@ -65,22 +143,101 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">Detalhes do <span className="text-gold-gradient">Homenageado</span></h2>
                 </div>
+                
                 <div className="flex flex-wrap gap-4">
+                    {isAdmin && honoree.approval_status === 'approved' && (
+                        <button
+                            onClick={handleTogglePublish}
+                            disabled={isUpdating}
+                            className={`${honoree.is_published ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-green-500 text-white shadow-green-500/20'} px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg border transition-all disabled:opacity-50`}
+                        >
+                            {honoree.is_published ? 'Despublicar' : 'Publicar Agora'}
+                        </button>
+                    )}
                     <Link
                         to={`/admin/homenageados/${id}/editar`}
-                        className="bg-white/5 hover:bg-white/10 text-gold px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all"
+                        className="bg-white/5 hover:bg-white/10 text-gold px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all flex items-center gap-2"
                     >
+                        <span className="material-symbols-outlined text-sm">edit</span>
                         Editar Perfil
                     </Link>
-                    <Link
-                        to={`/homenageado/${id}`}
-                        target="_blank"
-                        className="bg-gold text-navy-deep px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg shadow-gold/20 hover:scale-105 transition-all"
-                    >
-                        Ver Página Pública
-                    </Link>
+                    {honoree.is_published && (
+                        <Link
+                            to={`/homenageado/${id}`}
+                            target="_blank"
+                            className="bg-gold text-navy-deep px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg shadow-gold/20 hover:scale-105 transition-all flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">visibility</span>
+                            Ver Página Pública
+                        </Link>
+                    )}
                 </div>
             </div>
+
+            {/* Status & Approval Workflow Bar */}
+            <GlassCard className={`p-8 rounded-[2rem] border-white/5 overflow-hidden relative ${honoree.approval_status === 'rejected' ? 'bg-red-500/5' : honoree.approval_status === 'pending' ? 'bg-yellow-500/5' : 'bg-green-500/5'}`}>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="flex items-center gap-6">
+                        <div className={`size-16 rounded-2xl flex items-center justify-center shrink-0 ${honoree.approval_status === 'rejected' ? 'bg-red-500/20 text-red-500' : honoree.approval_status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>
+                            <span className="material-symbols-outlined text-3xl">
+                                {honoree.approval_status === 'rejected' ? 'cancel' : honoree.approval_status === 'pending' ? 'pending_actions' : 'verified'}
+                            </span>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] text-off-white/30 uppercase tracking-[0.3em] font-bold">Status do Cadastro</p>
+                            <h4 className="text-xl font-bold font-serif italic text-off-white">
+                                {honoree.approval_status === 'rejected' ? 'Cadastro Reprovado' : honoree.approval_status === 'pending' ? 'Aguardando Análise' : 'Cadastro Aprovado'}
+                            </h4>
+                            {honoree.approval_status === 'rejected' && (
+                                <p className="text-red-400 text-sm italic font-serif mt-2">
+                                    " {honoree.rejection_reason || 'Nenhum motivo fornecido.'} "
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        {isAdmin && honoree.approval_status === 'pending' && (
+                            <>
+                                <button
+                                    onClick={handleApprove}
+                                    disabled={isUpdating}
+                                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-green-500/20 flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    Aprovar
+                                </button>
+                                <button
+                                    onClick={() => setIsRejectionModalOpen(true)}
+                                    disabled={isUpdating}
+                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">cancel</span>
+                                    Reprovar
+                                </button>
+                            </>
+                        )}
+                        {isAdmin && honoree.approval_status === 'rejected' && (
+                            <button
+                                onClick={handleApprove}
+                                disabled={isUpdating}
+                                className="bg-white/5 hover:bg-white/10 text-off-white border border-white/10 px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all"
+                            >
+                                Reavaliar e Aprovar
+                            </button>
+                        )}
+                        {isDirector && honoree.approval_status === 'rejected' && (
+                            <Link
+                                to={`/admin/homenageados/${id}/editar`}
+                                className="bg-gold text-navy-deep px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-gold/20 flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                                Corrigir e Reenviar
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </GlassCard>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 {/* Profile Overview */}
@@ -100,8 +257,8 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                             <h3 className="text-2xl font-bold text-off-white font-serif italic">{profData.name}</h3>
                             <p className="text-gold text-sm font-medium mt-1 uppercase tracking-widest">{profData.role || profData.external_role}</p>
                         </div>
-                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${honoree.is_published ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
-                            {honoree.is_published ? 'Publicado' : 'Rascunho'}
+                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${honoree.is_published ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
+                            {honoree.is_published ? 'Publicado' : (honoree.approval_status === 'approved' ? 'Aprovado' : 'Em Análise')}
                         </div>
                         <div className="w-full pt-6 border-t border-white/5 space-y-4">
                             <div className="flex justify-between text-xs">
@@ -232,6 +389,29 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                     </GlassCard>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={isRejectionModalOpen}
+                onClose={() => setIsRejectionModalOpen(false)}
+                onConfirm={handleReject}
+                title="Reprovar Cadastro"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/60">Ao reprovar, descreva abaixo o que o diretor precisa corrigir para solicitar uma nova análise.</p>
+                        <textarea
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-off-white outline-none focus:border-red-500/50 transition-all font-serif italic text-lg"
+                            placeholder="Ex: A foto precisa estar em alta resolução; Corrigir o título do prêmio..."
+                            rows={4}
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            required
+                        />
+                    </div>
+                }
+                confirmLabel="Confirmar Reprovação"
+                cancelLabel="Voltar"
+                type="danger"
+            />
         </div>
     );
 };

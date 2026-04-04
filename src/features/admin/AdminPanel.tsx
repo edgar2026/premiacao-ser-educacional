@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../auth/AuthContext';
 
 const AdminPanel: React.FC = () => {
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const isDiretor = profile?.role === 'diretor';
+
     const [stats, setStats] = useState({
         honorees: '0',
         awards: '0',
@@ -19,16 +23,23 @@ const AdminPanel: React.FC = () => {
     const fetchStats = async () => {
         setIsLoading(true);
         try {
-            const [honoreesRes, awardsRes, regionalsRes] = await Promise.all([
-                supabase.from('honorees').select('*', { count: 'exact', head: true }),
-                supabase.from('awards').select('*', { count: 'exact', head: true }),
-                supabase.from('regionals').select('*', { count: 'exact', head: true })
-            ]);
+            const queries = [
+                supabase.from('honorees').select('*', { count: 'exact', head: true })
+            ];
+
+            if (!isDiretor) {
+                queries.push(
+                    supabase.from('awards').select('*', { count: 'exact', head: true }),
+                    supabase.from('regionals').select('*', { count: 'exact', head: true })
+                );
+            }
+
+            const results = await Promise.all(queries);
 
             setStats({
-                honorees: (honoreesRes.count || 0).toString(),
-                awards: (awardsRes.count || 0).toString(),
-                regionals: (regionalsRes.count || 0).toString()
+                honorees: (results[0].count || 0).toString(),
+                awards: !isDiretor ? (results[1].count || 0).toString() : '0',
+                regionals: !isDiretor ? (results[2].count || 0).toString() : '0'
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -36,6 +47,43 @@ const AdminPanel: React.FC = () => {
             setIsLoading(false);
         }
     };
+
+    const statsConfig = [
+        { label: 'Homenageados', value: stats.honorees, icon: 'groups', change: 'Live', link: '/admin/homenageados', visible: true },
+        { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios', visible: !isDiretor },
+        { label: 'Regional', value: stats.regionals, icon: 'map', change: 'Live', link: '/admin/geografia', visible: !isDiretor }
+    ].filter(s => s.visible);
+
+    const quickActions = [
+        { 
+            label: 'Novo Homenageado', 
+            desc: 'Registro de talentos', 
+            icon: 'person_add', 
+            link: '/admin/homenageados/novo',
+            visible: true 
+        },
+        { 
+            label: 'Configurar Prêmio', 
+            desc: 'Gestão de honrarias', 
+            icon: 'military_tech', 
+            link: '/admin/premios/novo',
+            visible: !isDiretor 
+        },
+        { 
+            label: 'Gestão Regional', 
+            desc: 'Regionais, Marcas e Unidades', 
+            icon: 'map', 
+            link: '/admin/geografia',
+            visible: !isDiretor 
+        },
+        { 
+            label: 'Dashboard Estratégico', 
+            desc: 'Dados analíticos', 
+            icon: 'dashboard', 
+            link: '/admin/dashboard',
+            visible: !isDiretor 
+        }
+    ].filter(a => a.visible);
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
@@ -59,17 +107,13 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 ${isDiretor ? 'md:grid-cols-1 max-w-sm' : 'md:grid-cols-3'} gap-6`}>
                 {isLoading ? (
                     <div className="col-span-full flex justify-center py-10">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold"></div>
                     </div>
                 ) : (
-                    [
-                        { label: 'Homenageados', value: stats.honorees, icon: 'groups', change: 'Live', link: '/admin/homenageados' },
-                        { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios' },
-                        { label: 'Regional', value: stats.regionals, icon: 'map', change: 'Live', link: '/admin/geografia' }
-                    ].map((stat, i) => (
+                    statsConfig.map((stat, i) => (
                         <GlassCard
                             key={i}
                             className="p-8 rounded-3xl group border-white/5 cursor-pointer hover:border-gold/20 transition-all bg-gradient-to-br from-white/[0.02] to-transparent"
@@ -94,12 +138,14 @@ const AdminPanel: React.FC = () => {
                 <GlassCard className="p-10 rounded-[3rem] border-white/5">
                     <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-serif italic text-off-white">Atividades Recentes</h3>
-                        <button
-                            onClick={() => navigate('/admin/dashboard')}
-                            className="text-gold text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
-                        >
-                            Ver Dashboard
-                        </button>
+                        {!isDiretor && (
+                            <button
+                                onClick={() => navigate('/admin/dashboard')}
+                                className="text-gold text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
+                            >
+                                Ver Dashboard
+                            </button>
+                        )}
                     </div>
                     <div className="space-y-6">
                         {[
@@ -125,39 +171,18 @@ const AdminPanel: React.FC = () => {
                         <h3 className="text-xl font-serif italic text-off-white">Ações Rápidas</h3>
                         <span className="material-symbols-outlined text-gold/30">bolt</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <button
-                            onClick={() => navigate('/admin/homenageados/novo')}
-                            className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
-                        >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">person_add</span>
-                            <p className="text-sm font-bold text-off-white">Novo Homenageado</p>
-                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Registro de talentos</p>
-                        </button>
-                        <button
-                            onClick={() => navigate('/admin/premios/novo')}
-                            className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
-                        >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">military_tech</span>
-                            <p className="text-sm font-bold text-off-white">Configurar Prêmio</p>
-                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Gestão de honrarias</p>
-                        </button>
-                        <button
-                            onClick={() => navigate('/admin/geografia')}
-                            className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
-                        >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">map</span>
-                            <p className="text-sm font-bold text-off-white">Gestão Regional</p>
-                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Regionais, Marcas e Unidades</p>
-                        </button>
-                        <button
-                            onClick={() => navigate('/admin/dashboard')}
-                            className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
-                        >
-                            <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">dashboard</span>
-                            <p className="text-sm font-bold text-off-white">Dashboard</p>
-                            <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">Dados estratégicos</p>
-                        </button>
+                    <div className={`grid grid-cols-1 ${isDiretor ? '' : 'sm:grid-cols-2'} gap-6`}>
+                        {quickActions.map((action, i) => (
+                            <button
+                                key={i}
+                                onClick={() => navigate(action.link)}
+                                className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
+                            >
+                                <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">{action.icon}</span>
+                                <p className="text-sm font-bold text-off-white">{action.label}</p>
+                                <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">{action.desc}</p>
+                            </button>
+                        ))}
                     </div>
                 </GlassCard>
             </div>

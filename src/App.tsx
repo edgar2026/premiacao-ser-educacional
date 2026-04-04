@@ -27,6 +27,7 @@ import HomeMediaAdminPage from './features/admin/HomeMediaAdminPage';
 import GeographicRegistrationPage from './features/admin/GeographicRegistrationPage';
 import { AuthProvider } from './features/auth/AuthContext';
 import ProtectedRoute from './features/auth/ProtectedRoute';
+import RoleGuard from './features/auth/RoleGuard';
 
 function App() {
   return (
@@ -66,15 +67,19 @@ function App() {
               <Route path="homenageados/:id" element={<HonoreeDetailsAdminPage />} />
               <Route path="homenageados/:id/editar" element={<HonoreeEditPage />} />
               <Route path="homenageados/:id/editar/:step" element={<HonoreeEditPage />} />
-              <Route path="premios" element={<AwardsAdminPage />} />
-              <Route path="premios/novo" element={<AwardRegistrationPage />} />
-              <Route path="premios/:id/editar" element={<AwardRegistrationPage />} />
-              <Route path="home-media" element={<HomeMediaAdminPage />} />
-              <Route path="geografia" element={<GeographicRegistrationPage />} />
-              <Route path="unidades" element={<Navigate to="/admin/geografia" replace />} />
-              <Route path="marcas" element={<Navigate to="/admin/geografia" replace />} />
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
+              
+              {/* Rotas restritas a Administradores */}
+              <Route element={<RoleGuard allowedRoles={['admin', 'super_admin']} />}>
+                <Route path="premios" element={<AwardsAdminPage />} />
+                <Route path="premios/novo" element={<AwardRegistrationPage />} />
+                <Route path="premios/:id/editar" element={<AwardRegistrationPage />} />
+                <Route path="home-media" element={<HomeMediaAdminPage />} />
+                <Route path="geografia" element={<GeographicRegistrationPage />} />
+                <Route path="unidades" element={<Navigate to="/admin/geografia" replace />} />
+                <Route path="marcas" element={<Navigate to="/admin/geografia" replace />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
+              </Route>
             </Route>
           </Route>
         </Routes>

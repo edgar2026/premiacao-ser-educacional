@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
+import { motion } from 'framer-motion';
 import PremiumVideoPlayer from '../../components/ui/PremiumVideoPlayer';
 
 interface Award {
@@ -161,7 +162,12 @@ const HomePage: React.FC = () => {
     return (
         <div className="w-full mesh-gradient-premium min-h-screen">
             {/* Hero Section */}
-            <section className="relative pt-16 pb-10">
+            <motion.section 
+                initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="relative pt-16 pb-10"
+            >
                 <div className="max-w-6xl mx-auto px-6 sm:px-8 md:px-6 text-center relative z-10 animate-fade-in">
                     <span className="inline-block px-4 sm:px-6 py-1.5 sm:py-2 mb-6 sm:mb-8 text-[7px] sm:text-[9px] font-bold tracking-[0.3em] sm:tracking-[0.5em] text-gold uppercase border border-gold/20 rounded-full bg-navy-deep/40 backdrop-blur-2xl">
                         EXCELÊNCIA E MERITOCRACIA
@@ -182,10 +188,17 @@ const HomePage: React.FC = () => {
                         className="max-w-5xl mx-auto"
                     />
                 </div>
-            </section>
+            </motion.section>
 
             {/* Awards Categories */}
-            <section className="py-20 relative" id="premios">
+            <motion.section 
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                className="py-20 relative" 
+                id="premios"
+            >
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col items-center text-center mb-16 gap-8">
                         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-off-white font-serif uppercase px-2">
@@ -230,10 +243,17 @@ const HomePage: React.FC = () => {
                         ))}
                     </div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Honorees Gallery */}
-            <section className="py-20" id="homenageados">
+            <motion.section 
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                className="py-20" 
+                id="homenageados"
+            >
                 <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-6 relative z-10">
                     <div className="text-center mb-12">
                         <h2 className="font-bold mb-6 uppercase font-serif max-w-full">
@@ -253,8 +273,14 @@ const HomePage: React.FC = () => {
                         {honorees.map((honoree) => {
                             const profData = JSON.parse(honoree.professional_data || '{}');
                             return (
-                                <Link key={honoree.id} to={`/homenageado/${honoree.id}`} className="group relative">
-                                    <div className="aspect-[3/4.5] overflow-hidden rounded-[2.5rem] glass-card p-1 border-white/10 transition-all duration-500 group-hover:scale-[1.02]">
+                                <motion.div 
+                                    key={honoree.id}
+                                    whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
+                                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                                    style={{ perspective: 1000 }}
+                                >
+                                    <Link to={`/homenageado/${honoree.id}`} className="group relative block h-full">
+                                        <div className="aspect-[3/4.5] overflow-hidden rounded-[2.5rem] glass-card p-1 border-white/10 transition-all duration-500 shadow-xl shadow-black/20">
                                         <div className="relative h-full w-full overflow-hidden rounded-[2.3rem]">
                                             <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/10 to-transparent opacity-80 z-10"></div>
                                             <img
@@ -276,16 +302,24 @@ const HomePage: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </Link>
+                                        </div>
+                                    </Link>
+                                </motion.div>
                             );
                         })}
                     </div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Ranking Section */}
-            <section className="py-32 relative overflow-hidden" id="ranking">
+            <motion.section 
+                initial={{ opacity: 0, y: 80 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+                className="py-32 relative overflow-hidden" 
+                id="ranking"
+            >
                 {/* Decorative Elements */}
                 <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] -z-10"></div>
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] -z-10"></div>
@@ -401,7 +435,7 @@ const HomePage: React.FC = () => {
                         ))}
                     </div>
                 </div>
-            </section>
+            </motion.section>
         </div>
     );
 }; export default HomePage;

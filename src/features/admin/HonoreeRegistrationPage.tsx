@@ -9,6 +9,7 @@ import type { Database } from '../../types/supabase';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useAuth } from '../auth/AuthContext';
 
 type Award = Database['public']['Tables']['awards']['Row'];
 type Unit = Database['public']['Tables']['units']['Row'];
@@ -20,7 +21,9 @@ interface HonoreeRegistrationPageProps {
 
 const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdit: propIsEdit }) => {
     const { id, step } = useParams();
+    const { profile } = useAuth();
     const isEdit = propIsEdit || !!id;
+    const isDirector = profile?.role === 'diretor';
     const navigate = useNavigate();
     const currentStep = step ? parseInt(step) - 1 : 0;
     const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +60,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         },
         timeline: [] as { id: string; semester: string; title: string; category: string }[],
         initiatives: '',
-        recognitions: ''
+        recognitions: '',
+        approval_status: 'pending' as 'pending' | 'approved' | 'rejected',
+        rejection_reason: '' as string | null
     });
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -166,7 +171,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 stats,
                 timeline,
                 initiatives: data.initiatives || '',
-                recognitions: data.recognitions || ''
+                recognitions: data.recognitions || '',
+                approval_status: (data.approval_status as any) || 'pending',
+                rejection_reason: data.rejection_reason || ''
             });
             if (data.photo_url) setPhotoPreview(data.photo_url);
             if (data.video_url) setVideoPreview(data.video_url);
@@ -291,11 +298,13 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 unit_id: formData.unit_id,
                 regional_id: formData.regional_id || null,
                 awarded_at: formData.awarded_at,
-                is_published: formData.is_published,
-                stats: formData.stats,
                 timeline: formData.timeline,
-                initiatives: formData.initiatives,
-                recognitions: formData.recognitions
+                    initiatives: formData.initiatives,
+                recognitions: formData.recognitions,
+                approval_status: isDirector ? 'pending' : formData.approval_status,
+                rejection_reason: isDirector ? null : formData.rejection_reason,
+                is_published: isDirector ? false : formData.is_published,
+                stats: formData.stats
             };
 
             if (id) {
@@ -397,6 +406,25 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                     </h2>
                 </div>
             </div>
+
+            {isDirector && formData.approval_status === 'rejected' && (
+                <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
+                    <div className="flex items-start gap-4">
+                        <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-red-500">error</span>
+                        </div>
+                        <div className="space-y-2">
+                            <h4 className="text-lg font-bold text-red-500 uppercase tracking-widest">Cadastro Reprovado</h4>
+                            <p className="text-off-white/70 italic font-serif">
+                                " {formData.rejection_reason || 'Nenhum motivo especificado.'} "
+                            </p>
+                            <p className="text-[10px] text-off-white/40 uppercase tracking-widest pt-2">
+                                Por favor, realize as correções solicitadas e salve para enviar para uma nova análise.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <StepIndicator steps={steps} currentStep={currentStep} />
 
@@ -750,20 +778,22 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center gap-4 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-                                                    <label className="flex items-center gap-4 cursor-pointer group">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="size-6 rounded-lg bg-white/5 border-white/10 text-gold focus:ring-gold/20 transition-all"
-                                                            checked={formData.is_published}
-                                                            onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                                                        />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-xs font-bold uppercase tracking-widest text-off-white group-hover:text-gold transition-colors">Publicar Imediatamente</span>
-                                                            <span className="text-[10px] text-off-white/20 uppercase tracking-tighter">O perfil ficará visível na galeria pública</span>
+                                                    {!isDirector && (
+                                                        <div className="flex items-center gap-4 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                                                            <label className="flex items-center gap-4 cursor-pointer group">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="size-6 rounded-lg bg-white/5 border-white/10 text-gold focus:ring-gold/20 transition-all"
+                                                                    checked={formData.is_published}
+                                                                    onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                                                                />
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-xs font-bold uppercase tracking-widest text-off-white group-hover:text-gold transition-colors">Publicar Imediatamente</span>
+                                                                    <span className="text-[10px] text-off-white/20 uppercase tracking-tighter">O perfil ficará visível na galeria pública</span>
+                                                                </div>
+                                                            </label>
                                                         </div>
-                                                    </label>
-                                                </div>
+                                                    )}
                                             </div>
 
                                             <div className="space-y-4">
@@ -953,7 +983,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 disabled={isLoading}
                                 className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                             >
-                                {isLoading ? 'Salvando...' : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')}
+                                {isLoading ? 'Salvando...' : (
+                                    isDirector && formData.approval_status === 'rejected' 
+                                        ? 'Enviar para Nova Análise' 
+                                        : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')
+                                )}
                             </button>
                         )}
                     </div>

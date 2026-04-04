@@ -80,3 +80,13 @@ Sempre que abrir este projeto, leia este arquivo para entender o contexto de:
 2. **Estilização:** CSS utilitário (Tailwind) sempre priorizado. Evite estilos inline.
 3. **Tipagem:** Nunca use `any`. Utilize os arquivos em `/types` ou crie interfaces locais.
 4. **Auth:** O `AuthContext` é o centro da verdade para permissões de usuários.
+
+---
+
+## ✨ Melhorias Premium (Implementadas)
+As seguintes melhorias visuais de luxo foram idealizadas e integradas para elevar o nível do design:
+1. **Tipografia Contrastante:** Uso da fonte *Playfair Display* para títulos em serif (luxo) e *Montserrat* para descrições e *tags* minúsculas, gerando forte contraste de elegância.
+2. **Scroll Reveal Mágico:** Animações fluídas ao rolar a página utilizando `framer-motion`, fazendo os elementos surgirem suavemente como em sites de grife.
+3. **Botão de Play Cinematográfico:** Substituição de players estáticos por botões em formato Lightbox flutuantes, utilizando vídeos de fundo em *autoplay* silencioso.
+4. **Textura Grain (Película de Cinema):** Aplicação sutil de ruído/granulado fotográfico por cima dos gradientes mesclados (`mesh-gradient-premium`) para remover *banding* digital e trazer textura real.
+5. **Cards com Paralaxe 3D e Brilho:** Cartões sensíveis ao micro-movimento do mouse, refletindo luz dinâmica com Tailwind.

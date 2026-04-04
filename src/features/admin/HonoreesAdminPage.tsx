@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
@@ -9,10 +10,13 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
+    approval_status?: string | null;
 };
 
 const HonoreesAdminPage: React.FC = () => {
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const isDiretor = profile?.role === 'diretor';
     const [honorees, setHonorees] = useState<Honoree[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -99,19 +103,36 @@ const HonoreesAdminPage: React.FC = () => {
         },
         {
             header: 'Status',
-            accessor: (h: Honoree) => (
-                <span className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border ${h.is_published
-                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                    : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                    }`}>
-                    {h.is_published ? 'Publicado' : 'Rascunho'}
-                </span>
-            )
+            accessor: (h: Honoree) => {
+                const status = h.approval_status as string;
+                if (status === 'rejected') {
+                    return (
+                        <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
+                            Reprovado
+                        </span>
+                    );
+                }
+                if (status === 'pending') {
+                    return (
+                        <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                            Pendente
+                        </span>
+                    );
+                }
+                return (
+                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border ${h.is_published
+                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                        : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                        }`}>
+                        {h.is_published ? 'Publicado' : 'Aprovado'}
+                    </span>
+                );
+            }
         }
     ];
 
     const actions = (h: Honoree) => (
-        <>
+        <div className="flex gap-2">
             <button
                 onClick={() => navigate(`/admin/homenageados/${h.id}`)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
@@ -126,14 +147,16 @@ const HonoreesAdminPage: React.FC = () => {
             >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
-            <button
-                onClick={() => handleDeleteClick(h.id)}
-                className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
-                title="Excluir"
-            >
-                <span className="material-symbols-outlined text-[20px]">delete</span>
-            </button>
-        </>
+            {!isDiretor && (
+                <button
+                    onClick={() => handleDeleteClick(h.id)}
+                    className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
+                    title="Excluir"
+                >
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+            )}
+        </div>
     );
 
     return (

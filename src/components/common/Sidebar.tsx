@@ -18,13 +18,15 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         fill?: boolean;
     }
 
+    const isDiretor = profile?.role === 'diretor';
+
     const dashboardLinks: SidebarLink[] = [
         { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
         { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
         { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
     ];
 
-    const adminLinks: SidebarLink[] = [
+    const allAdminLinks: SidebarLink[] = [
         { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
         { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
@@ -32,6 +34,10 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
         { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
     ];
+
+    const adminLinks = isDiretor 
+        ? allAdminLinks.filter(link => ['Painel de Controle', 'Homenageados'].includes(link.label))
+        : allAdminLinks;
 
     const links: SidebarLink[] = variant === 'dashboard' ? dashboardLinks : adminLinks;
 
