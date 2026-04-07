@@ -11,7 +11,7 @@ type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
     status?: string | null;
-    profiles?: { username: string } | null;
+
 };
 
 const HonoreesAdminPage: React.FC = () => {
@@ -33,7 +33,7 @@ const HonoreesAdminPage: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('honorees')
-            .select('*, awards!honorees_award_id_fkey(name), regionals(name), profiles:created_by(username)')
+            .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -91,7 +91,7 @@ const HonoreesAdminPage: React.FC = () => {
             setIsAlertModalOpen(true);
         } else {
             // Send email notification if needed
-            if (h.profiles?.username && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
+            if (h.created_by && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
                 try {
                     let honoreeName = 'Homenageado';
                     try {
@@ -106,7 +106,7 @@ const HonoreesAdminPage: React.FC = () => {
                     await supabase.functions.invoke('notify-rejection', {
                         body: {
                             honoreeName,
-                            userEmail: h.profiles?.username || '',
+                            userEmail: h.created_by || '',
                             reason: rejectionReason,
                             status
                         }
