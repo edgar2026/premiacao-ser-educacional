@@ -9,8 +9,8 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 // Extend the Database type to include the approval fields until types are regenerated
 type HonoreeRow = Database['public']['Tables']['honorees']['Row'];
 interface Honoree extends HonoreeRow {
-    approval_status?: 'pending' | 'approved' | 'rejected';
-    rejection_reason?: string | null;
+    awards?: { name: string } | null;
+    regionals?: { name: string } | null;
 }
 
 const HonoreeDetailsAdminPage: React.FC = () => {
