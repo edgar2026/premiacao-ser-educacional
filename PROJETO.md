@@ -9,14 +9,15 @@ Este documento serve como a **Bússola do Projeto** para desenvolvedores e assis
 - **Frontend:** [React 18](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/)
 - **Build Tool:** [Vite](https://vitejs.dev/)
 - **Estilização:** [Tailwind CSS 4.x](https://tailwindcss.com/) + [Lucide React](https://lucide.dev/) (Ícones)
-- **Autenticação:** [Clerk](https://clerk.com/) (para gestão de usuários e sessões)
-- **Backend / DB:** [Supabase](https://supabase.com/) (PostgreSQL + Realtime)
+- **Autenticação:** [Clerk](https://clerk.com/) (Gestão de usuários, sessões e organizações)
+- **Backend / DB:** [Supabase](https://supabase.com/) (PostgreSQL + Edge Functions + Realtime)
 - **Roteamento:** [React Router Dom v7](https://reactrouter.com/)
 - **Componentes Específicos:**
+  - `framer-motion`: Animações cinematográficas
   - `recharts`: Gráficos e visualização de dados
-  - `leaflet` & `react-leaflet`: Mapas e geolocalização
+  - `leaflet` & `react-leaflet`: Mapas e geolocalização de unidades
   - `react-easy-crop`: Edição de imagens de perfil/capa
-  - `react-quill`: Editor de texto rico para descrições
+  - `react-quill`: Editor de texto rico para biografias
   - `html2pdf.js` & `jspdf`: Geração automática de certificados/relatórios
 
 ---
@@ -27,66 +28,83 @@ A estrutura segue o padrão de **Feature-Based Design**, onde cada módulo tem s
 
 ```bash
 /src
-  /components        # Componentes globais (UI, Common)
+  /components        # Componentes globais (UI, Common, Layout Elements)
   /features          # Módulos principais com lógica de negócio
     /about           # Página Sobre
-    /admin           # Painel Administrativo (Gestão de Homenageados, Prêmios, Mídia, Geografia)
-    /auth            # Lógica de Login, Redefinição de Senha e AuthContext
+    /admin           # Painel Administrativo (Homenageados, Prêmios, Mídia, Usuários)
+    /auth            # Lógica de Login, Contexto de Auth e Proteção de Rotas
     /awards          # Galeria e Detalhes de Prêmios
-    /dashboard       # Dashboard Executivo (Gráficos e estatísticas)
+    /dashboard       # Dashboard Executivo (Métricas acumuladas)
     /gallery         # Galeria de Mídia do Projeto
     /home            # Homepage e Conteúdo Principal
-    /honoree         # Homenageados (Detalhes, Galeria)
+    /honoree         # Homenageados (Detalhes, Galeria Pública)
     /partners        # Lista de Parceiros
     /timeline        # Linha do Tempo e marcos históricos
   /layouts           # Templates de Layout (Main, Admin, Dashboard)
   /lib               # Configurações de API (Supabase Client)
-  /services          # Lógica de acesso a dados (mockData e chamadas Supabase)
-  /types             # Definições de tipos TypeScript
-  /utils             # Funções auxiliares e formatadores
+  /services          # Mock data e serviços de integração
+  /types             # Definições de tipos TypeScript e Types do Supabase
+  /utils             # Funções auxiliares (Helper functions)
+/supabase
+  /functions         # Edge Functions (RBAC, Email automation)
 ```
 
 ---
 
-## 🔑 Fluxos Principais
+## 🔑 Fluxos Principais e Segurança
 
-### 1. Autenticação e Níveis de Acesso
-- **Público:** Home, Sobre, Linha do Tempo, Galeria, Homenageados (Consulta), Prêmios (Consulta).
-- **Dashboard Executivo:** `/dashboard` - Acesso a métricas consolidadas.
-- **Administrador:** `/admin` - Gestão total do sistema (Homenageados, Prêmios, Conteúdo dinâmico).
-- **Proteção:** Utiliza `ProtectedRoute` e `AuthContext` integrados com Clerk e filtros customizados de acesso.
+### 1. Sistema de Autenticação (Clerk + Supabase)
+O projeto utiliza um sistema híbrido:
+- **Clerk:** Gerencia o login social, e-mail/senha, sessões seguras e IDs de organização.
+- **Supabase Profiles:** Armazena dados complementares e papéis (roles) para controle de acesso fino no banco de dados.
+- **Sincronização:** Quando um usuário loga pela primeira vez via Clerk, um perfil é criado automaticamente no Supabase via RPC (`create_clerk_profile`).
 
-### 2. Gestão de Homenageados
-- Fluxo de cadastro em etapas (Stepper) para garantir integridade dos dados (Informações Básicas, Biografia, Mídia, Unidades/Marcas).
-- Edição dinâmica de fotos com crop integrado.
+### 2. Níveis de Acesso (RBAC)
+Os papéis são definidos na tabela `profiles` e verificados pelo `RoleGuard`:
+- **`super_admin` / `admin`**: Acesso total ao painel administrativo (`/admin`), incluindo gestão de usuários, geografia e mídia da home.
+- **`diretor`**: Acesso ao painel administrativo para gestão de homenageados, mas com restrições em configurações globais e usuários.
+- **`public`**: Acesso apenas às áreas de consulta e visualização do site institucional.
 
-### 3. Painel Administrativo
-- Controle de **Geografia**: Gestão de Unidades e Marcas do grupo Ser Educacional.
-- Controle de **Home Media**: Edição dinâmica de banners e conteúdos da página inicial.
+### 3. Gestão de Homenageados e Workflow de Aprovação
+O sistema possui um fluxo de governança para novos registros:
+1. **Cadastro**: Realizado em etapas (Stepper) por Diretores ou Admins.
+2. **Status `pending`**: O registro aguarda revisão.
+3. **Status `approved`**: O registro foi validado por um Administrador.
+4. **Publicação (`is_published`)**: Somente após a aprovação e a marcação de "Publicado", o homenageado aparece na galeria pública.
+- **Edição Dinâmica**: Suporte a crop de imagens em tempo real para garantir o padrão visual.
+
+### 4. Edge Functions
+Utilizadas para tarefas que exigem privilégios elevados ou integrações externas:
+- **`set-clerk-role`**: Sincroniza a alteração de papel entre a interface administrativa do Supabase e o metadata do usuário no Clerk.
+- **`send-password-changed-email`**: (Em desenvolvimento/SIMULAÇÃO) Envia confirmação de troca de senha via Resend.
 
 ---
 
-## 🛠 Comandos Úteis
+## 🛠 Manutenção e DevOps
 
+### Comandos de Desenvolvimento
 - `npm run dev`: Inicia o ambiente de desenvolvimento.
-- `npm run build`: Gera o bundle de produção otimizado.
-- `npm run lint`: Executa a verificação estática do código.
+- `npm run build`: Gera o bundle de produção.
+- `npm run lint`: Checagem estática de código.
+
+### Scripts de Administração (Root)
+- `promote-edgar.js`: Script Node.js para promover o usuário admin inicial no Supabase.
+- `update_clerk_emails.js`: Script utilitário para manutenção de emails no Clerk.
 
 ---
 
 ## 📝 Notas para o Assistente (IA)
 Sempre que abrir este projeto, leia este arquivo para entender o contexto de:
 1. **Padrão de Nomeclatura:** PascalCase para Componentes, camelCase para funções/variáveis.
-2. **Estilização:** CSS utilitário (Tailwind) sempre priorizado. Evite estilos inline.
-3. **Tipagem:** Nunca use `any`. Utilize os arquivos em `/types` ou crie interfaces locais.
-4. **Auth:** O `AuthContext` é o centro da verdade para permissões de usuários.
+2. **Estilização:** Tailwind CSS v4 sempre priorizado. Utilize gradientes mesh e texturas premium.
+3. **Tipagem:** Nunca use `any`. Utilize `supabase.ts` gerado para o schema do banco.
+4. **Auth:** O `AuthContext` é o centro da verdade para permissões de usuários. Use `useAuth()` para acessar o perfil logado.
 
 ---
 
 ## ✨ Melhorias Premium (Implementadas)
-As seguintes melhorias visuais de luxo foram idealizadas e integradas para elevar o nível do design:
-1. **Tipografia Contrastante:** Uso da fonte *Playfair Display* para títulos em serif (luxo) e *Montserrat* para descrições e *tags* minúsculas, gerando forte contraste de elegância.
-2. **Scroll Reveal Mágico:** Animações fluídas ao rolar a página utilizando `framer-motion`, fazendo os elementos surgirem suavemente como em sites de grife.
-3. **Botão de Play Cinematográfico:** Substituição de players estáticos por botões em formato Lightbox flutuantes, utilizando vídeos de fundo em *autoplay* silencioso.
-4. **Textura Grain (Película de Cinema):** Aplicação sutil de ruído/granulado fotográfico por cima dos gradientes mesclados (`mesh-gradient-premium`) para remover *banding* digital e trazer textura real.
-5. **Cards com Paralaxe 3D e Brilho:** Cartões sensíveis ao micro-movimento do mouse, refletindo luz dinâmica com Tailwind.
+1. **Tipografia de Luxo:** Mix entre *Playfair Display* e *Montserrat*.
+2. **Efeitos de Vidro (Glassmorphism):** Menus e overlays com `backdrop-blur` e bordas sutis.
+3. **Grain Texture:** Camada de ruído visual para depth cinematográfico.
+4. **Motion Design:** Uso extensivo de `framer-motion` para transições suaves entre rotas e revelação de conteúdo.
+

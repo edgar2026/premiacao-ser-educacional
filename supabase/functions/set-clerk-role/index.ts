@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, role, sessionId, targetUserId: providedTargetId } = await req.json();
+    const { email, role, unitId, sessionId, targetUserId: providedTargetId } = await req.json();
 
     if (!CLERK_SECRET_KEY) throw new Error("Missing CLERK_SECRET_KEY");
     if (!email || !role || !sessionId) throw new Error("Missing parameters");
@@ -45,7 +45,7 @@ serve(async (req) => {
     const targetUser = targetData[0];
     if (!targetUser) throw new Error("User not found in Clerk");
 
-    // 4. Update the target user's role in Clerk
+    // 4. Update the target user's role and unit_id in Clerk
     const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}/metadata`, {
       method: "PATCH",
       headers: {
@@ -53,7 +53,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        public_metadata: { role }
+        public_metadata: { 
+          role,
+          unit_id: unitId || targetUser.public_metadata?.unit_id
+        }
       }),
     });
 
@@ -73,7 +76,10 @@ serve(async (req) => {
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal'
             },
-            body: JSON.stringify({ role: role })
+            body: JSON.stringify({ 
+                role: role,
+                unit_id: unitId || undefined
+            })
         });
     }
     

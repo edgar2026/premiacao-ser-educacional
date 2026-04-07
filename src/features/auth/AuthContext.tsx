@@ -12,6 +12,9 @@ interface Profile {
     primeiro_acesso: boolean;
     username: string | null;
     organization_id: string | null;
+    unit_id: string | null;
+    regional_id: string | null;
+    brand_id: string | null;
 }
 
 interface AuthContextType {
@@ -19,6 +22,8 @@ interface AuthContextType {
     profile: Profile | null;
     loading: boolean;
     isAuthorized: boolean;
+    isAdmin: boolean;
+    isDirector: boolean;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
 }
@@ -32,6 +37,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
+    const isSuperAdmin = profile?.role === 'super_admin';
+    const isAdmin = profile?.role === 'admin' || isSuperAdmin;
+    const isDirector = profile?.role === 'diretor';
 
     const fetchProfile = async (userId: string, email: string, clerkOrgId?: string) => {
         try {
@@ -71,7 +79,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 setProfile({ ...data, organization_id: clerkOrgId || data.organization_id });
             } else {
-                setProfile(null);
+                // CREATE THE PROFILE IF NOT EXISTS (FIRST CLERK LOGIN)
+                const { data: insertedData, error: insertError } = await supabase
+                    .rpc('create_clerk_profile', {
+                        p_id: crypto.randomUUID(),
+                        p_email: email,
+                        p_name: email.split('@')[0],
+                        p_org_id: clerkOrgId || null
+                    });
+
+                if (!insertError && insertedData) {
+                    setProfile(insertedData);
+                } else {
+                    console.error("Failed to auto-create profile via RPC:", insertError);
+                    setProfile(null);
+                }
             }
         } catch (error) {
             console.error('Error fetching profile:', error);
@@ -105,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, isAuthorized, signOut, refreshProfile }}>
+        <AuthContext.Provider value={{ user, profile, loading, isAuthorized, isAdmin, isDirector, signOut, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

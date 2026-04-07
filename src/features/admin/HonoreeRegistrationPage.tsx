@@ -21,7 +21,7 @@ interface HonoreeRegistrationPageProps {
 
 const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdit: propIsEdit }) => {
     const { id, step } = useParams();
-    const { profile } = useAuth();
+    const { profile, isAdmin } = useAuth();
     const isEdit = propIsEdit || !!id;
     const isDirector = profile?.role === 'diretor';
     const navigate = useNavigate();
@@ -61,7 +61,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         timeline: [] as { id: string; semester: string; title: string; category: string }[],
         initiatives: '',
         recognitions: '',
-        approval_status: 'pending' as 'pending' | 'approved' | 'rejected',
+        status: 'rascunho' as 'rascunho' | 'em_analise' | 'aprovado' | 'reprovado' | 'publicado',
         rejection_reason: '' as string | null
     });
 
@@ -99,8 +99,16 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         fetchRegionals();
         if (id) {
             fetchHonoree();
+        } else if (isDirector && profile?.unit_id) {
+            // Pre-fill unit for directors
+            setFormData(prev => ({
+                ...prev,
+                unit_id: profile.unit_id || '',
+                brand_id: profile.brand_id || '',
+                regional_id: profile.regional_id || ''
+            }));
         }
-    }, [id]);
+    }, [id, isDirector, profile]);
 
     useEffect(() => {
         if (!step || isNaN(parseInt(step)) || parseInt(step) < 1 || parseInt(step) > 5) {
@@ -172,7 +180,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 timeline,
                 initiatives: data.initiatives || '',
                 recognitions: data.recognitions || '',
-                approval_status: (data.approval_status as any) || 'pending',
+                status: (data.status as any) || 'rascunho',
                 rejection_reason: data.rejection_reason || ''
             });
             if (data.photo_url) setPhotoPreview(data.photo_url);
@@ -294,17 +302,18 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 photo_url: finalPhotoUrl,
                 video_url: finalVideoUrl,
                 award_id: formData.award_id || null,
-                brand_id: formData.brand_id,
-                unit_id: formData.unit_id,
+                brand_id: formData.brand_id || null,
+                unit_id: formData.unit_id || null,
                 regional_id: formData.regional_id || null,
                 awarded_at: formData.awarded_at,
                 timeline: formData.timeline,
-                    initiatives: formData.initiatives,
+                initiatives: formData.initiatives,
                 recognitions: formData.recognitions,
-                approval_status: isDirector ? 'pending' : formData.approval_status,
+                status: isDirector ? (formData.status === 'reprovado' ? 'em_analise' : formData.status) : formData.status,
                 rejection_reason: isDirector ? null : formData.rejection_reason,
-                is_published: isDirector ? false : formData.is_published,
-                stats: formData.stats
+                is_published: isAdmin ? formData.is_published : (formData.status === 'publicado'),
+                stats: formData.stats,
+                created_by: profile?.id
             };
 
             if (id) {
@@ -407,7 +416,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 </div>
             </div>
 
-            {isDirector && formData.approval_status === 'rejected' && (
+            {isDirector && formData.status === 'reprovado' && (
                 <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
                     <div className="flex items-start gap-4">
                         <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
@@ -545,7 +554,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
                                                         <select
                                                             required
-                                                            disabled={!formData.brand_id}
+                                                            disabled={!formData.brand_id || isDirector}
                                                             className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
                                                             value={formData.unit_id}
                                                             onChange={(e) => {
@@ -984,8 +993,8 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                             >
                                 {isLoading ? 'Salvando...' : (
-                                    isDirector && formData.approval_status === 'rejected' 
-                                        ? 'Enviar para Nova Análise' 
+                                    isDirector 
+                                        ? (formData.status === 'rascunho' || formData.status === 'reprovado' ? 'Enviar para Análise' : 'Atualizar') 
                                         : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')
                                 )}
                             </button>

@@ -10,7 +10,8 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
-    approval_status?: string | null;
+    status?: string | null;
+    profiles?: { email: string } | null;
 };
 
 const HonoreesAdminPage: React.FC = () => {
@@ -32,7 +33,7 @@ const HonoreesAdminPage: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('honorees')
-            .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
+            .select('*, awards!honorees_award_id_fkey(name), regionals(name), profiles:created_by(email)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -63,6 +64,52 @@ const HonoreesAdminPage: React.FC = () => {
             fetchHonorees();
         }
         setItemToDelete(null);
+    };
+
+    const handleStatusUpdate = async (h: Honoree, status: string, rejectionReason?: string | null) => {
+        setIsLoading(true);
+        const updateData: any = { status };
+        
+        if (rejectionReason !== undefined) {
+            updateData.rejection_reason = rejectionReason;
+        }
+        
+        // If status is published, also set is_published flag (for compatibility)
+        if (status === 'publicado') {
+            updateData.is_published = true;
+        } else if (status === 'aprovado' || status === 'reprovado' || status === 'em_analise') {
+            updateData.is_published = false;
+        }
+
+        const { error } = await supabase
+            .from('honorees')
+            .update(updateData)
+            .eq('id', h.id);
+
+        if (error) {
+            setAlertMessage('Erro ao atualizar status: ' + error.message);
+            setIsAlertModalOpen(true);
+        } else {
+            // Send email notification if needed
+            if (h.profiles?.email && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
+                try {
+                    const honoreeName = h.professional_data ? JSON.parse(h.professional_data).name : 'Homenageado';
+                    
+                    await supabase.functions.invoke('notify-rejection', {
+                        body: {
+                            honoreeName,
+                            directorEmail: h.profiles.email,
+                            reason: rejectionReason,
+                            status
+                        }
+                    });
+                } catch (emailError) {
+                    console.error('Failed to send notification email:', emailError);
+                }
+            }
+            fetchHonorees();
+        }
+        setIsLoading(false);
     };
 
     const columns: Column<Honoree>[] = [
@@ -104,29 +151,45 @@ const HonoreesAdminPage: React.FC = () => {
         {
             header: 'Status',
             accessor: (h: Honoree) => {
-                const status = h.approval_status as string;
-                if (status === 'rejected') {
-                    return (
-                        <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-                            Reprovado
-                        </span>
-                    );
+                const status = h.status as string;
+                switch (status) {
+                    case 'rascunho':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">
+                                Rascunho
+                            </span>
+                        );
+                    case 'em_analise':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                                Em Análise
+                            </span>
+                        );
+                    case 'aprovado':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">
+                                Aprovado
+                            </span>
+                        );
+                    case 'reprovado':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
+                                Reprovado
+                            </span>
+                        );
+                    case 'publicado':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">
+                                Publicado
+                            </span>
+                        );
+                    default:
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">
+                                {status || 'N/A'}
+                            </span>
+                        );
                 }
-                if (status === 'pending') {
-                    return (
-                        <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                            Pendente
-                        </span>
-                    );
-                }
-                return (
-                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border ${h.is_published
-                        ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                        : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                        }`}>
-                        {h.is_published ? 'Publicado' : 'Aprovado'}
-                    </span>
-                );
             }
         }
     ];
@@ -147,14 +210,51 @@ const HonoreesAdminPage: React.FC = () => {
             >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
+
             {!isDiretor && (
-                <button
-                    onClick={() => handleDeleteClick(h.id)}
-                    className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
-                    title="Excluir"
-                >
-                    <span className="material-symbols-outlined text-[20px]">delete</span>
-                </button>
+                <>
+                    {h.status === 'em_analise' && (
+                        <>
+                            <button
+                                onClick={() => handleStatusUpdate(h, 'aprovado')}
+                                className="size-10 rounded-xl flex items-center justify-center text-green-500/40 hover:text-green-500 hover:bg-green-500/10 transition-all border border-transparent hover:border-green-500/20"
+                                title="Aprovar"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const reason = prompt('Motivo da reprovação:');
+                                    if (reason) handleStatusUpdate(h, 'reprovado', reason);
+                                }}
+                                className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
+                                title="Reprovar"
+                            >
+                                <span className="material-symbols-outlined text-[20px]">cancel</span>
+                            </button>
+                        </>
+                    )}
+                    {(h.status === 'aprovado' || h.status === 'publicado') && (
+                        <button
+                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
+                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
+                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
+                                : 'text-off-white/20 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
+                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
+                        >
+                            <span className="material-symbols-outlined text-[20px]">
+                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
+                            </span>
+                        </button>
+                    )}
+                    <button
+                        onClick={() => handleDeleteClick(h.id)}
+                        className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
+                        title="Excluir"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                </>
             )}
         </div>
     );

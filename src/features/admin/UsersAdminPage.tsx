@@ -25,21 +25,30 @@ const UsersAdminPage: React.FC = () => {
     const [alertMessage, setAlertMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
     const [actionType, setActionType] = useState<'diretor' | 'admin' | 'public'>('diretor');
+    const [units, setUnits] = useState<{id: string, name: string}[]>([]);
+    const [selectedUnitId, setSelectedUnitId] = useState<string>('');
 
     useEffect(() => {
         fetchUsers();
+        fetchUnits();
     }, []);
+
+    const fetchUnits = async () => {
+        const { data } = await supabase.from('units').select('id, name').order('name');
+        setUnits(data || []);
+    };
 
     const fetchUsers = async () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('updated_at', { ascending: false });
 
         if (error) {
             console.error('Error fetching users:', error);
         } else {
+            console.log('Fetched users:', data);
             setUsersList(data || []);
         }
         setIsLoading(false);
@@ -48,6 +57,7 @@ const UsersAdminPage: React.FC = () => {
     const handleRoleChangeClick = (u: Profile, newRole: 'diretor' | 'admin' | 'public') => {
         setSelectedUser(u);
         setActionType(newRole);
+        setSelectedUnitId(''); // Reset selection
         setIsConfirmModalOpen(true);
     };
 
@@ -66,6 +76,7 @@ const UsersAdminPage: React.FC = () => {
                 body: {
                     email: selectedUser.username,
                     role: actionType,
+                    unitId: actionType === 'diretor' ? selectedUnitId : null,
                     sessionId: sessionId
                 }
             });
@@ -188,8 +199,33 @@ const UsersAdminPage: React.FC = () => {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={confirmRoleChange}
-                title="Confirmar Alteração de Papel"
-                message={`Tem certeza que deseja alterar o papel do usuário ${selectedUser?.username} para ${actionType}?`}
+                title="Confirmar Alteração"
+                message={
+                    <div className="space-y-6 text-left">
+                        <p className="text-off-white/70">
+                            Tem certeza que deseja alterar o papel do usuário <span className="text-gold font-bold">{selectedUser?.username}</span> para <span className="text-gold font-bold uppercase tracking-widest">{actionType}</span>?
+                        </p>
+                        
+                        {actionType === 'diretor' && (
+                            <div className="space-y-4 pt-4 border-t border-white/5">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gold/60">
+                                    Vincular a uma Unidade (Obrigatório)
+                                </label>
+                                <select 
+                                    className="w-full bg-white/[0.03] border border-white/10 py-4 px-6 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all appearance-none cursor-pointer"
+                                    value={selectedUnitId}
+                                    onChange={(e) => setSelectedUnitId(e.target.value)}
+                                    required
+                                >
+                                    <option value="" className="bg-navy-deep">Selecione a unidade...</option>
+                                    {units.map(u => (
+                                        <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                }
                 confirmLabel="Sim, Alterar"
                 cancelLabel="Cancelar"
                 type="warning"

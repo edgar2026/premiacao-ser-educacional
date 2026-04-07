@@ -1,79 +1,66 @@
-# Ser Prêmios (Ser Educacional)
+# 🏆 Ser Prêmios (Ser Educacional)
 
 > [!IMPORTANT]
-> **Documentação Centralizada:** Para entender a estrutura, tecnologias e regras do projeto, leia o arquivo [PROJETO.md](./PROJETO.md).
+> **Bússola do Projeto:** Para uma visão técnica detalhada de arquitetura, padrões e tecnologias, consulte o arquivo [PROJETO.md](./PROJETO.md).
 
-## React + TypeScript + Vite
+Este é o sistema de gestão de premiações e mérito acadêmico do grupo **Ser Educacional**. O projeto foi concebido para oferecer uma experiência "Premium" e cinematográfica, celebrando as conquistas dos homenageados com elegância e tecnologia de ponta.
 
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## ✨ Diferenciais do Projeto
 
-Currently, two official plugins are available:
+*   **Design Cinematográfico:** Interface rica em texturas de granulado fotográfico, gradientes dinâmicos e tipografia clássica (*Playfair Display*).
+*   **Gestão Híbrida de Auth:** Autenticação robusta com **Clerk** integrada a perfis dinâmicos no **Supabase**.
+*   **Painel Administrativo Poderoso:** Controle total sobre homenageados, premiações, unidades geográficas e mídias da home.
+*   **Experiência do Usuário (UX):** Transições fluidas com *Framer Motion*, mapas interativos e editores de conteúdo rico.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🛠️ Tecnologias Principais
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Frontend:** React 18, TypeScript, Vite
+*   **Estilização:** Tailwind CSS 4.x
+*   **Backend:** Supabase (DB & Edge Functions)
+*   **Auth:** Clerk (Enterprise-ready)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Como Começar
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Pré-requisitos
+Certifique-se de ter o arquivo `.env.local` configurado com as chaves necessárias do Clerk e Supabase.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Instalação
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Desenvolvimento
+```bash
+npm run dev
 ```
+
+---
+
+## 📂 Documentação Relacionada
+
+| Documento | Descrição |
+| :--- | :--- |
+| [PROJETO.md](./PROJETO.md) | **Principal**: Arquitetura, tecnologias e regras de negócio. |
+| [AUTH_FIX_EMERGENCY.md](./docs/AUTH_FIX_EMERGENCY.md) | Histórico de correções críticas no sistema de login. |
+| [EMAIL_CONFIG.md](./docs/EMAIL_CONFIG.md) | Guia de configuração para ativação de disparos de e-mail. |
+
+---
+
+## 👤 Scripts de Administração
+
+Para promover o primeiro administrador do sistema, utilize:
+```bash
+node promote-edgar.js
+```
+*(Certifique-se de preencher as variáveis no script antes de executar)*
+
+---
+
+© 2026 Ser Educacional - Todos os direitos reservados.
+
