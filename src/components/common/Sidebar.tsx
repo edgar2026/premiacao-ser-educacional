@@ -33,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
         { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
         { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
+        { to: '/admin/usuarios', icon: 'manage_accounts', label: 'Gestão de Usuários' },
     ];
 
     const adminLinks = isDiretor 

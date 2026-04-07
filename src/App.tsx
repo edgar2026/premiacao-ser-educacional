@@ -25,6 +25,7 @@ import AwardsAdminPage from './features/admin/AwardsAdminPage';
 import AwardRegistrationPage from './features/admin/AwardRegistrationPage';
 import HomeMediaAdminPage from './features/admin/HomeMediaAdminPage';
 import GeographicRegistrationPage from './features/admin/GeographicRegistrationPage';
+import UsersAdminPage from './features/admin/UsersAdminPage';
 import { AuthProvider } from './features/auth/AuthContext';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import RoleGuard from './features/auth/RoleGuard';
@@ -78,6 +79,7 @@ function App() {
                 <Route path="unidades" element={<Navigate to="/admin/geografia" replace />} />
                 <Route path="marcas" element={<Navigate to="/admin/geografia" replace />} />
                 <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="usuarios" element={<UsersAdminPage />} />
                 <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
             </Route>
