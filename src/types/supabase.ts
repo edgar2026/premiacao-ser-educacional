@@ -106,6 +106,11 @@ export type Database = {
                     unit_id: string
                     video_url: string | null
                     regional_id: string | null
+                    status: string | null
+                    approval_status: string | null
+                    rejection_reason: string | null
+                    name: string | null
+                    created_by: string | null
                 }
                 Insert: {
                     award_id?: string | null

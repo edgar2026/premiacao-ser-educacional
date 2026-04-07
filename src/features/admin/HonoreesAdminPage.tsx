@@ -11,7 +11,7 @@ type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
     status?: string | null;
-    profiles?: { email: string } | null;
+    profiles?: { username: string } | null;
 };
 
 const HonoreesAdminPage: React.FC = () => {
@@ -33,7 +33,7 @@ const HonoreesAdminPage: React.FC = () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('honorees')
-            .select('*, awards!honorees_award_id_fkey(name), regionals(name), profiles:created_by(email)')
+            .select('*, awards!honorees_award_id_fkey(name), regionals(name), profiles:created_by(username)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -91,14 +91,22 @@ const HonoreesAdminPage: React.FC = () => {
             setIsAlertModalOpen(true);
         } else {
             // Send email notification if needed
-            if (h.profiles?.email && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
+            if (h.profiles?.username && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
                 try {
-                    const honoreeName = h.professional_data ? JSON.parse(h.professional_data).name : 'Homenageado';
+                    let honoreeName = 'Homenageado';
+                    try {
+                        if (h.professional_data) {
+                            const data = JSON.parse(h.professional_data);
+                            honoreeName = data.name || 'Homenageado';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing professional_data for notification:', e);
+                    }
                     
                     await supabase.functions.invoke('notify-rejection', {
                         body: {
                             honoreeName,
-                            directorEmail: h.profiles.email,
+                            userEmail: h.profiles?.username || '',
                             reason: rejectionReason,
                             status
                         }
@@ -129,7 +137,13 @@ const HonoreesAdminPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-off-white font-serif italic text-lg leading-tight">
-                            {h.professional_data ? JSON.parse(h.professional_data).name : 'Sem nome'}
+                            {(() => {
+                                try {
+                                    return h.professional_data ? JSON.parse(h.professional_data).name : 'Sem nome';
+                                } catch (e) {
+                                    return h.name || 'Sem nome';
+                                }
+                            })()}
                         </span>
                         <span className="text-[10px] text-off-white/30 uppercase tracking-widest">
                             {h.type}

@@ -70,14 +70,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) throw error;
 
             if (data) {
-                // Sincroniza organization_id se necessário
-                if (clerkOrgId && data.organization_id !== clerkOrgId) {
+                // Sincroniza role e organization_id se necessário
+                const clerkRole = user?.publicMetadata?.role as string;
+                if ((clerkRole && data.role !== clerkRole) || (clerkOrgId && data.organization_id !== clerkOrgId)) {
                     await supabase
                         .from('profiles')
-                        .update({ organization_id: clerkOrgId })
+                        .update({ 
+                            organization_id: clerkOrgId || data.organization_id,
+                            role: clerkRole || data.role
+                        })
                         .eq('id', data.id);
                 }
-                setProfile({ ...data, organization_id: clerkOrgId || data.organization_id });
+                setProfile({ 
+                    ...data, 
+                    organization_id: clerkOrgId || data.organization_id,
+                    role: clerkRole || data.role
+                });
             } else {
                 // CREATE THE PROFILE IF NOT EXISTS (FIRST CLERK LOGIN)
                 const { data: insertedData, error: insertError } = await supabase
