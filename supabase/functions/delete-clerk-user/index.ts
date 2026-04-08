@@ -13,12 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { email, role, unitId, sessionId } = await req.json();
+    const { email, targetUserId, sessionId } = await req.json();
 
     if (!CLERK_SECRET_KEY) throw new Error("Missing CLERK_SECRET_KEY");
-    if (!email || !role || !sessionId) throw new Error("Missing parameters");
+    if (!sessionId || (!email && !targetUserId)) throw new Error("Missing target user identifiers");
 
-    // 1. Verify caller via session
+    // 1. Verify caller is admin
     const sessionRes = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}`, {
       headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
@@ -27,7 +27,6 @@ serve(async (req) => {
     if (!sessionData.user_id) throw new Error("Session has no user_id");
     const callerId = sessionData.user_id;
 
-    // 2. Verify caller is admin
     const callerRes = await fetch(`https://api.clerk.com/v1/users/${callerId}`, {
          headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
@@ -37,51 +36,45 @@ serve(async (req) => {
        throw new Error("Unauthorized (Not Admin)");
     }
 
-    // 3. Find target user in Clerk
-    const targetRes = await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}`, {
+    let clerkUserIdToDelete = targetUserId;
+
+    if (!clerkUserIdToDelete && email) {
+        const targetRes = await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}`, {
+          headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
+        });
+        const targetData = await targetRes.json();
+        const targetUser = targetData[0];
+        if (!targetUser) throw new Error("User not found in Clerk");
+        clerkUserIdToDelete = targetUser.id;
+    }
+    
+    if (clerkUserIdToDelete === callerId) throw new Error("Admins cannot delete themselves");
+
+    // 2. Delete target user in Clerk
+    const deleteRes = await fetch(`https://api.clerk.com/v1/users/${clerkUserIdToDelete}`, {
+      method: "DELETE",
       headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
-    const targetData = await targetRes.json();
-    const targetUser = targetData[0];
-    if (!targetUser) throw new Error("User not found in Clerk");
 
-    // 4. Update target user's role
-    const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}/metadata`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${CLERK_SECRET_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        public_metadata: { 
-          role,
-          unit_id: unitId || targetUser.public_metadata?.unit_id
-        }
-      }),
-    });
+    if (!deleteRes.ok) {
+        const errData = await deleteRes.json();
+        throw new Error(errData.errors?.[0]?.message || "Failed to delete user");
+    }
 
-    if (!updateRes.ok) throw new Error("Failed to update Clerk metadata");
-
-    // 5. Update Supabase profiles
+    // 3. Delete from Supabase profiles
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(email)}`, {
-            method: 'PATCH',
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${clerkUserIdToDelete}`, {
+            method: 'DELETE',
             headers: {
                 'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ 
-                role: role,
-                unit_id: unitId || undefined
-            })
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+            }
         });
     }
-    
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

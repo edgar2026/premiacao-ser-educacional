@@ -37,10 +37,12 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
     ];
 
     const adminLinks = isDiretor 
-        ? allAdminLinks.filter(link => ['Painel de Controle', 'Homenageados'].includes(link.label))
+        ? allAdminLinks.filter(link => ['Homenageados'].includes(link.label))
         : allAdminLinks;
 
-    const links: SidebarLink[] = variant === 'dashboard' ? dashboardLinks : adminLinks;
+    const links: SidebarLink[] = variant === 'dashboard'
+        ? (isDiretor ? dashboardLinks.filter(link => link.label === 'Gestão de Homenageados') : dashboardLinks)
+        : adminLinks;
 
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
 

@@ -13,12 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { email, role, unitId, sessionId } = await req.json();
+    const { email, firstName, lastName, password, role, unitId, sessionId } = await req.json();
 
     if (!CLERK_SECRET_KEY) throw new Error("Missing CLERK_SECRET_KEY");
-    if (!email || !role || !sessionId) throw new Error("Missing parameters");
+    if (!email || !password || !role || !sessionId) throw new Error("Missing parameters");
 
-    // 1. Verify caller via session
+    // 1. Verify caller is admin via session
     const sessionRes = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}`, {
       headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
@@ -27,7 +27,6 @@ serve(async (req) => {
     if (!sessionData.user_id) throw new Error("Session has no user_id");
     const callerId = sessionData.user_id;
 
-    // 2. Verify caller is admin
     const callerRes = await fetch(`https://api.clerk.com/v1/users/${callerId}`, {
          headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
@@ -37,38 +36,41 @@ serve(async (req) => {
        throw new Error("Unauthorized (Not Admin)");
     }
 
-    // 3. Find target user in Clerk
-    const targetRes = await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}`, {
-      headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
-    });
-    const targetData = await targetRes.json();
-    const targetUser = targetData[0];
-    if (!targetUser) throw new Error("User not found in Clerk");
-
-    // 4. Update target user's role
-    const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}/metadata`, {
-      method: "PATCH",
+    // 2. Create target user in Clerk
+    const createRes = await fetch(`https://api.clerk.com/v1/users`, {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${CLERK_SECRET_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        email_address: [email],
+        password: password,
+        skip_password_checks: true,
+        first_name: firstName,
+        last_name: lastName,
         public_metadata: { 
           role,
-          unit_id: unitId || targetUser.public_metadata?.unit_id
+          unit_id: unitId || undefined,
+          force_password_change: true
         }
       }),
     });
 
-    if (!updateRes.ok) throw new Error("Failed to update Clerk metadata");
+    if (!createRes.ok) {
+        const errData = await createRes.json();
+        throw new Error(errData.errors?.[0]?.long_message || errData.errors?.[0]?.message || "Failed to create user");
+    }
 
-    // 5. Update Supabase profiles
+    const newUser = await createRes.json();
+
+    // 3. Insert into Supabase profiles
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(email)}`, {
-            method: 'PATCH',
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+            method: 'POST',
             headers: {
                 'apikey': SUPABASE_SERVICE_ROLE_KEY,
                 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
@@ -76,13 +78,16 @@ serve(async (req) => {
                 'Prefer': 'return=minimal'
             },
             body: JSON.stringify({ 
+                id: newUser.id,
+                username: email,
+                full_name: `${firstName} ${lastName}`.trim(),
                 role: role,
-                unit_id: unitId || undefined
+                unit_id: unitId || null
             })
         });
     }
-    
-    return new Response(JSON.stringify({ success: true }), {
+
+    return new Response(JSON.stringify({ success: true, user: newUser }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

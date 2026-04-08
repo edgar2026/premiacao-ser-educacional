@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useSession } from '@clerk/clerk-react';
 import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
@@ -17,7 +17,7 @@ export interface Profile {
 
 const UsersAdminPage: React.FC = () => {
     const { profile } = useAuth();
-    const { sessionId } = useClerkAuth();
+    const { session } = useSession();
     const [usersList, setUsersList] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -27,6 +27,20 @@ const UsersAdminPage: React.FC = () => {
     const [actionType, setActionType] = useState<'diretor' | 'admin' | 'public'>('diretor');
     const [units, setUnits] = useState<{id: string, name: string}[]>([]);
     const [selectedUnitId, setSelectedUnitId] = useState<string>('');
+
+    // --- State for creating users ---
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newUserForm, setNewUserForm] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        role: 'diretor' as 'admin' | 'diretor' | 'public',
+        unitId: ''
+    });
+
+    // --- State for deleting users ---
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -67,8 +81,7 @@ const UsersAdminPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Using our Edge Function to update Clerk user metadata and Supabase
-            if (!sessionId) {
+            if (!session?.id) {
                 throw new Error("Sessão não identificada. Por favor, faça login novamente.");
             }
 
@@ -77,7 +90,7 @@ const UsersAdminPage: React.FC = () => {
                     email: selectedUser.username,
                     role: actionType,
                     unitId: actionType === 'diretor' ? selectedUnitId : null,
-                    sessionId: sessionId
+                    sessionId: session.id
                 }
             });
 
@@ -91,6 +104,76 @@ const UsersAdminPage: React.FC = () => {
             fetchUsers();
         } catch (err: any) {
             setAlertMessage('Erro ao alterar cargo: ' + err.message);
+            setIsAlertModalOpen(true);
+        } finally {
+            setIsLoading(false);
+            setSelectedUser(null);
+        }
+    };
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsCreateModalOpen(false);
+        setIsLoading(true);
+
+        try {
+            if (!session?.id) {
+                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
+            }
+
+            const res = await supabase.functions.invoke('create-clerk-user', {
+                body: {
+                    ...newUserForm,
+                    sessionId: session.id
+                }
+            });
+
+            if (res.error) {
+                throw new Error("Erro da API: " + res.error.message);
+            }
+            if (res.data && res.data.success === false) {
+                throw new Error(res.data.error || "Erro desconhecido na Edge Function");
+            }
+
+            setAlertMessage(`Usuário ${newUserForm.firstName} criado com sucesso!`);
+            setIsAlertModalOpen(true);
+            setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'diretor', unitId: '' });
+            fetchUsers();
+        } catch (err: any) {
+            setAlertMessage('Erro ao criar usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "create-clerk-user" foi feito deploy no Supabase.');
+            setIsAlertModalOpen(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const confirmDeleteUser = async () => {
+        if (!selectedUser) return;
+        setIsDeleteModalOpen(false);
+        setIsLoading(true);
+
+        try {
+            if (!session?.id) {
+                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
+            }
+
+            const res = await supabase.functions.invoke('delete-clerk-user', {
+                body: {
+                    email: selectedUser.username,
+                    targetUserId: selectedUser.id,
+                    sessionId: session.id
+                }
+            });
+
+            if (res.error) {
+                throw new Error("Erro da API: " + res.error.message);
+            }
+
+            setAlertMessage(`Usuário removido com sucesso.`);
+            setIsAlertModalOpen(true);
+            fetchUsers();
+        } catch (err: any) {
+            setAlertMessage('Erro ao excluir usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "delete-clerk-user" foi feito deploy no Supabase.');
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
@@ -166,6 +249,15 @@ const UsersAdminPage: React.FC = () => {
                         Remover Cargo
                     </button>
                 )}
+                <button
+                    onClick={() => {
+                        setSelectedUser(u);
+                        setIsDeleteModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-red-900/40 text-red-400 border border-red-900/50 hover:bg-red-500 hover:text-white hover:border-red-400 font-bold transition-colors text-xs ml-2"
+                >
+                    Excluir
+                </button>
             </div>
         );
     };
@@ -180,6 +272,14 @@ const UsersAdminPage: React.FC = () => {
                         Gerencie as permissões e papéis dos usuários do sistema.
                     </p>
                 </div>
+                
+                <button 
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="group relative px-6 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-widest text-[10px] uppercase overflow-hidden flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300"
+                >
+                    <span className="material-symbols-outlined text-lg">person_add</span>
+                    <span className="relative z-10 hidden sm:inline">Cadastrar Usuário</span>
+                </button>
             </div>
 
             {isLoading ? (
@@ -230,6 +330,103 @@ const UsersAdminPage: React.FC = () => {
                 cancelLabel="Cancelar"
                 type="warning"
             />
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDeleteUser}
+                title="Confirmar Exclusão"
+                message={`AVISO: Esta ação não pode ser desfeita. Tem certeza que deseja remover permanentemente o usuário ${selectedUser?.full_name || selectedUser?.username}?`}
+                confirmLabel="Sim, Excluir Usuário"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            {/* Modal de Criação de Usuário */}
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-navy-deep/90 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
+                    <div className="relative bg-navy rounded-3xl border border-white/10 w-full max-w-lg overflow-hidden shadow-2xl animate-scale-in">
+                        <div className="p-8">
+                            <h3 className="text-2xl font-serif text-gold mb-6">Criar Novo Usuário</h3>
+                            <form onSubmit={handleCreateUser} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Nome</label>
+                                        <input 
+                                            type="text" required
+                                            value={newUserForm.firstName} onChange={e => setNewUserForm({...newUserForm, firstName: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Sobrenome</label>
+                                        <input 
+                                            type="text" required
+                                            value={newUserForm.lastName} onChange={e => setNewUserForm({...newUserForm, lastName: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Email</label>
+                                    <input 
+                                        type="email" required
+                                        value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})}
+                                        className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Senha (Acesso Inicial)</label>
+                                    <input 
+                                        type="text" required minLength={8}
+                                        value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})}
+                                        className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo</label>
+                                        <select 
+                                            value={newUserForm.role}
+                                            onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as any})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer"
+                                        >
+                                            <option value="diretor" className="bg-navy-deep">Diretor</option>
+                                            <option value="admin" className="bg-navy-deep">Administrador</option>
+                                            <option value="public" className="bg-navy-deep">Público (S/ Permissão)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Unidade (Se Diretor)</label>
+                                        <select 
+                                            value={newUserForm.unitId}
+                                            onChange={(e) => setNewUserForm({...newUserForm, unitId: e.target.value})}
+                                            disabled={newUserForm.role !== 'diretor'}
+                                            required={newUserForm.role === 'diretor'}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer disabled:opacity-50"
+                                        >
+                                            <option value="" className="bg-navy-deep">Selecione...</option>
+                                            {units.map(u => (
+                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 flex justify-end gap-3">
+                                    <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-5 py-3 rounded-full text-white/50 hover:text-white font-bold text-xs uppercase cursor-pointer">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="px-5 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-widest text-[10px] uppercase hover:scale-105 transition-transform cursor-pointer">
+                                        Criar Cadastro
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={isAlertModalOpen}
