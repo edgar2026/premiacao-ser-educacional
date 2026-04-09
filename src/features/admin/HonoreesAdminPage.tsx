@@ -6,24 +6,29 @@ import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import GlassCard from '../../components/ui/GlassCard';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
     status?: string | null;
-
 };
 
 const HonoreesAdminPage: React.FC = () => {
     const navigate = useNavigate();
-    const { profile } = useAuth();
-    const isDiretor = profile?.role === 'diretor';
+    const { profile, isAdmin } = useAuth();
+    const isDiretor = !isAdmin;
     const [honorees, setHonorees] = useState<Honoree[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+    
+    // Reject modal state
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [rejectTarget, setRejectTarget] = useState<Honoree | null>(null);
+    const [rejectReason, setRejectReason] = useState('');
 
     useEffect(() => {
         fetchHonorees();
@@ -225,6 +230,18 @@ const HonoreesAdminPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
 
+            {/* Director actions */}
+            {isDiretor && (h.status === 'rascunho' || h.status === 'reprovado') && (
+                <button
+                    onClick={() => handleStatusUpdate(h, 'em_analise', null)}
+                    className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
+                    title="Solicitar Análise"
+                >
+                    <span className="material-symbols-outlined text-[20px]">send</span>
+                </button>
+            )}
+
+            {/* Admin actions */}
             {!isDiretor && (
                 <>
                     {h.status === 'em_analise' && (
@@ -238,8 +255,9 @@ const HonoreesAdminPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    const reason = prompt('Motivo da reprovação:');
-                                    if (reason) handleStatusUpdate(h, 'reprovado', reason);
+                                    setRejectTarget(h);
+                                    setRejectReason('');
+                                    setIsRejectModalOpen(true);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -325,6 +343,65 @@ const HonoreesAdminPage: React.FC = () => {
                 confirmLabel="OK"
                 type="warning"
             />
+
+            {/* Reject Modal */}
+            {isRejectModalOpen && rejectTarget && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+                    <GlassCard className="w-full max-w-lg p-10 rounded-[2.5rem] border-red-500/20 bg-navy-deep shadow-2xl">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4">
+                                <div className="size-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-red-500 text-2xl">gavel</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-serif italic text-off-white">Recusar Solicitação</h3>
+                                    <p className="text-[10px] text-off-white/30 uppercase tracking-widest">
+                                        {(() => { try { return rejectTarget.professional_data ? JSON.parse(rejectTarget.professional_data).name : 'Homenageado'; } catch { return 'Homenageado'; } })()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30">
+                                    Motivo da Recusa <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                    placeholder="Descreva o motivo da recusa para que o diretor possa corrigir..."
+                                    className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-off-white focus:border-red-500/50 outline-none transition-all min-h-[120px] resize-none placeholder:text-off-white/10"
+                                />
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    onClick={() => setIsRejectModalOpen(false)}
+                                    className="flex-1 px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-off-white/40 hover:text-off-white transition-all text-[10px] font-bold uppercase tracking-widest"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!rejectReason.trim()) {
+                                            setAlertMessage('Por favor, informe o motivo da recusa.');
+                                            setIsAlertModalOpen(true);
+                                            return;
+                                        }
+                                        await handleStatusUpdate(rejectTarget, 'reprovado', rejectReason.trim());
+                                        setIsRejectModalOpen(false);
+                                        setRejectTarget(null);
+                                    }}
+                                    disabled={!rejectReason.trim()}
+                                    className="flex-1 px-6 py-4 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-all text-[10px] font-bold uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">cancel</span>
+                                    Confirmar Recusa
+                                </button>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </div>
+            )}
         </div>
     );
 };

@@ -13,6 +13,9 @@ export interface Profile {
     username: string;
     full_name?: string | null;
     avatar_url?: string | null;
+    unit_id?: string | null;
+    ativo?: boolean;
+    units?: { name: string } | null;
 }
 
 const UsersAdminPage: React.FC = () => {
@@ -35,6 +38,17 @@ const UsersAdminPage: React.FC = () => {
         lastName: '',
         email: '',
         password: '',
+        role: 'diretor' as 'admin' | 'diretor' | 'public',
+        unitId: ''
+    });
+
+    // --- State for editing users ---
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editUserForm, setEditUserForm] = useState({
+        id: '',
+        firstName: '',
+        lastName: '',
+        email: '',
         role: 'diretor' as 'admin' | 'diretor' | 'public',
         unitId: ''
     });
@@ -63,7 +77,10 @@ const UsersAdminPage: React.FC = () => {
             console.error('Error fetching users:', error);
         } else {
             console.log('Fetched users:', data);
-            setUsersList(data || []);
+            // Filtro dinâmico: se a coluna 'ativo' ainda não existir, será undefined (passa). 
+            // Só bloqueia se for explicitamente false (quando houver soft-delete real).
+            const activeUsers = (data || []).filter(u => u.ativo !== false);
+            setUsersList(activeUsers);
         }
         setIsLoading(false);
     };
@@ -147,6 +164,43 @@ const UsersAdminPage: React.FC = () => {
         }
     };
 
+    const handleUpdateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsEditModalOpen(false);
+        setIsLoading(true);
+
+        try {
+            if (!session?.id) {
+                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
+            }
+
+            const res = await supabase.functions.invoke('update-clerk-user', {
+                body: {
+                    ...editUserForm,
+                    targetUserId: editUserForm.id,
+                    sessionId: session.id
+                }
+            });
+
+            if (res.error) {
+                throw new Error("Erro da API: " + res.error.message);
+            }
+            if (res.data && res.data.success === false) {
+                throw new Error(res.data.error || "Erro desconhecido na Edge Function");
+            }
+
+            setAlertMessage(`Usuário atualizado com sucesso!`);
+            setIsAlertModalOpen(true);
+            setEditUserForm({ id: '', firstName: '', lastName: '', email: '', role: 'diretor', unitId: '' });
+            fetchUsers();
+        } catch (err: any) {
+            setAlertMessage('Erro ao atualizar usuário: ' + err.message);
+            setIsAlertModalOpen(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const confirmDeleteUser = async () => {
         if (!selectedUser) return;
         setIsDeleteModalOpen(false);
@@ -205,50 +259,55 @@ const UsersAdminPage: React.FC = () => {
             )
         },
         {
-            header: 'Papel (Role)',
+            header: 'Papel e Unidade',
             accessor: (u: Profile) => {
                 const r = u.role;
+                let roleBadge = <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Público</span>;
                 if (r === 'admin' || r === 'super_admin') {
-                    return <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Admin</span>;
+                    roleBadge = <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Admin</span>;
+                } else if (r === 'diretor') {
+                    roleBadge = <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor</span>;
                 }
-                if (r === 'diretor') {
-                    return <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor</span>;
-                }
-                return <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Público</span>;
+                
+                const unitName = units.find(unit => unit.id === u.unit_id)?.name;
+
+                return (
+                    <div className="flex flex-col items-start gap-1">
+                        {roleBadge}
+                        {unitName && (
+                            <span className="text-[10px] text-off-white/40 italic flex items-center gap-1 mt-1">
+                                <span className="material-symbols-outlined text-[12px]">location_on</span>
+                                {unitName}
+                            </span>
+                        )}
+                    </div>
+                );
             }
         }
     ];
 
     const actions = (u: Profile) => {
-        // Prevent editing own role here or super admins
-        if (u.id === profile?.id || u.role === 'super_admin') return null;
-
         return (
             <div className="flex gap-2">
-                {u.role !== 'diretor' && (
-                    <button
-                        onClick={() => handleRoleChangeClick(u, 'diretor')}
-                        className="px-3 py-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold hover:text-navy-deep font-bold transition-colors text-xs"
-                    >
-                        Tornar Diretor
-                    </button>
-                )}
-                {u.role !== 'admin' && (
-                    <button
-                        onClick={() => handleRoleChangeClick(u, 'admin')}
-                        className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white font-bold transition-colors text-xs"
-                    >
-                        Tornar Admin
-                    </button>
-                )}
-                {u.role !== 'public' && u.role !== 'admin' && (
-                    <button
-                        onClick={() => handleRoleChangeClick(u, 'public')}
-                        className="px-3 py-1.5 rounded-lg bg-off-white/5 text-off-white/40 hover:bg-off-white/20 hover:text-white font-bold transition-colors text-xs"
-                    >
-                        Remover Cargo
-                    </button>
-                )}
+                <button
+                    onClick={() => {
+                        const parts = (u.full_name || '').split(' ');
+                        const first = parts[0] || '';
+                        const rest = parts.slice(1).join(' ');
+                        setEditUserForm({
+                            id: u.id,
+                            firstName: first,
+                            lastName: rest,
+                            email: u.username,
+                            role: (u.role || 'public') as 'admin' | 'diretor' | 'public',
+                            unitId: u.unit_id || ''
+                        });
+                        setIsEditModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white hover:border-blue-400 font-bold transition-all duration-300 text-xs"
+                >
+                    Editar
+                </button>
                 <button
                     onClick={() => {
                         setSelectedUser(u);
@@ -420,6 +479,84 @@ const UsersAdminPage: React.FC = () => {
                                     </button>
                                     <button type="submit" className="px-5 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-widest text-[10px] uppercase hover:scale-105 transition-transform cursor-pointer">
                                         Criar Cadastro
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Edição de Usuário */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-navy-deep/90 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+                    <div className="relative bg-navy rounded-3xl border border-white/10 w-full max-w-lg overflow-hidden shadow-2xl animate-scale-in">
+                        <div className="p-8">
+                            <h3 className="text-2xl font-serif text-gold mb-6">Editar Usuário</h3>
+                            <form onSubmit={handleUpdateUser} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Nome</label>
+                                        <input 
+                                            type="text" required
+                                            value={editUserForm.firstName} onChange={e => setEditUserForm({...editUserForm, firstName: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Sobrenome</label>
+                                        <input 
+                                            type="text" required
+                                            value={editUserForm.lastName} onChange={e => setEditUserForm({...editUserForm, lastName: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Email</label>
+                                    <input 
+                                        type="email" required
+                                        value={editUserForm.email} onChange={e => setEditUserForm({...editUserForm, email: e.target.value})}
+                                        className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none opacity-60 cursor-not-allowed"
+                                        disabled
+                                        title="Email do Clerk não deve ser modificado aqui"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo</label>
+                                        <select 
+                                            value={editUserForm.role}
+                                            onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value as any})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer"
+                                        >
+                                            <option value="diretor" className="bg-navy-deep">Diretor</option>
+                                            <option value="admin" className="bg-navy-deep">Administrador</option>
+                                            <option value="public" className="bg-navy-deep">Público (S/ Permissão)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Unidade</label>
+                                        <select 
+                                            value={editUserForm.unitId}
+                                            onChange={(e) => setEditUserForm({...editUserForm, unitId: e.target.value})}
+                                            className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer"
+                                        >
+                                            <option value="" className="bg-navy-deep">Nenhuma (Global)</option>
+                                            {units.map(u => (
+                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 flex justify-end gap-3">
+                                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-3 rounded-full text-white/50 hover:text-white font-bold text-xs uppercase cursor-pointer">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="px-5 py-3 rounded-full bg-blue-500 text-white font-bold tracking-widest text-[10px] uppercase hover:scale-105 transition-transform cursor-pointer">
+                                        Salvar Alterações
                                     </button>
                                 </div>
                             </form>

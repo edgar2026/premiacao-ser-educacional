@@ -67,11 +67,14 @@ serve(async (req) => {
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${clerkUserIdToDelete}`, {
-            method: 'DELETE',
+            method: 'PATCH',
             headers: {
                 'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
-            }
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ ativo: false })
         });
     }
 

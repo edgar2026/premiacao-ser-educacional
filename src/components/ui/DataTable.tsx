@@ -104,7 +104,7 @@ const DataTable = <T extends { id: string | number }>({
                                         ))}
                                         {actions && (
                                             <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
-                                                <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                                <div className="flex justify-end gap-3 transition-all duration-300">
                                                     {actions(item)}
                                                 </div>
                                             </td>

@@ -17,6 +17,8 @@ export const translateClerkError = (err: any): string => {
         'form_password_length_too_short': 'A senha deve ter pelo menos 8 caracteres.',
         'form_param_nil': 'Por favor, preencha todos os campos.',
         'session_exists': 'Você já possui uma sessão ativa. Por favor, recarregue a página ou faça logout.',
+        'too_many_requests': 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
+        'rate_limit_exceeded': 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
     };
 
     if (translations[code]) {
@@ -26,6 +28,11 @@ export const translateClerkError = (err: any): string => {
     // Se for a mensagem específica de vazamento mas o código for diferente
     if (message?.toLowerCase().includes('data breach')) {
         return 'Esta senha foi encontrada em um vazamento de dados na internet. Por segurança, escolha uma senha diferente.';
+    }
+
+    // Se for rate limit
+    if (message?.toLowerCase().includes('too many')) {
+        return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
     }
 
     // Fallback para a mensagem original ou uma genérica

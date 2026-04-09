@@ -7,7 +7,7 @@ import { useAuth } from '../auth/AuthContext';
 const AdminPanel: React.FC = () => {
     const navigate = useNavigate();
     const { profile } = useAuth();
-    const isDiretor = profile?.role === 'diretor';
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
 
     const [stats, setStats] = useState({
         honorees: '0',
@@ -17,12 +17,12 @@ const AdminPanel: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (isDiretor) {
+        if (!isAdmin) {
             navigate('/admin/homenageados', { replace: true });
         } else {
             fetchStats();
         }
-    }, [isDiretor, navigate]);
+    }, [isAdmin, navigate]);
 
     const fetchStats = async () => {
         setIsLoading(true);
@@ -31,7 +31,7 @@ const AdminPanel: React.FC = () => {
                 supabase.from('honorees').select('*', { count: 'exact', head: true })
             ];
 
-            if (!isDiretor) {
+            if (isAdmin) {
                 queries.push(
                     supabase.from('awards').select('*', { count: 'exact', head: true }),
                     supabase.from('regionals').select('*', { count: 'exact', head: true })
@@ -42,8 +42,8 @@ const AdminPanel: React.FC = () => {
 
             setStats({
                 honorees: (results[0].count || 0).toString(),
-                awards: !isDiretor ? (results[1].count || 0).toString() : '0',
-                regionals: !isDiretor ? (results[2].count || 0).toString() : '0'
+                awards: isAdmin ? (results[1].count || 0).toString() : '0',
+                regionals: isAdmin ? (results[2].count || 0).toString() : '0'
             });
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -54,8 +54,8 @@ const AdminPanel: React.FC = () => {
 
     const statsConfig = [
         { label: 'Homenageados', value: stats.honorees, icon: 'groups', change: 'Live', link: '/admin/homenageados', visible: true },
-        { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios', visible: !isDiretor },
-        { label: 'Regional', value: stats.regionals, icon: 'map', change: 'Live', link: '/admin/geografia', visible: !isDiretor }
+        { label: 'Láureas Ativas', value: stats.awards, icon: 'military_tech', change: 'Live', link: '/admin/premios', visible: isAdmin },
+        { label: 'Regional', value: stats.regionals, icon: 'map', change: 'Live', link: '/admin/geografia', visible: isAdmin }
     ].filter(s => s.visible);
 
     const quickActions = [
@@ -71,7 +71,7 @@ const AdminPanel: React.FC = () => {
             desc: 'Gestão de honrarias', 
             icon: 'military_tech', 
             link: '/admin/premios/novo',
-            visible: !isDiretor 
+            visible: isAdmin 
         },
         { 
             label: 'Gestão Regional', 
@@ -111,7 +111,7 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className={`grid grid-cols-1 ${isDiretor ? 'md:grid-cols-1 max-w-sm' : 'md:grid-cols-3'} gap-6`}>
+            <div className={`grid grid-cols-1 ${!isAdmin ? 'md:grid-cols-1 max-w-sm' : 'md:grid-cols-3'} gap-6`}>
                 {isLoading ? (
                     <div className="col-span-full flex justify-center py-10">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold"></div>
@@ -142,7 +142,7 @@ const AdminPanel: React.FC = () => {
                 <GlassCard className="p-10 rounded-[3rem] border-white/5">
                     <div className="flex justify-between items-center mb-10">
                         <h3 className="text-xl font-serif italic text-off-white">Atividades Recentes</h3>
-                        {!isDiretor && (
+                        {isAdmin && (
                             <button
                                 onClick={() => navigate('/admin/dashboard')}
                                 className="text-gold text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
@@ -175,7 +175,7 @@ const AdminPanel: React.FC = () => {
                         <h3 className="text-xl font-serif italic text-off-white">Ações Rápidas</h3>
                         <span className="material-symbols-outlined text-gold/30">bolt</span>
                     </div>
-                    <div className={`grid grid-cols-1 ${isDiretor ? '' : 'sm:grid-cols-2'} gap-6`}>
+                    <div className={`grid grid-cols-1 ${!isAdmin ? '' : 'sm:grid-cols-2'} gap-6`}>
                         {quickActions.map((action, i) => (
                             <button
                                 key={i}

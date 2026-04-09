@@ -309,7 +309,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 timeline: formData.timeline,
                 initiatives: formData.initiatives,
                 recognitions: formData.recognitions,
-                status: isDirector ? (formData.status === 'reprovado' ? 'em_analise' : formData.status) : formData.status,
+                status: isDirector ? 'em_analise' : formData.status,
                 rejection_reason: isDirector ? null : formData.rejection_reason,
                 is_published: isAdmin ? formData.is_published : (formData.status === 'publicado'),
                 stats: formData.stats,

@@ -19,7 +19,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({ allowedRoles }) => {
 
     // Se não houver perfil ou o papel não estiver na lista permitida, redireciona
     if (!profile || !profile.role || !allowedRoles.includes(profile.role)) {
-        return <Navigate to="/admin" replace />;
+        return <Navigate to="/admin/homenageados" replace />;
     }
 
     return <Outlet />;

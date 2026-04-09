@@ -53,19 +53,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setIsAuthorized(true);
 
-            // 2. Busca ou sincroniza perfil no Supabase
-            // Verifica se o userId é um UUID válido para evitar erro de sintaxe no Postgres
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+            // 2. Busca perfil no Supabase — id agora é TEXT (= Clerk user ID)
+            let data = null;
+            let error = null;
 
-            let query = supabase.from('profiles').select('*');
-
-            if (isUuid) {
-                query = query.or(`id.eq.${userId},username.eq.${email}`);
+            // Tenta buscar pelo ID do Clerk primeiro
+            const byId = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+            if (byId.data) {
+                data = byId.data;
+                error = byId.error;
             } else {
-                query = query.eq('username', email);
+                // Fallback: busca pelo email (username)
+                const byEmail = await supabase.from('profiles').select('*').eq('username', email).maybeSingle();
+                data = byEmail.data;
+                error = byEmail.error;
             }
-
-            const { data, error } = await query.maybeSingle();
 
             if (error) throw error;
 

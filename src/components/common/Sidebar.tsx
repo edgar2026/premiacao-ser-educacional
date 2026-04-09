@@ -18,30 +18,38 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         fill?: boolean;
     }
 
-    const isDiretor = profile?.role === 'diretor';
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
 
-    const dashboardLinks: SidebarLink[] = [
-        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
-        { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
-        { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
-    ];
+    const dashboardLinks: SidebarLink[] = isAdmin
+        ? [
+            { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
+            { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
+            { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
+        ]
+        : [
+            { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
+        ];
 
     const allAdminLinks: SidebarLink[] = [
         { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
         { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
+        { to: '/admin/aprovacoes', icon: 'fact_check', label: 'Aprovações' },
         { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
         { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
         { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
         { to: '/admin/usuarios', icon: 'manage_accounts', label: 'Gestão de Usuários' },
     ];
 
-    const adminLinks = isDiretor 
-        ? allAdminLinks.filter(link => ['Homenageados'].includes(link.label))
-        : allAdminLinks;
+    const adminLinks = isAdmin
+        ? allAdminLinks
+        : [
+            { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
+            { to: '/admin/minhas-solicitacoes', icon: 'assignment', label: 'Minhas Solicitações' },
+          ];
 
     const links: SidebarLink[] = variant === 'dashboard'
-        ? (isDiretor ? dashboardLinks.filter(link => link.label === 'Gestão de Homenageados') : dashboardLinks)
+        ? dashboardLinks
         : adminLinks;
 
     const closeMobileMenu = () => setIsMobileMenuOpen(false);

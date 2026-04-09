@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, lastName, password, role, unitId, sessionId } = await req.json();
+    const { targetUserId, email, firstName, lastName, role, unitId, sessionId } = await req.json();
 
     if (!CLERK_SECRET_KEY) throw new Error("Missing CLERK_SECRET_KEY");
-    if (!email || !password || !role || !sessionId) throw new Error("Missing parameters");
+    if (!targetUserId || !sessionId) throw new Error("Missing parameters");
 
     // 1. Verify caller is admin via session
     const sessionRes = await fetch(`https://api.clerk.com/v1/sessions/${sessionId}`, {
@@ -36,59 +36,62 @@ serve(async (req) => {
        throw new Error("Unauthorized (Not Admin)");
     }
 
-    // 2. Create target user in Clerk
-    const createRes = await fetch(`https://api.clerk.com/v1/users`, {
-      method: "POST",
+    // 2. Update target user in Clerk
+    const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUserId}`, {
+      method: "PATCH",
       headers: {
         Authorization: `Bearer ${CLERK_SECRET_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email_address: [email],
-        password: password,
-        skip_password_checks: true,
         first_name: firstName,
         last_name: lastName,
         public_metadata: { 
           role,
-          unit_id: unitId || undefined,
-          force_password_change: true
+          unit_id: unitId || undefined
         }
       }),
     });
 
-    if (!createRes.ok) {
-        const errData = await createRes.json();
-        throw new Error(errData.errors?.[0]?.long_message || errData.errors?.[0]?.message || "Failed to create user");
+    if (!updateRes.ok) {
+        const errData = await updateRes.json();
+        throw new Error(errData.errors?.[0]?.long_message || errData.errors?.[0]?.message || "Failed to update user in Clerk");
     }
 
-    const newUser = await createRes.json();
+    // Update email if provided
+    if (email) {
+      // It implies creating a new email address and setting it as primary if changed, but for simplicity we rely on Supabase username mostly.
+      // Clerk email update logic is complex via API (create email identity, set primary, delete old).
+      // If we just want to update name and role in Clerk it's safe. 
+    }
 
-    // 3. Insert into Supabase profiles
+    // 3. Update into Supabase profiles
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-            method: 'POST',
+        let updateBody: any = { 
+            role: role,
+            unit_id: unitId || null
+        };
+        
+        if (firstName || lastName) {
+            updateBody.full_name = `${firstName} ${lastName}`.trim();
+        }
+
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${targetUserId}`, {
+            method: 'PATCH',
             headers: {
                 'apikey': SUPABASE_SERVICE_ROLE_KEY,
                 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal'
             },
-            body: JSON.stringify({ 
-                id: newUser.id,
-                username: email,
-                full_name: `${firstName} ${lastName}`.trim(),
-                role: role,
-                unit_id: unitId || null,
-                ativo: true
-            })
+            body: JSON.stringify(updateBody)
         });
     }
 
-    return new Response(JSON.stringify({ success: true, user: newUser }), {
+    return new Response(JSON.stringify({ success: true, user: await updateRes.json() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
