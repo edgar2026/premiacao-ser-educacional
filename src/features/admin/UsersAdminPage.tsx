@@ -54,24 +54,29 @@ const UsersAdminPage: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     useEffect(() => {
-        // Auto-fix imediato para o usuário específico que ficou órfão no banco local
+        // Auto-fix definitivo para o Victor
         const syncOrphanedUser = async () => {
             try {
                 const targetEmail = 'victavares925@gmail.com';
                 const { data } = await supabase.from('profiles').select('id').eq('username', targetEmail).maybeSingle();
                 
                 if (!data) {
-                    await supabase.from('profiles').insert({
-                        id: `usr_${crypto.randomUUID()}`,
-                        username: targetEmail,
-                        full_name: 'Victor Tavares',
-                        role: 'diretor',
-                        ativo: true,
-                        primeiro_acesso: true
+                    // Usa a função oficial (RPC) do banco para criar o perfil forçadamente
+                    await supabase.rpc('create_clerk_profile', {
+                        p_id: crypto.randomUUID(),
+                        p_email: targetEmail,
+                        p_name: 'Victor Tavares',
+                        p_org_id: null
                     });
+
+                    // Em seguida, atualiza o cargo dele
+                    await supabase.from('profiles').update({
+                        role: 'diretor',
+                        ativo: true
+                    }).eq('username', targetEmail);
                 }
             } catch (e) {
-                console.error("Silent sync failed", e);
+                console.error("Falha ao forçar sincronização do Victor", e);
             }
         };
 
@@ -146,57 +151,53 @@ const UsersAdminPage: React.FC = () => {
         setIsCreateModalOpen(false);
         setIsLoading(true);
 
-        let clerkUserId = `usr_${crypto.randomUUID()}`;
-
         try {
             if (!session?.id) throw new Error("Sessão inválida");
 
-            // Tenta criar no Clerk
+            // Tenta criar no Clerk (Autenticação)
             const res = await supabase.functions.invoke('create-clerk-user', {
                 body: { ...newUserForm, sessionId: session.id }
             });
 
-            if (res.data?.user?.id) clerkUserId = res.data.user.id;
-            else if (res.data?.id) clerkUserId = res.data.id;
-
-            // Se der erro de usuário já existente, interceptamos para sincronizar!
             if (res.error || res.data?.success === false) {
                 const errMsg = res.error?.message || res.data?.error || '';
-                if (errMsg.toLowerCase().includes('exist') || errMsg.toLowerCase().includes('duplicate')) {
-                    console.warn("Usuário já existe no Auth. Sincronizando perfil localmente...");
-                } else {
+                if (!errMsg.toLowerCase().includes('exist') && !errMsg.toLowerCase().includes('duplicate')) {
                     throw new Error(errMsg);
                 }
             }
 
-            // Garante que o banco local Supabase seja atualizado/criado
+            // FORÇA a criação no banco de dados local usando o RPC nativo!
             const { data: existing } = await supabase.from('profiles').select('id').eq('username', newUserForm.email).maybeSingle();
             
-            if (existing) {
-                await supabase.from('profiles').update({
-                    full_name: `${newUserForm.firstName} ${newUserForm.lastName}`.trim(),
-                    role: newUserForm.role,
-                    unit_id: newUserForm.unitId || null
-                }).eq('id', existing.id);
-            } else {
-                await supabase.from('profiles').insert({
-                    id: clerkUserId,
-                    username: newUserForm.email,
-                    full_name: `${newUserForm.firstName} ${newUserForm.lastName}`.trim(),
-                    role: newUserForm.role,
-                    unit_id: newUserForm.unitId || null,
-                    ativo: true,
-                    primeiro_acesso: true
+            if (!existing) {
+                const { error: rpcError } = await supabase.rpc('create_clerk_profile', {
+                    p_id: crypto.randomUUID(),
+                    p_email: newUserForm.email,
+                    p_name: `${newUserForm.firstName} ${newUserForm.lastName}`.trim(),
+                    p_org_id: null
                 });
+                
+                if (rpcError) throw new Error("Falha ao injetar usuário na tabela profiles: " + rpcError.message);
             }
 
-            setAlertMessage(`Usuário cadastrado e sincronizado com sucesso!`);
+            // Garante as permissões corretas
+            const { error: updateError } = await supabase.from('profiles').update({
+                full_name: `${newUserForm.firstName} ${newUserForm.lastName}`.trim(),
+                role: newUserForm.role,
+                unit_id: newUserForm.unitId || null,
+                ativo: true
+            }).eq('username', newUserForm.email);
+
+            if (updateError) throw new Error("Falha ao definir permissões no banco: " + updateError.message);
+
+            setAlertMessage(`Usuário cadastrado com sucesso!`);
             setIsAlertModalOpen(true);
             setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'diretor', unitId: '' });
             fetchUsers();
         } catch (err: any) {
             setAlertMessage('Erro: ' + err.message);
             setIsAlertModalOpen(true);
+            fetchUsers();
         } finally {
             setIsLoading(false);
         }
@@ -517,8 +518,8 @@ const UsersAdminPage: React.FC = () => {
                                     <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-3 rounded-full text-white/40 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors">
                                         Cancelar
                                     </button>
-                                    <button type="submit" className="px-8 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-gold/20">
-                                        Criar Cadastro
+                                    <button type="submit" disabled={isLoading} className="px-8 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-gold/20 disabled:opacity-50">
+                                        {isLoading ? 'Salvando...' : 'Criar Cadastro'}
                                     </button>
                                 </div>
                             </form>
@@ -595,8 +596,8 @@ const UsersAdminPage: React.FC = () => {
                                     <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 rounded-full text-white/40 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors">
                                         Cancelar
                                     </button>
-                                    <button type="submit" className="px-8 py-3 rounded-full bg-blue-500 text-white font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">
-                                        Salvar Alterações
+                                    <button type="submit" disabled={isLoading} className="px-8 py-3 rounded-full bg-blue-500 text-white font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-blue-500/20 disabled:opacity-50">
+                                        {isLoading ? 'Salvando...' : 'Salvar Alterações'}
                                     </button>
                                 </div>
                             </form>
