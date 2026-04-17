@@ -224,6 +224,21 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
 
+            {/* Botão de Publicar / Despublicar - Visível para Admins (e diretores se permitido) */}
+            {(h.status === 'aprovado' || h.status === 'publicado') && (
+                <button
+                    onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
+                    className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
+                        ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
+                        : 'text-green-500/60 hover:text-green-500 hover:bg-green-500/10 hover:border-green-500/20'}`}
+                    title={h.status === 'publicado' ? "Despublicar" : "Publicar Agora"}
+                >
+                    <span className="material-symbols-outlined text-[20px]">
+                        {h.status === 'publicado' ? 'visibility_off' : 'publish'}
+                    </span>
+                </button>
+            )}
+
             {!isDiretor && (
                 <>
                     {(h.status === 'em_analise') && (
@@ -267,19 +282,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                             title="Enviar para Análise"
                         >
                             <span className="material-symbols-outlined text-[20px]">send</span>
-                        </button>
-                    )}
-                    {(h.status === 'aprovado' || h.status === 'publicado') && (
-                        <button
-                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
-                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
-                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
-                                : 'text-off-white/40 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
-                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
-                            </span>
                         </button>
                     )}
                 </>
