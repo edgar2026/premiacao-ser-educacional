@@ -43,8 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchProfile = async (userId: string, email: string, clerkOrgId?: string) => {
         try {
+            // 1. Verifica restrição de organização se configurada
             if (REQUIRED_ORG_ID && clerkOrgId !== REQUIRED_ORG_ID) {
-                console.warn(`[Auth] Usuário não pertence à organização obrigatória.`);
+                console.warn(`[Auth] Usuário não pertence à organização obrigatória: ${REQUIRED_ORG_ID}`);
                 setIsAuthorized(false);
                 setProfile(null);
                 return;
@@ -52,23 +53,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             setIsAuthorized(true);
 
-            // CHAMA A EDGE FUNCTION PARA SINCRONIZAR 100% O CLERK COM O SUPABASE
-            const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-clerk-profile', {
-                body: {
-                    id: userId,
-                    email: email,
-                    firstName: user?.firstName,
-                    lastName: user?.lastName,
-                    role: user?.publicMetadata?.role || 'public',
-                    unitId: user?.publicMetadata?.unit_id || null,
-                }
-            });
+            // 2. Busca ou sincroniza perfil no Supabase
+            // Verifica se o userId é um UUID válido para evitar erro de sintaxe no Postgres
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
 
-            if (!syncError && syncData?.profile) {
-                setProfile(syncData.profile);
+            let query = supabase.from('profiles').select('*');
+
+            if (isUuid) {
+                query = query.or(`id.eq.${userId},username.eq.${email}`);
             } else {
-                console.error("Failed to sync profile:", syncError || syncData?.error);
-                setProfile(null);
+                query = query.eq('username', email);
+            }
+
+            const { data, error } = await query.maybeSingle();
+
+            if (error) throw error;
+
+            if (data) {
+                // Sincroniza role e organization_id se necessário
+                const clerkRole = user?.publicMetadata?.role as string;
+                if ((clerkRole && data.role !== clerkRole) || (clerkOrgId && data.organization_id !== clerkOrgId)) {
+                    await supabase
+                        .from('profiles')
+                        .update({ 
+                            organization_id: clerkOrgId || data.organization_id,
+                            role: clerkRole || data.role
+                        })
+                        .eq('id', data.id);
+                }
+                setProfile({ 
+                    ...data, 
+                    organization_id: clerkOrgId || data.organization_id,
+                    role: clerkRole || data.role
+                });
+            } else {
+                // CREATE THE PROFILE IF NOT EXISTS (FIRST CLERK LOGIN)
+                const { data: insertedData, error: insertError } = await supabase
+                    .rpc('create_clerk_profile', {
+                        p_id: crypto.randomUUID(),
+                        p_email: email,
+                        p_name: email.split('@')[0],
+                        p_org_id: clerkOrgId || null
+                    });
+
+                if (!insertError && insertedData) {
+                    setProfile(insertedData);
+                } else {
+                    console.error("Failed to auto-create profile via RPC:", insertError);
+                    setProfile(null);
+                }
             }
         } catch (error) {
             console.error('Error fetching profile:', error);

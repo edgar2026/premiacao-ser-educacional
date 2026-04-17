@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
-import { useSession } from '@clerk/clerk-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, LabelList, LineChart, Line
@@ -29,8 +28,8 @@ interface Honoree {
 }
 
 const DashboardPage: React.FC = () => {
-    const { session } = useSession();
     const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     
     // Data states
     const [brands, setBrands] = useState<Brand[]>([]);
@@ -52,24 +51,18 @@ const DashboardPage: React.FC = () => {
     });
 
     useEffect(() => {
-        if (session?.id) {
-            fetchData();
-        }
-    }, [session?.id]);
+        fetchData();
+    }, []);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            // Chamada Edge Function Mestra para Homenageados! (Burla RLS com segurança p/ Executivo)
-            const dashboardRes = await supabase.functions.invoke('get-dashboard-data', {
-                body: { sessionId: session?.id }
-            });
-
-            const [brandsRes, unitsRes, awardsRes, regionalsRes, profilesRes] = await Promise.all([
+            const [brandsRes, unitsRes, awardsRes, regionalsRes, honoreesRes, profilesRes] = await Promise.all([
                 supabase.from('brands').select('*').order('name'),
                 supabase.from('units').select('*').order('name'),
                 supabase.from('awards').select('*').order('name'),
                 supabase.from('regionals').select('*').order('name'),
+                supabase.from('honorees').select('*'), // SEM FILTRO DE PUBLISHED - PEGAR TUDO
                 supabase.from('profiles').select('id, full_name, username')
             ]);
 
@@ -77,12 +70,8 @@ const DashboardPage: React.FC = () => {
             if (unitsRes.data) setUnits(unitsRes.data);
             if (awardsRes.data) setAwards(awardsRes.data);
             if (regionalsRes.data) setRegionals(regionalsRes.data);
+            if (honoreesRes.data) setHonorees(honoreesRes.data as any);
             if (profilesRes.data) setProfiles(profilesRes.data as any);
-            
-            if (dashboardRes.data?.honorees) {
-                setHonorees(dashboardRes.data.honorees);
-            }
-
         } catch (error) {
             console.error('Error fetching data:', error);
             showAlert('Não foi possível carregar todos os dados.', 'Erro de Conexão', 'danger');
@@ -232,9 +221,9 @@ const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Filters Row - Responsive */}
-            <div className="flex flex-col md:flex-row flex-wrap gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:flex-1">
+            {/* Filters Row */}
+            <div className="flex flex-col md:flex-row gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
+                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto flex-1 md:flex-none">
                     <span className="material-symbols-outlined text-gold/50 text-sm">map</span>
                     <select
                         className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
@@ -246,7 +235,7 @@ const DashboardPage: React.FC = () => {
                     </select>
                 </div>
                 
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:flex-1">
+                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto flex-1 md:flex-none">
                     <span className="material-symbols-outlined text-gold/50 text-sm">location_city</span>
                     <select
                         className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
@@ -258,7 +247,7 @@ const DashboardPage: React.FC = () => {
                     </select>
                 </div>
 
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto">
+                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto flex-1 md:flex-none">
                     <span className="material-symbols-outlined text-gold/50 text-sm">filter_list</span>
                     <select
                         className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
@@ -267,7 +256,7 @@ const DashboardPage: React.FC = () => {
                     >
                         <option value="all" className="bg-navy-deep">Todos os Status</option>
                         <option value="em_analise" className="bg-navy-deep">Pendentes</option>
-                        <option value="aprovados" className="bg-navy-deep">Aprovados / Publicados</option>
+                        <option value="aprovados" className="bg-navy-deep">Aprovados/Publicados</option>
                         <option value="reprovado" className="bg-navy-deep">Rejeitados</option>
                     </select>
                 </div>
@@ -287,36 +276,36 @@ const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* KPIs Grid - Empilhados no mobile */}
+            {/* KPIs Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-gold/50 col-span-2 md:col-span-1 text-center md:text-left">
+                <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-gold/50">
                     <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest mb-2">Total Geral</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-off-white italic">{metrics.total}</span>
+                    <span className="text-4xl font-bold font-serif text-off-white italic">{metrics.total}</span>
                 </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-yellow-500">
+                <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-yellow-500">
                     <p className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-widest mb-2">Pendentes</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-yellow-400 italic">{metrics.pendentes}</span>
+                    <span className="text-4xl font-bold font-serif text-yellow-400 italic">{metrics.pendentes}</span>
                 </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-blue-500">
+                <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-blue-500">
                     <p className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest mb-2">Aprovados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-blue-400 italic">{metrics.aprovados}</span>
+                    <span className="text-4xl font-bold font-serif text-blue-400 italic">{metrics.aprovados}</span>
                 </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-green-500">
+                <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-green-500">
                     <p className="text-[10px] font-bold text-green-500/80 uppercase tracking-widest mb-2">Publicados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-green-400 italic">{metrics.publicados}</span>
+                    <span className="text-4xl font-bold font-serif text-green-400 italic">{metrics.publicados}</span>
                 </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-red-500">
+                <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-red-500">
                     <p className="text-[10px] font-bold text-red-500/80 uppercase tracking-widest mb-2">Rejeitados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-red-400 italic">{metrics.reprovados}</span>
+                    <span className="text-4xl font-bold font-serif text-red-400 italic">{metrics.reprovados}</span>
                 </GlassCard>
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Pie Chart */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 flex flex-col items-center overflow-x-auto custom-scrollbar">
+                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 flex flex-col items-center">
                     <h3 className="text-xl font-serif italic text-off-white w-full text-left mb-6">Distribuição de Status</h3>
-                    <div className="h-[250px] w-full min-w-[200px]">
+                    <div className="h-[250px] w-full">
                         {statusPieData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -344,9 +333,9 @@ const DashboardPage: React.FC = () => {
                 </GlassCard>
 
                 {/* Line Chart */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 lg:col-span-2 overflow-x-auto custom-scrollbar">
+                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 lg:col-span-2">
                     <h3 className="text-xl font-serif italic text-off-white mb-6">Evolução de Cadastros</h3>
-                    <div className="h-[250px] w-full min-w-[400px]">
+                    <div className="h-[250px] w-full">
                         {evolutionData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={evolutionData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
@@ -369,12 +358,12 @@ const DashboardPage: React.FC = () => {
             {/* Rankings & Bar Chart */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Bar Chart Units */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 lg:col-span-2 overflow-x-auto custom-scrollbar">
+                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 lg:col-span-2">
                     <h3 className="text-xl font-serif italic text-off-white mb-6">Cadastros por Unidade (Top 8)</h3>
-                    <div className="h-[280px] w-full min-w-[350px]">
+                    <div className="h-[280px] w-full">
                         {unitsBarData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={unitsBarData} layout="vertical" margin={{ left: 80, right: 30, top: 5, bottom: 5 }}>
+                                <BarChart data={unitsBarData} layout="vertical" margin={{ left: 60, right: 30, top: 5, bottom: 5 }}>
                                     <XAxis type="number" hide />
                                     <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#ffffff80', fontSize: 10, fontWeight: 500 }} width={120} />
                                     <RechartsTooltip 
@@ -392,7 +381,7 @@ const DashboardPage: React.FC = () => {
                 </GlassCard>
 
                 {/* Top Directors Ranking */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5">
+                <GlassCard className="p-8 rounded-[2.5rem] border-white/5">
                     <div className="flex items-center gap-3 mb-6">
                         <span className="material-symbols-outlined text-gold">workspace_premium</span>
                         <h3 className="text-xl font-serif italic text-off-white">Top Diretores</h3>
@@ -405,7 +394,7 @@ const DashboardPage: React.FC = () => {
                                         <div className="size-8 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs shrink-0">
                                             {i + 1}º
                                         </div>
-                                        <span className="text-sm font-bold text-off-white truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[150px]">{director.name}</span>
+                                        <span className="text-sm font-bold text-off-white truncate max-w-[150px]">{director.name}</span>
                                     </div>
                                     <span className="text-gold font-black">{director.count}</span>
                                 </div>
@@ -418,22 +407,21 @@ const DashboardPage: React.FC = () => {
             </div>
 
             {/* Tabela Completa */}
-            <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5 overflow-hidden">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <GlassCard className="p-8 rounded-[3rem] border-white/5 overflow-hidden">
+                <div className="flex justify-between items-center mb-8">
                     <h3 className="text-2xl font-serif italic text-off-white">Relação Completa</h3>
                     <span className="text-gold text-[10px] font-bold uppercase tracking-widest bg-gold/10 px-4 py-2 rounded-full">
                         {filteredHonorees.length} Registros
                     </span>
                 </div>
 
-                <div className="overflow-x-auto custom-scrollbar pb-4">
-                    <table className="w-full text-left border-collapse min-w-[900px]">
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr className="border-b border-white/10">
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Nome / Cargo</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Unidade</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Regional</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Responsável</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest text-right">Data</th>
                             </tr>
@@ -443,7 +431,6 @@ const DashboardPage: React.FC = () => {
                                 const unit = units.find(u => u.id === h.unit_id);
                                 const reg = regionals.find(r => r.id === unit?.regional_id);
                                 const profData = h.professional_data ? JSON.parse(h.professional_data) : {};
-                                const creator = profiles.find(p => p.id === h.created_by);
                                 return (
                                     <tr key={h.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td className="px-4 py-4">
@@ -452,7 +439,6 @@ const DashboardPage: React.FC = () => {
                                         </td>
                                         <td className="px-4 py-4 text-sm text-off-white/70">{unit?.name || '-'}</td>
                                         <td className="px-4 py-4 text-sm text-off-white/70">{reg?.name || '-'}</td>
-                                        <td className="px-4 py-4 text-xs font-bold text-off-white/50">{creator?.full_name || 'Sistema'}</td>
                                         <td className="px-4 py-4">{formatStatus(h.status)}</td>
                                         <td className="px-4 py-4 text-right text-xs text-off-white/40 font-mono">
                                             {new Date(h.created_at || h.awarded_at).toLocaleDateString('pt-BR')}
@@ -462,7 +448,7 @@ const DashboardPage: React.FC = () => {
                             })}
                             {filteredHonorees.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="py-16 text-center text-off-white/30 italic">
+                                    <td colSpan={5} className="py-16 text-center text-off-white/30 italic">
                                         Nenhum registro encontrado com os filtros atuais.
                                     </td>
                                 </tr>
