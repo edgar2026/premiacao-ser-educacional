@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Temp files
+_temp_*
+
+# Supabase local config
+supabase/.temp/
