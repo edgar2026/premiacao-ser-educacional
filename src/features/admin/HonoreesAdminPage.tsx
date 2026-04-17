@@ -24,10 +24,17 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const isDiretor = profile?.role === 'diretor';
     const [honorees, setHonorees] = useState<Honoree[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Modais de exclusão e alerta
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+
+    // Modal de Reprovação
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [honoreeToReject, setHonoreeToReject] = useState<Honoree | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
 
     // Cria um cliente autenticado com a identidade do usuário atual para furar o bloqueio anônimo
     const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
@@ -80,12 +87,12 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         setItemToDelete(null);
     };
 
-    const handleStatusUpdate = async (h: Honoree, status: string, rejectionReason?: string | null) => {
+    const handleStatusUpdate = async (h: Honoree, status: string, reason?: string | null) => {
         setIsLoading(true);
         const updateData: any = { status };
         
-        if (rejectionReason !== undefined) {
-            updateData.rejection_reason = rejectionReason;
+        if (reason !== undefined) {
+            updateData.rejection_reason = reason;
         }
         
         if (status === 'publicado') {
@@ -119,7 +126,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         body: {
                             honoreeName,
                             userEmail: h.created_by || '',
-                            reason: rejectionReason,
+                            reason: reason,
                             status
                         }
                     });
@@ -130,6 +137,22 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             fetchHonorees();
         }
         setIsLoading(false);
+    };
+
+    const confirmReject = async () => {
+        if (!honoreeToReject) return;
+        
+        if (!rejectionReason.trim()) {
+            setAlertMessage('Por favor, informe o motivo da reprovação.');
+            setIsAlertModalOpen(true);
+            return;
+        }
+
+        setIsRejectModalOpen(false);
+        await handleStatusUpdate(honoreeToReject, 'reprovado', rejectionReason);
+        
+        setHonoreeToReject(null);
+        setRejectionReason('');
     };
 
     const columns: Column<Honoree>[] = [
@@ -250,8 +273,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                             </button>
                             <button
                                 onClick={() => {
-                                    const reason = prompt('Motivo da reprovação:');
-                                    if (reason) handleStatusUpdate(h, 'reprovado', reason);
+                                    setHonoreeToReject(h);
+                                    setRejectionReason('');
+                                    setIsRejectModalOpen(true);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -355,6 +379,35 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 title="Excluir Homenageado"
                 message="Tem certeza que deseja excluir este homenageado? Esta ação não poderá ser desfeita."
                 confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isRejectModalOpen}
+                onClose={() => {
+                    setIsRejectModalOpen(false);
+                    setHonoreeToReject(null);
+                    setRejectionReason('');
+                }}
+                onConfirm={confirmReject}
+                title="Reprovar Cadastro"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/60">
+                            Ao reprovar, descreva abaixo o que o diretor precisa corrigir para solicitar uma nova análise.
+                        </p>
+                        <textarea
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-off-white outline-none focus:border-red-500/50 transition-all font-serif italic text-lg"
+                            placeholder="Ex: A foto precisa estar em alta resolução; Corrigir o título do prêmio..."
+                            rows={4}
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            required
+                        />
+                    </div>
+                }
+                confirmLabel="Confirmar Reprovação"
                 cancelLabel="Cancelar"
                 type="danger"
             />
