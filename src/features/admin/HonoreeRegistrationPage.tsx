@@ -33,7 +33,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
     const [regionals, setRegionals] = useState<Regional[]>([]);
 
-    // Refs para corrigir advertências de StrictMode com findDOMNode do ReactQuill
     const bioQuillRef = useRef(null);
     const initQuillRef = useRef(null);
     const recQuillRef = useRef(null);
@@ -67,7 +66,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         initiatives: '',
         recognitions: '',
         rejection_reason: '',
-        status: 'rascunho' as 'rascunho' | 'pendente_analise' | 'em_correcao' | 'aprovado' | 'rejeitado' | 'publicado' | 'reprovado'
+        status: 'rascunho' as 'rascunho' | 'em_analise' | 'aprovado' | 'reprovado' | 'publicado'
     });
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -76,7 +75,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [videoPreview, setVideoPreview] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    // Cropper State
     const [isCropping, setIsCropping] = useState(false);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
@@ -104,7 +102,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         fetchRegionals();
     }, []);
 
-    // Effect independente para autopreenchimento de Diretores, com suporte a busca indireta da marca e regional
     useEffect(() => {
         if (!id && isDirector && profile?.unit_id && units.length > 0) {
             const myUnit = units.find(u => u.id === profile.unit_id);
@@ -303,13 +300,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 external_role: formData.external_role
             });
 
-            // Validação inteligente
             const isInterno = formData.type === 'interno';
             const missingName = !formData.name.trim();
             const missingAward = !formData.award_id;
-            const missingInternals = isInterno && (!formData.unit_id); // Avalia apenas a unidade, pois brand é inferido.
+            const missingInternals = isInterno && (!formData.unit_id);
 
-            // Permite salvar como rascunho mesmo com dados em branco, senão bloqueia
             if (actionType !== 'rascunho' && (missingName || missingAward || missingInternals)) {
                 showAlert(
                     "Existem campos obrigatórios em branco. Verifique Identificação e os vínculos obrigatórios institucionais.",
@@ -320,16 +315,15 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 return;
             }
 
-            // Gerenciamento de Status pelo Workflow
             let finalStatus = formData.status;
 
             if (isDirector) {
                 if (actionType === 'enviar') {
-                    finalStatus = 'pendente_analise';
+                    finalStatus = 'em_analise';
                 } else if (actionType === 'rascunho') {
                     finalStatus = 'rascunho';
-                } else if (actionType === 'atualizar' && ['rejeitado', 'reprovado', 'em_correcao'].includes(formData.status)) {
-                    finalStatus = 'pendente_analise'; // Quando o diretor salva em cima de uma rejeição, reenvia para análise.
+                } else if (actionType === 'atualizar' && ['reprovado'].includes(formData.status)) {
+                    finalStatus = 'em_analise';
                 }
             } else if (isAdmin && !id) {
                 finalStatus = formData.is_published ? 'publicado' : 'aprovado';
@@ -458,7 +452,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 </div>
             </div>
 
-            {isDirector && (formData.status === 'rejeitado' || formData.status === 'reprovado' || formData.status === 'em_correcao') && (
+            {isDirector && (formData.status === 'reprovado') && (
                 <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
                     <div className="flex items-start gap-4">
                         <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
@@ -1046,13 +1040,13 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                     </button>
                                 )}
                                 <button
-                                    onClick={() => handleSubmit(isDirector ? (['rascunho', 'rejeitado', 'reprovado', 'em_correcao'].includes(formData.status) || !id ? 'enviar' : 'atualizar') : 'atualizar')}
+                                    onClick={() => handleSubmit(isDirector ? (['rascunho', 'reprovado'].includes(formData.status) || !id ? 'enviar' : 'atualizar') : 'atualizar')}
                                     disabled={isLoading}
                                     className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                                 >
                                     {isLoading ? 'Processando...' : (
                                         isDirector 
-                                            ? (['rascunho', 'rejeitado', 'reprovado', 'em_correcao'].includes(formData.status) || !id ? 'Enviar para Análise' : 'Atualizar Dados') 
+                                            ? (['rascunho', 'reprovado'].includes(formData.status) || !id ? 'Enviar para Análise' : 'Atualizar Dados') 
                                             : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')
                                     )}
                                 </button>

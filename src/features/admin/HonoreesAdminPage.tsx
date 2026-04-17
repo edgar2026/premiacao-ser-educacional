@@ -47,9 +47,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         const { data, error } = await query;
 
         if (error) {
-            console.error('Error fetching honorees:', error);
+            console.error('Error fetching honoree:', error);
         } else {
-            setHonorees(data || []);
+            setHonoree(data as any);
         }
         setIsLoading(false);
     };
@@ -84,10 +84,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             updateData.rejection_reason = rejectionReason;
         }
         
-        // If status is published, also set is_published flag (for compatibility)
         if (status === 'publicado') {
             updateData.is_published = true;
-        } else if (status === 'aprovado' || status === 'rejeitado' || status === 'reprovado' || status === 'pendente_analise' || status === 'em_analise' || status === 'em_correcao') {
+        } else if (status === 'aprovado' || status === 'reprovado' || status === 'em_analise') {
             updateData.is_published = false;
         }
 
@@ -100,7 +99,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             setAlertMessage('Erro ao atualizar status: ' + error.message);
             setIsAlertModalOpen(true);
         } else {
-            // Send email notification if needed
             if (h.created_by && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
                 try {
                     let honoreeName = 'Homenageado';
@@ -183,7 +181,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                                 Rascunho
                             </span>
                         );
-                    case 'pendente_analise':
                     case 'em_analise':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
@@ -196,17 +193,10 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                                 Aprovado
                             </span>
                         );
-                    case 'rejeitado':
                     case 'reprovado':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-                                Rejeitado
-                            </span>
-                        );
-                    case 'em_correcao':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-orange-500/10 text-orange-500 border-orange-500/20">
-                                Em Correção
+                                Reprovado
                             </span>
                         );
                     case 'publicado':
@@ -245,7 +235,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
 
             {!isDiretor && (
                 <>
-                    {(h.status === 'pendente_analise' || h.status === 'em_analise') && (
+                    {(h.status === 'em_analise') && (
                         <>
                             <button
                                 onClick={() => handleStatusUpdate(h, 'aprovado')}
@@ -257,7 +247,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                             <button
                                 onClick={() => {
                                     const reason = prompt('Motivo da reprovação:');
-                                    if (reason) handleStatusUpdate(h, 'rejeitado', reason);
+                                    if (reason) handleStatusUpdate(h, 'reprovado', reason);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -278,9 +268,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
 
             {isDiretor && (
                 <>
-                    {(h.status === 'rascunho' || h.status === 'em_correcao' || h.status === 'rejeitado' || h.status === 'reprovado') && (
+                    {(h.status === 'rascunho' || h.status === 'reprovado') && (
                         <button
-                            onClick={() => handleStatusUpdate(h, 'pendente_analise')}
+                            onClick={() => handleStatusUpdate(h, 'em_analise')}
                             className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
                             title="Enviar para Análise"
                         >
@@ -309,9 +299,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         const st = h.status || 'rascunho';
         if (isRequestsView) {
             if (isDiretor) {
-                return ['rascunho', 'pendente_analise', 'rejeitado', 'reprovado', 'em_correcao'].includes(st);
+                return ['rascunho', 'em_analise', 'reprovado'].includes(st);
             } else {
-                return ['pendente_analise', 'em_analise', 'em_correcao', 'rejeitado', 'reprovado'].includes(st);
+                return ['em_analise', 'reprovado'].includes(st);
             }
         } else {
             return ['aprovado', 'publicado'].includes(st);
