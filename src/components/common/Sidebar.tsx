@@ -24,15 +24,18 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
 
     const dashboardLinks: SidebarLink[] = [
         ...(isAdmin || isExecutivo ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' }] : []),
-        { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
-        { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
+        ...(isAdmin || isExecutivo ? [{ to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' }] : []),
+        { to: isDiretor ? '/admin/solicitacoes' : '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
     ];
 
     const adminLinks: SidebarLink[] = [
         ...(isAdmin || isExecutivo ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' }] : []),
-        { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
+        // Ocultando completamente o Painel de Controle para o Diretor de Unidade
+        ...(isAdmin || isExecutivo ? [{ to: '/admin', icon: 'grid_view', label: 'Painel de Controle' }] : []),
+        
         { to: '/admin/solicitacoes', icon: 'mark_email_unread', label: isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
+        
         // Links exclusivos para Administradores
         ...(isAdmin ? [
             { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
