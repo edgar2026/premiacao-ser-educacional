@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useSession } from '@clerk/clerk-react';
 import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
 export interface Profile {
@@ -19,17 +19,18 @@ export interface Profile {
 }
 
 const UsersAdminPage: React.FC = () => {
-    void useAuth; // context available if needed
+    const { profile } = useAuth();
     const { session } = useSession();
+    
+    // 🔥 CORREÇÃO: Cria um cliente de banco com a sua identidade (crachá de Admin)
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
     const [usersList, setUsersList] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
-    const [actionType, setActionType] = useState<'diretor' | 'admin' | 'public'>('diretor');
     const [units, setUnits] = useState<{id: string, name: string}[]>([]);
-    const [selectedUnitId, setSelectedUnitId] = useState<string>('');
 
     // --- State for creating users ---
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -38,7 +39,7 @@ const UsersAdminPage: React.FC = () => {
         lastName: '',
         email: '',
         password: '',
-        role: 'diretor' as 'admin' | 'diretor' | 'public',
+        role: 'diretor' as 'admin' | 'diretor' | 'public' | 'diretor_executivo',
         unitId: ''
     });
 
@@ -62,13 +63,13 @@ const UsersAdminPage: React.FC = () => {
     }, []);
 
     const fetchUnits = async () => {
-        const { data } = await supabase.from('units').select('id, name').order('name');
+        const { data } = await dbClient.from('units').select('id, name').order('name');
         setUnits(data || []);
     };
 
     const fetchUsers = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('profiles')
             .select('*')
             .order('updated_at', { ascending: false });
@@ -80,39 +81,6 @@ const UsersAdminPage: React.FC = () => {
             setUsersList(activeUsers);
         }
         setIsLoading(false);
-    };
-
-    const confirmRoleChange = async () => {
-        if (!selectedUser) return;
-        setIsConfirmModalOpen(false);
-        setIsLoading(true);
-
-        try {
-            // 1. Atualização DIRETA no banco via RLS de Admin
-            const { error: dbError } = await supabase
-                .from('profiles')
-                .update({ role: actionType, unit_id: actionType === 'diretor' ? selectedUnitId : null })
-                .eq('id', selectedUser.id);
-            
-            if (dbError) throw new Error(dbError.message);
-
-            // 2. Sincroniza Clerk silenciosamente
-            if (session?.id) {
-                supabase.functions.invoke('set-clerk-role', {
-                    body: { email: selectedUser.username, role: actionType, unitId: actionType === 'diretor' ? selectedUnitId : null, sessionId: session.id }
-                }).catch(console.warn);
-            }
-
-            setAlertMessage(`Permissão de ${selectedUser.full_name || selectedUser.username} alterada com sucesso!`);
-            setIsAlertModalOpen(true);
-            fetchUsers();
-        } catch (err: any) {
-            setAlertMessage('Erro ao alterar cargo: ' + err.message);
-            setIsAlertModalOpen(true);
-        } finally {
-            setIsLoading(false);
-            setSelectedUser(null);
-        }
     };
 
     const handleCreateUser = async (e: React.FormEvent) => {
@@ -127,7 +95,7 @@ const UsersAdminPage: React.FC = () => {
                 body: { ...newUserForm, sessionId: session.id }
             });
 
-            if (res.error) throw new Error("A requisição foi bloqueada pelo navegador ou servidor.");
+            if (res.error) throw new Error("A requisição foi bloqueada pelo navegador. Tente desativar os bloqueadores de anúncios (Shields) nesta página.");
             if (res.data && res.data.success === false) throw new Error(res.data.error || "Erro desconhecido na criação.");
 
             setAlertMessage(`Usuário ${newUserForm.firstName} criado com sucesso!`);
@@ -142,78 +110,89 @@ const UsersAdminPage: React.FC = () => {
         }
     };
 
-    // FIX: UPDATE À PROVA DE FALHAS (ATUALIZA DIRETAMENTE NO SUPABASE)
+    // 🔥 CORREÇÃO: Usando o dbClient com validação de alteração real
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsEditModalOpen(false);
         setIsLoading(true);
 
         try {
-            // 1. Atualiza DIRETO no banco de dados. Isso é instantâneo e não depende de Edge Functions.
             const fullName = [editUserForm.firstName, editUserForm.lastName].filter(Boolean).join(' ');
             
-            const { error: dbError } = await supabase
+            // 1. Atualiza DIRETO no banco e pede o retorno da linha alterada (select)
+            const { data, error: dbError } = await dbClient
                 .from('profiles')
                 .update({
                     full_name: fullName,
                     role: editUserForm.role,
                     unit_id: editUserForm.unitId || null
                 })
-                .eq('id', editUserForm.id);
+                .eq('id', editUserForm.id)
+                .select();
 
             if (dbError) throw new Error(dbError.message);
+            
+            // Se o RLS bloquear silenciosamente, os dados voltam vazios
+            if (!data || data.length === 0) {
+                throw new Error("O banco bloqueou a edição por falta de privilégios reais. Tente atualizar a página.");
+            }
 
-            // 2. Sincroniza com a função antiga que já funcionava, mas de forma silenciosa (fire-and-forget)
+            // 2. Sincroniza com o Clerk em segundo plano
             if (session?.id) {
-                supabase.functions.invoke('set-clerk-role', {
+                supabase.functions.invoke('update-clerk-user', {
                     body: {
-                        email: editUserForm.email,
+                        targetUserId: editUserForm.id,
+                        firstName: editUserForm.firstName,
+                        lastName: editUserForm.lastName,
                         role: editUserForm.role,
                         unitId: editUserForm.unitId || null,
                         sessionId: session.id
                     }
-                }).catch(console.warn);
+                }).catch(err => console.warn("Aviso Clerk:", err));
             }
 
-            setAlertMessage(`Usuário atualizado com sucesso!`);
+            setAlertMessage(`Usuário atualizado com sucesso no banco de dados!`);
             setIsAlertModalOpen(true);
             setEditUserForm({ id: '', firstName: '', lastName: '', email: '', role: 'diretor', unitId: '' });
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao atualizar no banco de dados: ' + err.message);
+            setAlertMessage('Erro real ao atualizar: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // FIX: EXCLUSÃO À PROVA DE FALHAS
+    // 🔥 CORREÇÃO: Usando dbClient e conferindo a exclusão
     const confirmDeleteUser = async () => {
         if (!selectedUser) return;
         setIsDeleteModalOpen(false);
         setIsLoading(true);
 
         try {
-            // 1. Deleta do Supabase. Isso instantaneamente revoga o acesso do usuário ao sistema.
-            const { error: dbError } = await supabase
+            const { data, error: dbError } = await dbClient
                 .from('profiles')
                 .delete()
-                .eq('id', selectedUser.id);
+                .eq('id', selectedUser.id)
+                .select();
                 
             if (dbError) throw new Error(dbError.message);
+            if (!data || data.length === 0) {
+                throw new Error("O banco bloqueou a exclusão por falta de privilégios.");
+            }
 
-            // 2. Tenta limpar o Clerk em background
+            // Limpar Clerk em background
             if (session?.id) {
                 supabase.functions.invoke('delete-clerk-user', {
                     body: { targetUserId: selectedUser.id, sessionId: session.id }
-                }).catch(console.warn);
+                }).catch(err => console.warn("Aviso Clerk:", err));
             }
 
             setAlertMessage(`Acesso do usuário revogado com sucesso.`);
             setIsAlertModalOpen(true);
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao excluir usuário: ' + err.message);
+            setAlertMessage('Erro real ao excluir usuário: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
