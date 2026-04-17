@@ -90,10 +90,11 @@ const Header: React.FC<HeaderProps> = ({ variant = 'public', userName, userRole,
                 </nav>
 
                 <div className="flex items-center gap-6">
+                    {/* Botão invisível (Easter Egg). Opacity 0 por padrão, hover altera para 100 */}
                     <Link
                         to="/login"
-                        className="flex items-center justify-center size-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-off-white/60 hover:text-gold group"
-                        title="Portal Administrativo"
+                        className="flex items-center justify-center size-10 rounded-full opacity-0 hover:opacity-100 bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-off-white/60 hover:text-gold group focus:opacity-100"
+                        aria-label="Acesso Restrito"
                     >
                         <Settings className="size-5 transition-transform group-hover:rotate-90" />
                     </Link>
