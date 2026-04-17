@@ -37,6 +37,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const initQuillRef = useRef(null);
     const recQuillRef = useRef(null);
 
+    // Cliente Autenticado para furar bloqueios de RLS invisível
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
     const [formData, setFormData] = useState({
         type: 'interno' as 'interno' | 'externo',
         name: '',
@@ -144,7 +147,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     };
 
     const fetchHonoree = async () => {
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('honorees')
             .select('*')
             .eq('id', id)
@@ -349,8 +352,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 stats: formData.stats,
                 created_by: profile?.id
             };
-
-            const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
             if (id) {
                 const { error } = await dbClient

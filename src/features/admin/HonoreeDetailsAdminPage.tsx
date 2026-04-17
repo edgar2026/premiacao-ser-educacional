@@ -224,15 +224,8 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 </button>
                             </>
                         )}
-                        {isAdmin && (honoree.status === 'reprovado') && (
-                            <button
-                                onClick={handleApprove}
-                                disabled={isUpdating}
-                                className="bg-white/5 hover:bg-white/10 text-off-white border border-white/10 px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all"
-                            >
-                                Reavaliar e Aprovar
-                            </button>
-                        )}
+                        {/* Botão de 'Reavaliar e Aprovar' removido do status de reprovado para os admins, aguardando o diretor corrigir e submeter novamente */}
+                        
                         {isDirector && (honoree.status === 'reprovado' || honoree.status === 'rascunho') && (
                             <button
                                 onClick={async () => {
