@@ -124,9 +124,7 @@ const ApprovalAdminPage: React.FC = () => {
         }
     };
 
-    const filterCounts = {
-        em_analise: honorees.length,
-    };
+
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">

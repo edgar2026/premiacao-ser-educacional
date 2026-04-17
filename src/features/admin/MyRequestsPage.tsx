@@ -71,14 +71,7 @@ const MyRequestsPage: React.FC = () => {
         return statusConfig[status || ''] || statusConfig.rascunho;
     };
 
-    // Summary counts
-    const counts = {
-        all: honorees.length,
-        rascunho: 0,
-        em_analise: 0,
-        aprovado: 0,
-        reprovado: 0,
-    };
+
     // Compute counts separately to avoid filtering issues
     useEffect(() => {
         // counts are implicitly recalculated on render from honorees
