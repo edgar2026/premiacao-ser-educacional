@@ -9,9 +9,7 @@ import {
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
 // Interfaces
-interface Brand { id: string; name: string; }
 interface Unit { id: string; name: string; brand_id: string; regional_id?: string; }
-interface Award { id: string; name: string; }
 interface Regional { id: string; name: string; }
 interface Profile { id: string; full_name: string; username: string; }
 interface Honoree {
@@ -33,9 +31,7 @@ const DashboardPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     
     // Data states
-    const [brands, setBrands] = useState<Brand[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
-    const [awards, setAwards] = useState<Award[]>([]);
     const [regionals, setRegionals] = useState<Regional[]>([]);
     const [honorees, setHonorees] = useState<Honoree[]>([]);
     const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -65,17 +61,13 @@ const DashboardPage: React.FC = () => {
                 body: { sessionId: session?.id }
             });
 
-            const [brandsRes, unitsRes, awardsRes, regionalsRes, profilesRes] = await Promise.all([
-                supabase.from('brands').select('*').order('name'),
+            const [unitsRes, regionalsRes, profilesRes] = await Promise.all([
                 supabase.from('units').select('*').order('name'),
-                supabase.from('awards').select('*').order('name'),
                 supabase.from('regionals').select('*').order('name'),
                 supabase.from('profiles').select('id, full_name, username')
             ]);
 
-            if (brandsRes.data) setBrands(brandsRes.data);
             if (unitsRes.data) setUnits(unitsRes.data);
-            if (awardsRes.data) setAwards(awardsRes.data);
             if (regionalsRes.data) setRegionals(regionalsRes.data);
             if (profilesRes.data) setProfiles(profilesRes.data as any);
             
