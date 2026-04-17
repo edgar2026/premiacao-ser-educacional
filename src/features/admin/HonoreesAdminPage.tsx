@@ -47,9 +47,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         const { data, error } = await query;
 
         if (error) {
-            console.error('Error fetching honoree:', error);
+            console.error('Error fetching honorees:', error);
         } else {
-            setHonoree(data as any);
+            setHonorees(data as any); // Corrigido aqui: de setHonoree para setHonorees
         }
         setIsLoading(false);
     };
