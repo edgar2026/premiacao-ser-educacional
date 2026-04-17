@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import { useAuth } from '../auth/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -25,6 +25,9 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
     const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
     const isDirector = profile?.role === 'diretor';
+    
+    // Injeção do cliente autenticado para buscar dados Rascunho/Pendentes
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
     useEffect(() => {
         if (id) {
@@ -34,7 +37,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
     const fetchHonoree = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .eq('id', id)
@@ -53,7 +56,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         if (!honoree) return;
         setIsUpdating(true);
         try {
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({
                     status: 'aprovado',
@@ -74,7 +77,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         if (!honoree || !rejectionReason.trim()) return;
         setIsUpdating(true);
         try {
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({
                     status: 'reprovado',
@@ -99,7 +102,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         setIsUpdating(true);
         try {
             const newStatus = honoree.status === 'publicado' ? 'aprovado' : 'publicado';
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({ 
                     is_published: newStatus === 'publicado',
@@ -235,7 +238,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 onClick={async () => {
                                     if (honoree.status !== 'em_analise') {
                                         setIsUpdating(true);
-                                        await supabase.from('honorees').update({ status: 'em_analise' }).eq('id', honoree.id);
+                                        await dbClient.from('honorees').update({ status: 'em_analise' }).eq('id', honoree.id);
                                         await fetchHonoree();
                                         setIsUpdating(false);
                                     }

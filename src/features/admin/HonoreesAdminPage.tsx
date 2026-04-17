@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 
@@ -29,13 +29,17 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
 
+    // Cria um cliente autenticado com a identidade do usuário atual para furar o bloqueio anônimo
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
     useEffect(() => {
         fetchHonorees();
     }, []);
 
     const fetchHonorees = async () => {
         setIsLoading(true);
-        let query = supabase
+        
+        let query = dbClient
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
@@ -49,7 +53,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         if (error) {
             console.error('Error fetching honorees:', error);
         } else {
-            setHonorees(data as any); // Corrigido aqui: de setHonoree para setHonorees
+            setHonorees(data as any);
         }
         setIsLoading(false);
     };
@@ -62,7 +66,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const confirmDelete = async () => {
         if (!itemToDelete) return;
 
-        const { error } = await supabase
+        const { error } = await dbClient
             .from('honorees')
             .delete()
             .eq('id', itemToDelete);
@@ -90,7 +94,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             updateData.is_published = false;
         }
 
-        const { error } = await supabase
+        const { error } = await dbClient
             .from('honorees')
             .update(updateData)
             .eq('id', h.id);
