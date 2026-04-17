@@ -70,7 +70,13 @@ function App() {
               <Route path="homenageados/:id/editar" element={<HonoreeEditPage />} />
               <Route path="homenageados/:id/editar/:step" element={<HonoreeEditPage />} />
               
-              {/* Rotas restritas a Administradores */}
+              {/* Rota estendida para o Diretor Executivo */}
+              <Route element={<RoleGuard allowedRoles={['admin', 'super_admin', 'diretor_executivo']} />}>
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
+              </Route>
+
+              {/* Rotas restritas exclusivamente a Administradores */}
               <Route element={<RoleGuard allowedRoles={['admin', 'super_admin']} />}>
                 <Route path="premios" element={<AwardsAdminPage />} />
                 <Route path="premios/novo" element={<AwardRegistrationPage />} />
@@ -79,9 +85,7 @@ function App() {
                 <Route path="geografia" element={<GeographicRegistrationPage />} />
                 <Route path="unidades" element={<Navigate to="/admin/geografia" replace />} />
                 <Route path="marcas" element={<Navigate to="/admin/geografia" replace />} />
-                <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="usuarios" element={<UsersAdminPage />} />
-                <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
             </Route>
           </Route>
