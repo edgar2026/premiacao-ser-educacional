@@ -351,94 +351,66 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 </button>
             </div>
 
-            {/* AÇÕES IMEDIATAS (Visível apenas para o Diretor) */}
+            {/* AÇÕES IMEDIATAS (Visível apenas para o Diretor) - BLOCO UNIFICADO */}
             {isDiretor && (rejectedHonorees.length > 0 || approvedHonorees.length > 0) && (
-                <div className="space-y-8 animate-slide-up mb-12">
+                <GlassCard className="p-6 md:p-8 rounded-[2.5rem] border-gold/20 bg-gradient-to-br from-gold/5 to-transparent shadow-lg shadow-gold/5 animate-slide-up mb-12">
+                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gold/10">
+                        <div className="size-12 rounded-full bg-gold/10 flex items-center justify-center text-gold shrink-0">
+                            <span className="material-symbols-outlined text-2xl">notifications_active</span>
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold font-serif text-gold italic">Ações Necessárias</h3>
+                            <p className="text-[10px] text-off-white/40 uppercase tracking-widest font-bold">Pendências que exigem sua atenção</p>
+                        </div>
+                    </div>
                     
-                    {/* Lista de Reprovados - Prioridade MÁXIMA */}
-                    {rejectedHonorees.length > 0 && (
-                        <GlassCard className="p-8 rounded-[2.5rem] border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent shadow-lg shadow-red-900/10">
-                            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-red-500/20">
-                                <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
-                                    <span className="material-symbols-outlined text-2xl">error</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold font-serif text-red-400 italic">Itens que precisam de correção</h3>
-                                    <p className="text-[10px] text-red-300/60 uppercase tracking-widest font-bold">Ação Urgente Necessária</p>
-                                </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {rejectedHonorees.map(h => (
-                                    <div key={h.id} className="bg-navy-deep/80 border border-red-500/20 p-6 rounded-[1.5rem] flex flex-col justify-between gap-6 hover:border-red-500/40 transition-colors">
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="size-10 rounded-full overflow-hidden shrink-0">
-                                                    <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
-                                                </div>
-                                                <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
-                                            </div>
-                                            <div className="bg-red-500/5 p-3 rounded-lg border border-red-500/10">
-                                                <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Motivo:</p>
-                                                <p className="text-xs text-red-300/80 italic line-clamp-2">"{h.rejection_reason}"</p>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => handleEditClick(h)} 
-                                            className="w-full py-4 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">edit</span> Corrigir Agora
-                                        </button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {rejectedHonorees.map(h => (
+                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-red-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                                        <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
                                     </div>
-                                ))}
-                            </div>
-                        </GlassCard>
-                    )}
-
-                    {/* Lista de Aprovados - Prontos para Publicação */}
-                    {approvedHonorees.length > 0 && (
-                        <GlassCard className="p-8 rounded-[2.5rem] border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent shadow-lg shadow-green-900/10">
-                            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-green-500/20">
-                                <div className="size-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
-                                    <span className="material-symbols-outlined text-2xl">verified</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold font-serif text-green-400 italic">Tudo que precisa ser publicado</h3>
-                                    <p className="text-[10px] text-green-300/60 uppercase tracking-widest font-bold">Conteúdos Aprovados pela Administração</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {approvedHonorees.map(h => (
-                                    <div key={h.id} className="bg-navy-deep/80 border border-green-500/20 p-6 rounded-[1.5rem] flex flex-col justify-between gap-6 hover:border-green-500/40 transition-colors">
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="size-10 rounded-full overflow-hidden shrink-0">
-                                                    <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
-                                                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest bg-green-500/20 text-green-400">Pronto</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-green-300/70">
-                                                <span className="material-symbols-outlined text-sm">calendar_today</span>
-                                                Aprovado em {new Date(h.updated_at || h.created_at || '').toLocaleDateString('pt-BR')}
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => handleStatusUpdate(h, 'publicado')} 
-                                            disabled={isLoading}
-                                            className="w-full py-4 bg-green-500 text-navy-deep rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-green-400 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:opacity-50"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">publish</span> Publicar no Site
-                                        </button>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[10px] text-red-400 mt-1 line-clamp-1" title={h.rejection_reason || ''}>
+                                            <span className="font-bold uppercase tracking-widest">Motivo:</span> {h.rejection_reason}
+                                        </p>
                                     </div>
-                                ))}
+                                </div>
+                                <button 
+                                    onClick={() => handleEditClick(h)} 
+                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">edit</span> Corrigir
+                                </button>
                             </div>
-                        </GlassCard>
-                    )}
-                </div>
+                        ))}
+
+                        {approvedHonorees.map(h => (
+                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-green-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                                        <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[10px] text-green-400 mt-1">
+                                            <span className="font-bold uppercase tracking-widest">Pronto para Publicação</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleStatusUpdate(h, 'publicado')} 
+                                    disabled={isLoading}
+                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-navy-deep border border-green-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-sm">publish</span> Publicar
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </GlassCard>
             )}
 
             {/* BARRA DE CONTROLES (Abas e Filtros) */}
