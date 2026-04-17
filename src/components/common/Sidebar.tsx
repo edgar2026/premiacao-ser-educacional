@@ -18,28 +18,28 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         fill?: boolean;
     }
 
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
     const isDiretor = profile?.role === 'diretor';
 
     const dashboardLinks: SidebarLink[] = [
-        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' },
+        ...(isAdmin ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' }] : []),
         { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
         { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
     ];
 
-    const allAdminLinks: SidebarLink[] = [
-        { to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' },
+    const adminLinks: SidebarLink[] = [
+        ...(isAdmin ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard' }] : []),
         { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
         { to: '/admin/solicitacoes', icon: 'mark_email_unread', label: isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes' },
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
-        { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
-        { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
-        { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
-        { to: '/admin/usuarios', icon: 'manage_accounts', label: 'Gestão de Usuários' },
+        // Links exclusivos para Administradores
+        ...(isAdmin ? [
+            { to: '/admin/premios', icon: 'military_tech', label: 'Prêmios' },
+            { to: '/admin/geografia', icon: 'map', label: 'Gestão Regional' },
+            { to: '/admin/home-media', icon: 'home_app_logo', label: 'Mídia Home' },
+            { to: '/admin/usuarios', icon: 'manage_accounts', label: 'Gestão de Usuários' },
+        ] : [])
     ];
-
-    const adminLinks = isDiretor 
-        ? allAdminLinks.filter(link => ['Minhas Solicitações', 'Homenageados'].includes(link.label))
-        : allAdminLinks;
 
     const links: SidebarLink[] = variant === 'dashboard' ? dashboardLinks : adminLinks;
 
@@ -138,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
                                     {profile?.full_name || user?.fullName || "Usuário"}
                                 </p>
                                 <p className="text-[10px] text-soft-cyan/80 truncate uppercase tracking-tighter">
-                                    {profile?.role || "Gestão Ser Educacional"}
+                                    {profile?.role === 'super_admin' ? 'Super Admin' : profile?.role === 'admin' ? 'Administrador' : profile?.role === 'diretor_executivo' ? 'Dir. Executivo' : profile?.role === 'diretor' ? 'Dir. de Unidade' : 'Sem Acesso'}
                                 </p>
                             </div>
                         </div>

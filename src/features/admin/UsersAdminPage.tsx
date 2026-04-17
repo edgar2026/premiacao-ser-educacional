@@ -49,7 +49,7 @@ const UsersAdminPage: React.FC = () => {
         firstName: '',
         lastName: '',
         email: '',
-        role: 'diretor' as 'admin' | 'diretor' | 'public',
+        role: 'diretor' as 'admin' | 'diretor' | 'public' | 'diretor_executivo',
         unitId: ''
     });
 
@@ -71,15 +71,13 @@ const UsersAdminPage: React.FC = () => {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            .neq('role', 'public')
+            // Removido: .neq('role', 'public') para que todos usuários novos apareçam na tabela
             .order('updated_at', { ascending: false });
 
         if (error) {
             console.error('Error fetching users:', error);
         } else {
             console.log('Fetched users:', data);
-            // Filtro dinâmico: se a coluna 'ativo' ainda não existir, será undefined (passa). 
-            // Só bloqueia se for explicitamente false (quando houver soft-delete real).
             const activeUsers = (data || []).filter(u => u.ativo !== false);
             setUsersList(activeUsers);
         }
@@ -264,13 +262,16 @@ const UsersAdminPage: React.FC = () => {
             header: 'Papel e Unidade',
             accessor: (u: Profile) => {
                 const r = u.role;
-                let roleBadge = <span className="px-3 py-1 bg-off-white/10 text-off-white border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider">{r || 'Desconhecido'}</span>;
+                let roleBadge = <span className="px-3 py-1 bg-white/10 text-white/50 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Sem Cargo</span>;
+                
                 if (r === 'admin' || r === 'super_admin') {
                     roleBadge = <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Admin</span>;
                 } else if (r === 'diretor_executivo') {
                     roleBadge = <span className="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Executivo</span>;
                 } else if (r === 'diretor') {
                     roleBadge = <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor Unidade</span>;
+                } else if (r === 'public') {
+                    roleBadge = <span className="px-3 py-1 bg-white/5 text-white/30 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-wider">Público (Novo)</span>;
                 }
                 
                 const unitName = units.find(unit => unit.id === u.unit_id)?.name;
@@ -303,7 +304,7 @@ const UsersAdminPage: React.FC = () => {
                             firstName: first,
                             lastName: rest,
                             email: u.username,
-                            role: (u.role || 'public') as 'admin' | 'diretor' | 'public',
+                            role: (u.role || 'public') as any,
                             unitId: u.unit_id || ''
                         });
                         setIsEditModalOpen(true);
@@ -538,6 +539,7 @@ const UsersAdminPage: React.FC = () => {
                                             <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
                                             <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo</option>
                                             <option value="admin" className="bg-navy-deep">Administrador</option>
+                                            <option value="public" className="bg-navy-deep">Público (Sem Cargo)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
