@@ -26,8 +26,6 @@ import AwardRegistrationPage from './features/admin/AwardRegistrationPage';
 import HomeMediaAdminPage from './features/admin/HomeMediaAdminPage';
 import GeographicRegistrationPage from './features/admin/GeographicRegistrationPage';
 import UsersAdminPage from './features/admin/UsersAdminPage';
-import ApprovalAdminPage from './features/admin/ApprovalAdminPage';
-import MyRequestsPage from './features/admin/MyRequestsPage';
 import { AuthProvider } from './features/auth/AuthContext';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import RoleGuard from './features/auth/RoleGuard';
@@ -71,9 +69,14 @@ function App() {
               <Route path="homenageados/:id" element={<HonoreeDetailsAdminPage />} />
               <Route path="homenageados/:id/editar" element={<HonoreeEditPage />} />
               <Route path="homenageados/:id/editar/:step" element={<HonoreeEditPage />} />
-              <Route path="minhas-solicitacoes" element={<MyRequestsPage />} />
               
-              {/* Rotas restritas a Administradores */}
+              {/* Rota estendida para o Diretor Executivo */}
+              <Route element={<RoleGuard allowedRoles={['admin', 'super_admin', 'diretor_executivo']} />}>
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
+              </Route>
+
+              {/* Rotas restritas exclusivamente a Administradores */}
               <Route element={<RoleGuard allowedRoles={['admin', 'super_admin']} />}>
                 <Route path="premios" element={<AwardsAdminPage />} />
                 <Route path="premios/novo" element={<AwardRegistrationPage />} />
@@ -82,10 +85,7 @@ function App() {
                 <Route path="geografia" element={<GeographicRegistrationPage />} />
                 <Route path="unidades" element={<Navigate to="/admin/geografia" replace />} />
                 <Route path="marcas" element={<Navigate to="/admin/geografia" replace />} />
-                <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="usuarios" element={<UsersAdminPage />} />
-                <Route path="aprovacoes" element={<ApprovalAdminPage />} />
-                <Route path="relatorios" element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
             </Route>
           </Route>
