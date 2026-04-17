@@ -19,7 +19,7 @@ export interface Profile {
 }
 
 const UsersAdminPage: React.FC = () => {
-    const { profile } = useAuth();
+    void useAuth; // context available if needed
     const { session } = useSession();
     const [usersList, setUsersList] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +71,7 @@ const UsersAdminPage: React.FC = () => {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
+            .neq('role', 'public')
             .order('updated_at', { ascending: false });
 
         if (error) {
@@ -91,6 +92,7 @@ const UsersAdminPage: React.FC = () => {
         setSelectedUnitId(''); // Reset selection
         setIsConfirmModalOpen(true);
     };
+    void handleRoleChangeClick; // preserved for future use
 
     const confirmRoleChange = async () => {
         if (!selectedUser) return;
@@ -262,11 +264,13 @@ const UsersAdminPage: React.FC = () => {
             header: 'Papel e Unidade',
             accessor: (u: Profile) => {
                 const r = u.role;
-                let roleBadge = <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Público</span>;
+                let roleBadge = <span className="px-3 py-1 bg-off-white/10 text-off-white border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider">{r || 'Desconhecido'}</span>;
                 if (r === 'admin' || r === 'super_admin') {
                     roleBadge = <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Admin</span>;
+                } else if (r === 'diretor_executivo') {
+                    roleBadge = <span className="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Executivo</span>;
                 } else if (r === 'diretor') {
-                    roleBadge = <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor</span>;
+                    roleBadge = <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor Unidade</span>;
                 }
                 
                 const unitName = units.find(unit => unit.id === u.unit_id)?.name;
@@ -451,9 +455,9 @@ const UsersAdminPage: React.FC = () => {
                                             onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as any})}
                                             className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer"
                                         >
-                                            <option value="diretor" className="bg-navy-deep">Diretor</option>
+                                            <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
+                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo</option>
                                             <option value="admin" className="bg-navy-deep">Administrador</option>
-                                            <option value="public" className="bg-navy-deep">Público (S/ Permissão)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
@@ -531,9 +535,9 @@ const UsersAdminPage: React.FC = () => {
                                             onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value as any})}
                                             className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold outline-none cursor-pointer"
                                         >
-                                            <option value="diretor" className="bg-navy-deep">Diretor</option>
+                                            <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
+                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo</option>
                                             <option value="admin" className="bg-navy-deep">Administrador</option>
-                                            <option value="public" className="bg-navy-deep">Público (S/ Permissão)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">

@@ -6,29 +6,28 @@ import type { Column } from '../../components/ui/DataTable';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
-import GlassCard from '../../components/ui/GlassCard';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
     status?: string | null;
+
 };
 
-const HonoreesAdminPage: React.FC = () => {
+interface HonoreesAdminPageProps {
+    isRequestsView?: boolean;
+}
+
+const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = false }) => {
     const navigate = useNavigate();
-    const { profile, isAdmin } = useAuth();
-    const isDiretor = !isAdmin;
+    const { profile } = useAuth();
+    const isDiretor = profile?.role === 'diretor';
     const [honorees, setHonorees] = useState<Honoree[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
-    
-    // Reject modal state
-    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-    const [rejectTarget, setRejectTarget] = useState<Honoree | null>(null);
-    const [rejectReason, setRejectReason] = useState('');
 
     useEffect(() => {
         fetchHonorees();
@@ -36,10 +35,16 @@ const HonoreesAdminPage: React.FC = () => {
 
     const fetchHonorees = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        let query = supabase
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
+            
+        if (isDiretor && profile?.unit_id) {
+            query = query.eq('unit_id', profile.unit_id);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Error fetching honorees:', error);
@@ -82,7 +87,7 @@ const HonoreesAdminPage: React.FC = () => {
         // If status is published, also set is_published flag (for compatibility)
         if (status === 'publicado') {
             updateData.is_published = true;
-        } else if (status === 'aprovado' || status === 'reprovado' || status === 'em_analise') {
+        } else if (status === 'aprovado' || status === 'rejeitado' || status === 'reprovado' || status === 'pendente_analise' || status === 'em_analise' || status === 'em_correcao') {
             updateData.is_published = false;
         }
 
@@ -178,10 +183,11 @@ const HonoreesAdminPage: React.FC = () => {
                                 Rascunho
                             </span>
                         );
+                    case 'pendente_analise':
                     case 'em_analise':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                                Em Análise
+                                Pendente Análise
                             </span>
                         );
                     case 'aprovado':
@@ -190,10 +196,17 @@ const HonoreesAdminPage: React.FC = () => {
                                 Aprovado
                             </span>
                         );
+                    case 'rejeitado':
                     case 'reprovado':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-                                Reprovado
+                                Rejeitado
+                            </span>
+                        );
+                    case 'em_correcao':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-orange-500/10 text-orange-500 border-orange-500/20">
+                                Em Correção
                             </span>
                         );
                     case 'publicado':
@@ -230,21 +243,9 @@ const HonoreesAdminPage: React.FC = () => {
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
 
-            {/* Director actions */}
-            {isDiretor && (h.status === 'rascunho' || h.status === 'reprovado') && (
-                <button
-                    onClick={() => handleStatusUpdate(h, 'em_analise', null)}
-                    className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
-                    title="Solicitar Análise"
-                >
-                    <span className="material-symbols-outlined text-[20px]">send</span>
-                </button>
-            )}
-
-            {/* Admin actions */}
             {!isDiretor && (
                 <>
-                    {h.status === 'em_analise' && (
+                    {(h.status === 'pendente_analise' || h.status === 'em_analise') && (
                         <>
                             <button
                                 onClick={() => handleStatusUpdate(h, 'aprovado')}
@@ -255,9 +256,8 @@ const HonoreesAdminPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    setRejectTarget(h);
-                                    setRejectReason('');
-                                    setIsRejectModalOpen(true);
+                                    const reason = prompt('Motivo da reprovação:');
+                                    if (reason) handleStatusUpdate(h, 'rejeitado', reason);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -265,19 +265,6 @@ const HonoreesAdminPage: React.FC = () => {
                                 <span className="material-symbols-outlined text-[20px]">cancel</span>
                             </button>
                         </>
-                    )}
-                    {(h.status === 'aprovado' || h.status === 'publicado') && (
-                        <button
-                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
-                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
-                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
-                                : 'text-off-white/20 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
-                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
-                            </span>
-                        </button>
                     )}
                     <button
                         onClick={() => handleDeleteClick(h.id)}
@@ -288,17 +275,61 @@ const HonoreesAdminPage: React.FC = () => {
                     </button>
                 </>
             )}
+
+            {isDiretor && (
+                <>
+                    {(h.status === 'rascunho' || h.status === 'em_correcao' || h.status === 'rejeitado' || h.status === 'reprovado') && (
+                        <button
+                            onClick={() => handleStatusUpdate(h, 'pendente_analise')}
+                            className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
+                            title="Enviar para Análise"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">send</span>
+                        </button>
+                    )}
+                    {(h.status === 'aprovado' || h.status === 'publicado') && (
+                        <button
+                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
+                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
+                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
+                                : 'text-off-white/40 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
+                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
+                        >
+                            <span className="material-symbols-outlined text-[20px]">
+                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
+                            </span>
+                        </button>
+                    )}
+                </>
+            )}
         </div>
     );
+
+    const filteredHonorees = honorees.filter(h => {
+        const st = h.status || 'rascunho';
+        if (isRequestsView) {
+            if (isDiretor) {
+                return ['rascunho', 'pendente_analise', 'rejeitado', 'reprovado', 'em_correcao'].includes(st);
+            } else {
+                return ['pendente_analise', 'em_analise', 'em_correcao', 'rejeitado', 'reprovado'].includes(st);
+            }
+        } else {
+            return ['aprovado', 'publicado'].includes(st);
+        }
+    });
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Homenageados</h2>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">
+                        {isRequestsView ? (isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes') : 'Homenageados'}
+                    </h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
-                        Administre o registro histórico de excelência e mérito institucional.
+                        {isRequestsView 
+                            ? 'Acompanhe e gerencie as solicitações de cadastro no sistema.'
+                            : 'Administre o registro histórico de excelência e mérito institucional aprovados.'}
                     </p>
                 </div>
                 <button
@@ -316,7 +347,7 @@ const HonoreesAdminPage: React.FC = () => {
                 </div>
             ) : (
                 <DataTable
-                    data={honorees}
+                    data={filteredHonorees}
                     columns={columns}
                     actions={actions}
                     searchPlaceholder="Buscar por nome ou prêmio..."
@@ -343,65 +374,6 @@ const HonoreesAdminPage: React.FC = () => {
                 confirmLabel="OK"
                 type="warning"
             />
-
-            {/* Reject Modal */}
-            {isRejectModalOpen && rejectTarget && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
-                    <GlassCard className="w-full max-w-lg p-10 rounded-[2.5rem] border-red-500/20 bg-navy-deep shadow-2xl">
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                                <div className="size-14 rounded-full bg-red-500/10 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-red-500 text-2xl">gavel</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-serif italic text-off-white">Recusar Solicitação</h3>
-                                    <p className="text-[10px] text-off-white/30 uppercase tracking-widest">
-                                        {(() => { try { return rejectTarget.professional_data ? JSON.parse(rejectTarget.professional_data).name : 'Homenageado'; } catch { return 'Homenageado'; } })()}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30">
-                                    Motivo da Recusa <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    placeholder="Descreva o motivo da recusa para que o diretor possa corrigir..."
-                                    className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl text-off-white focus:border-red-500/50 outline-none transition-all min-h-[120px] resize-none placeholder:text-off-white/10"
-                                />
-                            </div>
-
-                            <div className="flex gap-4 pt-4">
-                                <button
-                                    onClick={() => setIsRejectModalOpen(false)}
-                                    className="flex-1 px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-off-white/40 hover:text-off-white transition-all text-[10px] font-bold uppercase tracking-widest"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        if (!rejectReason.trim()) {
-                                            setAlertMessage('Por favor, informe o motivo da recusa.');
-                                            setIsAlertModalOpen(true);
-                                            return;
-                                        }
-                                        await handleStatusUpdate(rejectTarget, 'reprovado', rejectReason.trim());
-                                        setIsRejectModalOpen(false);
-                                        setRejectTarget(null);
-                                    }}
-                                    disabled={!rejectReason.trim()}
-                                    className="flex-1 px-6 py-4 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-all text-[10px] font-bold uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    <span className="material-symbols-outlined text-sm">cancel</span>
-                                    Confirmar Recusa
-                                </button>
-                            </div>
-                        </div>
-                    </GlassCard>
-                </div>
-            )}
         </div>
     );
 };

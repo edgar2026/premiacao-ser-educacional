@@ -1,110 +1,66 @@
 # 🏆 Ser Prêmios (Ser Educacional)
 
 > [!IMPORTANT]
-> **Bússola do Projeto:** Para uma visão técnica detalhada de arquitetura, padrões e tecnologias, consulte o arquivo [PROJETO.md](./PROJETO.md).
+> **Bússola do Projeto:** Para uma visão técnica detalhada de arquitetura, fluxos restritos, design system de alto padrão e stack profunda, consulte as diretrizes arquiteturais em [PROJETO.md](./PROJETO.md).
 
-Este é o sistema de gestão de premiações e mérito acadêmico do grupo **Ser Educacional**. O projeto foi concebido para oferecer uma experiência "Premium" e cinematográfica, celebrando as conquistas dos homenageados com elegância e tecnologia de ponta.
-
----
-
-## ✨ Diferenciais do Projeto
-
-*   **Design Cinematográfico:** Interface rica em texturas de granulado fotográfico, gradientes dinâmicos e tipografia clássica (*Playfair Display*).
-*   **Gestão Híbrida de Auth:** Autenticação robusta com **Clerk** integrada a perfis dinâmicos no **Supabase**.
-*   **Painel Administrativo Poderoso:** Controle total sobre homenageados, premiações, unidades geográficas, mídias da home e **gestão completa de usuários**.
-*   **Workflow de Aprovação:** Fluxo completo com status (Rascunho → Em Análise → Aprovado/Reprovado → Publicado), tela de pendências para admin e acompanhamento para diretores.
-*   **RBAC Dinâmico:** Menu lateral e rotas controlados por nível de acesso (admin vê tudo, diretor vê Homenageados + Minhas Solicitações).
-*   **CRUD de Usuários:** Criar, editar, alterar cargo/unidade e excluir usuários diretamente pelo painel, com sincronização automática Clerk ↔ Supabase.
-*   **Experiência do Usuário (UX):** Transições fluidas com *Framer Motion*, mapas interativos e editores de conteúdo rico.
+Este é o ecossistema institucional de gestão de premiações e mérito corporativo/acadêmico do grupo **Ser Educacional**. Arquitetado com foco obsessivo em uma experiência do usuário "Premium" (estilo *gala editorial*), segregação profunda de segurança de banco de dados por diretores de unidades e painéis imersivos.
 
 ---
 
-## 🛠️ Tecnologias Principais
+## ✨ Identidade e Fundamentos
 
-*   **Frontend:** React 18, TypeScript, Vite
-*   **Estilização:** Tailwind CSS 4.x
-*   **Backend:** Supabase (DB & Edge Functions)
-*   **Auth:** Clerk (Enterprise-ready)
-
----
-
-## 🔐 Níveis de Acesso
-
-| Role           | Menu                    | Acesso                                              |
-|:---------------|:------------------------|:----------------------------------------------------|
-| `super_admin`  | Todos os 8 itens        | Acesso total a todas as funcionalidades              |
-| `admin`        | Todos os 8 itens        | Acesso total a todas as funcionalidades              |
-| `diretor`      | Homenageados + Solicitações | Gestão e acompanhamento de homenageados          |
-| `public`       | Apenas "Homenageados"   | Visualização básica                                  |
+*   **Design Cinematográfico:** UI desenhada sob conceitos de luxo, adotando texturas de granulado fotográfico, tipografia clássica serifada (*Playfair Display*), paletas baseadas em Azul Marinho Profundo, Ouro e elementos de "vidro" (*Glassmorphism*).
+*   **Gestão de Identidade Híbrida:** Integração enterprise atuando com o **Clerk** (Login, Sessão B2B OTP) comunicando via JWT e Webhooks com as políticas RLS do **Supabase**.
+*   **Geopolítica Institucional:** Segmentação administrativa baseada no triângulo **Marca -> Regional -> Unidade**. O RLS assegura que "Diretores" gerenciem apenas a própria paróquia (unidade), enquanto "Administradores" governam o ecossistema e aprovam pendências.
+*   **Integração Contínua Funcional:** Suporte a edições e histórico multissemetral de homenagens, gráficos executivos, geração de credenciais on-the-fly (`html2pdf`) e uploads controlados (com crop nativo inline).
+*   **Motion Total:** Transições de tela perfeitamente cronometradas usando *Framer Motion* para consolidar a credibilidade da navegação.
 
 ---
 
-## 🔄 Workflow de Aprovação
+## 🛠️ Stack Principal
 
-```
-RASCUNHO → EM ANÁLISE → APROVADO → PUBLICADO
-                   ↓
-              REPROVADO (com justificativa) → Diretor corrige → EM ANÁLISE
-```
-
-| Tela                    | Acesso   | Rota                          |
-|:------------------------|:---------|:------------------------------|
-| Central de Análise      | Admin    | `/admin/aprovacoes`           |
-| Minhas Solicitações     | Diretor  | `/admin/minhas-solicitacoes`  |
-| Lista de Homenageados   | Todos    | `/admin/homenageados`         |
+*   **Frontend Core:** React 18, TypeScript, Vite
+*   **Motor CSS:** Tailwind CSS 4.x
+*   **BaaS (Gestão de Dados & Permissão):** Supabase (PostgreSQL, RLS Rules, Edge DB, Storage)
+*   **B2B Auth:** Clerk 
 
 ---
 
-## ⚙️ Edge Functions (Supabase)
-
-| Função                        | Descrição                                          |
-|:------------------------------|:---------------------------------------------------|
-| `create-clerk-user`           | Cria usuário no Clerk + Supabase                   |
-| `update-clerk-user`           | Atualiza dados do usuário (nome, cargo, unidade)   |
-| `delete-clerk-user`           | Remove usuário (Soft Delete)                       |
-| `set-clerk-role`              | Altera papel/role de um usuário                    |
-| `send-password-changed-email` | Confirmação de troca de senha                      |
-| `notify-rejection`            | Notificação de alteração de status (email)          |
-
----
-
-## 🚀 Como Começar
+## 🚀 Guia Rápido
 
 ### Pré-requisitos
-Certifique-se de ter o arquivo `.env.local` configurado com as chaves necessárias do Clerk e Supabase.
-
-```env
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
-```
+A aplicação não iniciará sem a simbiose de chaves da dupla *Clerk* + *Supabase*. Verifique e preencha o `.env.local` usando o layout padrão.
 
 ### Instalação
 ```bash
 npm install
 ```
 
-### Desenvolvimento
+### Inicialização (Dev Server)
 ```bash
 npm run dev
 ```
 
 ---
 
-## 👤 Administrador do Sistema
+## 📂 Documentação e Suportes de Manutenção
 
-A conta principal do sistema é `edgareda2015@gmail.com` com role `super_admin`. Todos os demais usuários devem ser criados a partir do **Painel de Gestão de Usuários** (`/admin/usuarios`).
-
----
-
-## 📂 Documentação Relacionada
-
-| Documento | Descrição |
+| Arquivo Ref | Função e Contexto |
 | :--- | :--- |
-| [PROJETO.md](./PROJETO.md) | **Principal**: Arquitetura, tecnologias, RBAC e regras de negócio. |
-| [AUTH_FIX_EMERGENCY.md](./docs/AUTH_FIX_EMERGENCY.md) | Histórico de correções críticas no sistema de login. |
-| [EMAIL_CONFIG.md](./docs/EMAIL_CONFIG.md) | Guia de configuração para ativação de disparos de e-mail. |
+| **[PROJETO.md](./PROJETO.md)** | **Manifesto Principal**. Definições arquiteturais e regras de negócio. |
+| **[docs/AUTH_FIX_EMERGENCY.md](./docs/AUTH_FIX_EMERGENCY.md)** | Tratamentos de contingência para eventuais syncs falhos entre Clerk<>Supabase. |
+| **[docs/EMAIL_CONFIG.md](./docs/EMAIL_CONFIG.md)** | Definições de disparo automático (`Resend`/Edges) configurados. |
 
 ---
 
-© 2026 Ser Educacional - Todos os direitos reservados.
+## 👤 Scripts Administrativos de Raiz
+
+Na raiz do projeto existem rotinas em Node (sem uso webpack) voltadas a correções diretas no Banco. Exemplo, para promover a semente zero do super administrador:
+```bash
+node promote-edgar.js
+```
+*(Confirme variáveis internas do script. Precisa ter runtime Node disponível localmente)*
+
+---
+
+*© 2026 Grupo Ser Educacional - Inovação Corporativa*

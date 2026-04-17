@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import GlassCard from '../../components/ui/GlassCard';
 import StepIndicator from '../../components/ui/StepIndicator';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
@@ -61,8 +61,8 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         timeline: [] as { id: string; semester: string; title: string; category: string }[],
         initiatives: '',
         recognitions: '',
-        status: 'rascunho' as 'rascunho' | 'em_analise' | 'aprovado' | 'reprovado' | 'publicado',
-        rejection_reason: '' as string | null
+        rejection_reason: '',
+        status: 'rascunho' as 'rascunho' | 'pendente_analise' | 'em_correcao' | 'aprovado' | 'rejeitado' | 'publicado' | 'reprovado'
     });
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -295,6 +295,26 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 external_role: formData.external_role
             });
 
+            const isInterno = formData.type === 'interno';
+            const missingName = !formData.name;
+            const missingAward = !formData.award_id;
+            const missingInternals = isInterno && (!formData.brand_id || !formData.unit_id);
+
+            if (missingName || missingAward || missingInternals) {
+                showAlert(
+                    "Existem campos obrigatórios em branco. Verifique Identificação (Nome) e os vínculos obrigatórios.",
+                    "Dados Incompletos",
+                    "warning"
+                );
+                setIsLoading(false);
+                return;
+            }
+
+            let finalStatus = formData.status;
+            if (isDirector && id && (formData.status === 'rejeitado' || formData.status === 'reprovado' || formData.status === 'em_correcao')) {
+                finalStatus = 'em_correcao';
+            }
+
             const payload = {
                 type: formData.type,
                 professional_data,
@@ -309,21 +329,23 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 timeline: formData.timeline,
                 initiatives: formData.initiatives,
                 recognitions: formData.recognitions,
-                status: isDirector ? 'em_analise' : formData.status,
-                rejection_reason: isDirector ? null : formData.rejection_reason,
-                is_published: isAdmin ? formData.is_published : (formData.status === 'publicado'),
+                status: finalStatus,
+                rejection_reason: isDirector ? formData.rejection_reason : formData.rejection_reason,
+                is_published: isAdmin ? formData.is_published : (finalStatus === 'publicado'),
                 stats: formData.stats,
                 created_by: profile?.id
             };
 
+            const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
             if (id) {
-                const { error } = await supabase
+                const { error } = await dbClient
                     .from('honorees')
                     .update(payload)
                     .eq('id', id);
                 if (error) throw error;
             } else {
-                const { error } = await supabase
+                const { error } = await dbClient
                     .from('honorees')
                     .insert([payload]);
                 if (error) throw error;
@@ -416,19 +438,19 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 </div>
             </div>
 
-            {isDirector && formData.status === 'reprovado' && (
+            {isDirector && (formData.status === 'rejeitado' || formData.status === 'reprovado' || formData.status === 'em_correcao') && (
                 <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
                     <div className="flex items-start gap-4">
                         <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-red-500">error</span>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="text-lg font-bold text-red-500 uppercase tracking-widest">Cadastro Reprovado</h4>
+                            <h4 className="text-lg font-bold text-red-500 uppercase tracking-widest">Cadastro com Pendências</h4>
                             <p className="text-off-white/70 italic font-serif">
                                 " {formData.rejection_reason || 'Nenhum motivo especificado.'} "
                             </p>
                             <p className="text-[10px] text-off-white/40 uppercase tracking-widest pt-2">
-                                Por favor, realize as correções solicitadas e salve para enviar para uma nova análise.
+                                Por favor, realize as correções solicitadas e retorne à tela de Detalhes para reenviar para uma nova análise. Ao salvar aqui os dados alteram automaticamente seu status para 'Em Correção'.
                             </p>
                         </div>
                     </div>
@@ -527,7 +549,8 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Marca Institucional</label>
                                                         <select
                                                             required
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            disabled={isDirector}
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
                                                             value={formData.brand_id}
                                                             onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
                                                         >
@@ -540,7 +563,8 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                     <div className="space-y-4">
                                                         <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Regional</label>
                                                         <select
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
+                                                            disabled={isDirector}
+                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
                                                             value={formData.regional_id}
                                                             onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
                                                         >
