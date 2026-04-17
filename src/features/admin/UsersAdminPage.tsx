@@ -77,20 +77,11 @@ const UsersAdminPage: React.FC = () => {
         if (error) {
             console.error('Error fetching users:', error);
         } else {
-            console.log('Fetched users:', data);
             const activeUsers = (data || []).filter(u => u.ativo !== false);
             setUsersList(activeUsers);
         }
         setIsLoading(false);
     };
-
-    const handleRoleChangeClick = (u: Profile, newRole: 'diretor' | 'admin' | 'public') => {
-        setSelectedUser(u);
-        setActionType(newRole);
-        setSelectedUnitId(''); // Reset selection
-        setIsConfirmModalOpen(true);
-    };
-    void handleRoleChangeClick; // preserved for future use
 
     const confirmRoleChange = async () => {
         if (!selectedUser) return;
@@ -114,6 +105,16 @@ const UsersAdminPage: React.FC = () => {
             if (res.error) {
                 console.error("Clerk role set failed:", res.error);
                 throw new Error("Ocorreu um erro ao atualizar a permissão no serviço de autenticação.");
+            }
+
+            // FORÇAR SINCRONIZAÇÃO NO BANCO DE DADOS LOCAL IMEDIATAMENTE
+            try {
+                await supabase.from('profiles').update({
+                    role: actionType,
+                    unit_id: actionType === 'diretor' ? selectedUnitId : null
+                }).eq('id', selectedUser.id);
+            } catch (dbErr) {
+                console.error("Erro ao sincronizar banco:", dbErr);
             }
 
             setAlertMessage(`Usuário ${selectedUser.full_name || selectedUser.username} agora é ${actionType}!`);
@@ -152,12 +153,31 @@ const UsersAdminPage: React.FC = () => {
                 throw new Error(res.data.error || "Erro desconhecido na Edge Function");
             }
 
+            // FORÇAR SINCRONIZAÇÃO NO BANCO DE DADOS LOCAL IMEDIATAMENTE
+            try {
+                const { data: existing } = await supabase.from('profiles').select('id').eq('username', newUserForm.email).maybeSingle();
+                if (!existing) {
+                    const newId = res.data?.user?.id || res.data?.id || `usr_${crypto.randomUUID()}`;
+                    await supabase.from('profiles').insert({
+                        id: newId,
+                        username: newUserForm.email,
+                        full_name: `${newUserForm.firstName} ${newUserForm.lastName}`.trim(),
+                        role: newUserForm.role,
+                        unit_id: newUserForm.unitId || null,
+                        ativo: true,
+                        primeiro_acesso: true
+                    });
+                }
+            } catch (dbErr) {
+                console.error("Erro ao inserir no banco de dados local:", dbErr);
+            }
+
             setAlertMessage(`Usuário ${newUserForm.firstName} criado com sucesso!`);
             setIsAlertModalOpen(true);
             setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'diretor', unitId: '' });
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao criar usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "create-clerk-user" foi feito deploy no Supabase.');
+            setAlertMessage('Erro ao criar usuário: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
@@ -187,6 +207,17 @@ const UsersAdminPage: React.FC = () => {
             }
             if (res.data && res.data.success === false) {
                 throw new Error(res.data.error || "Erro desconhecido na Edge Function");
+            }
+
+            // FORÇAR SINCRONIZAÇÃO NO BANCO DE DADOS LOCAL IMEDIATAMENTE
+            try {
+                await supabase.from('profiles').update({
+                    full_name: `${editUserForm.firstName} ${editUserForm.lastName}`.trim(),
+                    role: editUserForm.role,
+                    unit_id: editUserForm.unitId || null
+                }).eq('id', editUserForm.id);
+            } catch (dbErr) {
+                console.error("Erro ao atualizar banco local:", dbErr);
             }
 
             setAlertMessage(`Usuário atualizado com sucesso!`);
@@ -223,11 +254,18 @@ const UsersAdminPage: React.FC = () => {
                 throw new Error("Erro da API: " + res.error.message);
             }
 
+            // FORÇAR EXCLUSÃO LOCAL IMEDIATA
+            try {
+                await supabase.from('profiles').delete().eq('id', selectedUser.id);
+            } catch (dbErr) {
+                console.error("Erro ao excluir do banco local:", dbErr);
+            }
+
             setAlertMessage(`Usuário removido com sucesso.`);
             setIsAlertModalOpen(true);
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao excluir usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "delete-clerk-user" foi feito deploy no Supabase.');
+            setAlertMessage('Erro ao excluir usuário: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
