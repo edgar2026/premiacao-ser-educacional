@@ -279,7 +279,7 @@ const DashboardPage: React.FC = () => {
             {/* KPIs Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-gold/50">
-                    <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest mb-2">Total Geral</p>
+                    <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest mb-2">Total de Indicações</p>
                     <span className="text-4xl font-bold font-serif text-off-white italic">{metrics.total}</span>
                 </GlassCard>
                 <GlassCard className="p-6 rounded-[2rem] border-white/5 border-l-4 border-l-yellow-500">
@@ -334,7 +334,7 @@ const DashboardPage: React.FC = () => {
 
                 {/* Line Chart */}
                 <GlassCard className="p-8 rounded-[2.5rem] border-white/5 lg:col-span-2">
-                    <h3 className="text-xl font-serif italic text-off-white mb-6">Evolução de Cadastros</h3>
+                    <h3 className="text-xl font-serif italic text-off-white mb-6">Evolução de Indicações</h3>
                     <div className="h-[250px] w-full">
                         {evolutionData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -347,7 +347,7 @@ const DashboardPage: React.FC = () => {
                                         itemStyle={{ color: '#D4AF37', fontWeight: 'bold' }}
                                         labelStyle={{ color: '#ffffff40', marginBottom: '4px' }}
                                     />
-                                    <Line type="monotone" dataKey="count" name="Cadastros" stroke="#D4AF37" strokeWidth={3} dot={{ r: 4, fill: '#D4AF37', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="count" name="Indicações" stroke="#D4AF37" strokeWidth={3} dot={{ r: 4, fill: '#D4AF37', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : <p className="text-off-white/20 italic text-sm mt-20 text-center">Nenhum dado temporal disponível.</p>}
@@ -359,7 +359,7 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Bar Chart Units */}
                 <GlassCard className="p-8 rounded-[2.5rem] border-white/5 lg:col-span-2">
-                    <h3 className="text-xl font-serif italic text-off-white mb-6">Cadastros por Unidade (Top 8)</h3>
+                    <h3 className="text-xl font-serif italic text-off-white mb-6">Homenageados por Unidade (Top 8)</h3>
                     <div className="h-[280px] w-full">
                         {unitsBarData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -409,20 +409,21 @@ const DashboardPage: React.FC = () => {
             {/* Tabela Completa */}
             <GlassCard className="p-8 rounded-[3rem] border-white/5 overflow-hidden">
                 <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-2xl font-serif italic text-off-white">Relação Completa</h3>
+                    <h3 className="text-2xl font-serif italic text-off-white">Relação de Homenageados</h3>
                     <span className="text-gold text-[10px] font-bold uppercase tracking-widest bg-gold/10 px-4 py-2 rounded-full">
-                        {filteredHonorees.length} Registros
+                        {filteredHonorees.length} Indicações
                     </span>
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse min-w-[800px]">
+                    <table className="w-full text-left border-collapse min-w-[900px]">
                         <thead>
                             <tr className="border-b border-white/10">
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Nome / Cargo</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Unidade</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Regional</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Status</th>
+                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Responsável</th>
                                 <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest text-right">Data</th>
                             </tr>
                         </thead>
@@ -431,6 +432,8 @@ const DashboardPage: React.FC = () => {
                                 const unit = units.find(u => u.id === h.unit_id);
                                 const reg = regionals.find(r => r.id === unit?.regional_id);
                                 const profData = h.professional_data ? JSON.parse(h.professional_data) : {};
+                                const creator = profiles.find(p => p.id === h.created_by);
+                                
                                 return (
                                     <tr key={h.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td className="px-4 py-4">
@@ -440,6 +443,12 @@ const DashboardPage: React.FC = () => {
                                         <td className="px-4 py-4 text-sm text-off-white/70">{unit?.name || '-'}</td>
                                         <td className="px-4 py-4 text-sm text-off-white/70">{reg?.name || '-'}</td>
                                         <td className="px-4 py-4">{formatStatus(h.status)}</td>
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[14px] text-gold/50">person</span>
+                                                <span className="text-xs text-off-white/70">{creator?.full_name || creator?.username || 'Sistema'}</span>
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-4 text-right text-xs text-off-white/40 font-mono">
                                             {new Date(h.created_at || h.awarded_at).toLocaleDateString('pt-BR')}
                                         </td>
@@ -448,7 +457,7 @@ const DashboardPage: React.FC = () => {
                             })}
                             {filteredHonorees.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="py-16 text-center text-off-white/30 italic">
+                                    <td colSpan={6} className="py-16 text-center text-off-white/30 italic">
                                         Nenhum registro encontrado com os filtros atuais.
                                     </td>
                                 </tr>
