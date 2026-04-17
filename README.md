@@ -1,66 +1,66 @@
 # 🏆 Ser Prêmios (Ser Educacional)
 
 > [!IMPORTANT]
-> **Bússola do Projeto:** Para uma visão técnica detalhada de arquitetura, padrões e tecnologias, consulte o arquivo [PROJETO.md](./PROJETO.md).
+> **Bússola do Projeto:** Para uma visão técnica detalhada de arquitetura, fluxos restritos, design system de alto padrão e stack profunda, consulte as diretrizes arquiteturais em [PROJETO.md](./PROJETO.md).
 
-Este é o sistema de gestão de premiações e mérito acadêmico do grupo **Ser Educacional**. O projeto foi concebido para oferecer uma experiência "Premium" e cinematográfica, celebrando as conquistas dos homenageados com elegância e tecnologia de ponta.
-
----
-
-## ✨ Diferenciais do Projeto
-
-*   **Design Cinematográfico:** Interface rica em texturas de granulado fotográfico, gradientes dinâmicos e tipografia clássica (*Playfair Display*).
-*   **Gestão Híbrida de Auth:** Autenticação robusta com **Clerk** integrada a perfis dinâmicos no **Supabase**.
-*   **Painel Administrativo Poderoso:** Controle total sobre homenageados, premiações, unidades geográficas e mídias da home.
-*   **Experiência do Usuário (UX):** Transições fluidas com *Framer Motion*, mapas interativos e editores de conteúdo rico.
+Este é o ecossistema institucional de gestão de premiações e mérito corporativo/acadêmico do grupo **Ser Educacional**. Arquitetado com foco obsessivo em uma experiência do usuário "Premium" (estilo *gala editorial*), segregação profunda de segurança de banco de dados por diretores de unidades e painéis imersivos.
 
 ---
 
-## 🛠️ Tecnologias Principais
+## ✨ Identidade e Fundamentos
 
-*   **Frontend:** React 18, TypeScript, Vite
-*   **Estilização:** Tailwind CSS 4.x
-*   **Backend:** Supabase (DB & Edge Functions)
-*   **Auth:** Clerk (Enterprise-ready)
+*   **Design Cinematográfico:** UI desenhada sob conceitos de luxo, adotando texturas de granulado fotográfico, tipografia clássica serifada (*Playfair Display*), paletas baseadas em Azul Marinho Profundo, Ouro e elementos de "vidro" (*Glassmorphism*).
+*   **Gestão de Identidade Híbrida:** Integração enterprise atuando com o **Clerk** (Login, Sessão B2B OTP) comunicando via JWT e Webhooks com as políticas RLS do **Supabase**.
+*   **Geopolítica Institucional:** Segmentação administrativa baseada no triângulo **Marca -> Regional -> Unidade**. O RLS assegura que "Diretores" gerenciem apenas a própria paróquia (unidade), enquanto "Administradores" governam o ecossistema e aprovam pendências.
+*   **Integração Contínua Funcional:** Suporte a edições e histórico multissemetral de homenagens, gráficos executivos, geração de credenciais on-the-fly (`html2pdf`) e uploads controlados (com crop nativo inline).
+*   **Motion Total:** Transições de tela perfeitamente cronometradas usando *Framer Motion* para consolidar a credibilidade da navegação.
 
 ---
 
-## 🚀 Como Começar
+## 🛠️ Stack Principal
+
+*   **Frontend Core:** React 18, TypeScript, Vite
+*   **Motor CSS:** Tailwind CSS 4.x
+*   **BaaS (Gestão de Dados & Permissão):** Supabase (PostgreSQL, RLS Rules, Edge DB, Storage)
+*   **B2B Auth:** Clerk 
+
+---
+
+## 🚀 Guia Rápido
 
 ### Pré-requisitos
-Certifique-se de ter o arquivo `.env.local` configurado com as chaves necessárias do Clerk e Supabase.
+A aplicação não iniciará sem a simbiose de chaves da dupla *Clerk* + *Supabase*. Verifique e preencha o `.env.local` usando o layout padrão.
 
 ### Instalação
 ```bash
 npm install
 ```
 
-### Desenvolvimento
+### Inicialização (Dev Server)
 ```bash
 npm run dev
 ```
 
 ---
 
-## 📂 Documentação Relacionada
+## 📂 Documentação e Suportes de Manutenção
 
-| Documento | Descrição |
+| Arquivo Ref | Função e Contexto |
 | :--- | :--- |
-| [PROJETO.md](./PROJETO.md) | **Principal**: Arquitetura, tecnologias e regras de negócio. |
-| [AUTH_FIX_EMERGENCY.md](./docs/AUTH_FIX_EMERGENCY.md) | Histórico de correções críticas no sistema de login. |
-| [EMAIL_CONFIG.md](./docs/EMAIL_CONFIG.md) | Guia de configuração para ativação de disparos de e-mail. |
+| **[PROJETO.md](./PROJETO.md)** | **Manifesto Principal**. Definições arquiteturais e regras de negócio. |
+| **[docs/AUTH_FIX_EMERGENCY.md](./docs/AUTH_FIX_EMERGENCY.md)** | Tratamentos de contingência para eventuais syncs falhos entre Clerk<>Supabase. |
+| **[docs/EMAIL_CONFIG.md](./docs/EMAIL_CONFIG.md)** | Definições de disparo automático (`Resend`/Edges) configurados. |
 
 ---
 
-## 👤 Scripts de Administração
+## 👤 Scripts Administrativos de Raiz
 
-Para promover o primeiro administrador do sistema, utilize:
+Na raiz do projeto existem rotinas em Node (sem uso webpack) voltadas a correções diretas no Banco. Exemplo, para promover a semente zero do super administrador:
 ```bash
 node promote-edgar.js
 ```
-*(Certifique-se de preencher as variáveis no script antes de executar)*
+*(Confirme variáveis internas do script. Precisa ter runtime Node disponível localmente)*
 
 ---
 
-© 2026 Ser Educacional - Todos os direitos reservados.
-
+*© 2026 Grupo Ser Educacional - Inovação Corporativa*

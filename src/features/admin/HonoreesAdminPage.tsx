@@ -14,7 +14,11 @@ type Honoree = Database['public']['Tables']['honorees']['Row'] & {
 
 };
 
-const HonoreesAdminPage: React.FC = () => {
+interface HonoreesAdminPageProps {
+    isRequestsView?: boolean;
+}
+
+const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = false }) => {
     const navigate = useNavigate();
     const { profile } = useAuth();
     const isDiretor = profile?.role === 'diretor';
@@ -31,10 +35,16 @@ const HonoreesAdminPage: React.FC = () => {
 
     const fetchHonorees = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        let query = supabase
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
+            
+        if (isDiretor && profile?.unit_id) {
+            query = query.eq('unit_id', profile.unit_id);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Error fetching honorees:', error);
@@ -77,7 +87,7 @@ const HonoreesAdminPage: React.FC = () => {
         // If status is published, also set is_published flag (for compatibility)
         if (status === 'publicado') {
             updateData.is_published = true;
-        } else if (status === 'aprovado' || status === 'reprovado' || status === 'em_analise') {
+        } else if (status === 'aprovado' || status === 'rejeitado' || status === 'reprovado' || status === 'pendente_analise' || status === 'em_analise' || status === 'em_correcao') {
             updateData.is_published = false;
         }
 
@@ -173,10 +183,11 @@ const HonoreesAdminPage: React.FC = () => {
                                 Rascunho
                             </span>
                         );
+                    case 'pendente_analise':
                     case 'em_analise':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                                Em Análise
+                                Pendente Análise
                             </span>
                         );
                     case 'aprovado':
@@ -185,10 +196,17 @@ const HonoreesAdminPage: React.FC = () => {
                                 Aprovado
                             </span>
                         );
+                    case 'rejeitado':
                     case 'reprovado':
                         return (
                             <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-                                Reprovado
+                                Rejeitado
+                            </span>
+                        );
+                    case 'em_correcao':
+                        return (
+                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-orange-500/10 text-orange-500 border-orange-500/20">
+                                Em Correção
                             </span>
                         );
                     case 'publicado':
@@ -227,7 +245,7 @@ const HonoreesAdminPage: React.FC = () => {
 
             {!isDiretor && (
                 <>
-                    {h.status === 'em_analise' && (
+                    {(h.status === 'pendente_analise' || h.status === 'em_analise') && (
                         <>
                             <button
                                 onClick={() => handleStatusUpdate(h, 'aprovado')}
@@ -239,7 +257,7 @@ const HonoreesAdminPage: React.FC = () => {
                             <button
                                 onClick={() => {
                                     const reason = prompt('Motivo da reprovação:');
-                                    if (reason) handleStatusUpdate(h, 'reprovado', reason);
+                                    if (reason) handleStatusUpdate(h, 'rejeitado', reason);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -247,19 +265,6 @@ const HonoreesAdminPage: React.FC = () => {
                                 <span className="material-symbols-outlined text-[20px]">cancel</span>
                             </button>
                         </>
-                    )}
-                    {(h.status === 'aprovado' || h.status === 'publicado') && (
-                        <button
-                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
-                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
-                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
-                                : 'text-off-white/20 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
-                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
-                            </span>
-                        </button>
                     )}
                     <button
                         onClick={() => handleDeleteClick(h.id)}
@@ -270,17 +275,61 @@ const HonoreesAdminPage: React.FC = () => {
                     </button>
                 </>
             )}
+
+            {isDiretor && (
+                <>
+                    {(h.status === 'rascunho' || h.status === 'em_correcao' || h.status === 'rejeitado' || h.status === 'reprovado') && (
+                        <button
+                            onClick={() => handleStatusUpdate(h, 'pendente_analise')}
+                            className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
+                            title="Enviar para Análise"
+                        >
+                            <span className="material-symbols-outlined text-[20px]">send</span>
+                        </button>
+                    )}
+                    {(h.status === 'aprovado' || h.status === 'publicado') && (
+                        <button
+                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
+                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
+                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
+                                : 'text-off-white/40 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
+                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
+                        >
+                            <span className="material-symbols-outlined text-[20px]">
+                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
+                            </span>
+                        </button>
+                    )}
+                </>
+            )}
         </div>
     );
+
+    const filteredHonorees = honorees.filter(h => {
+        const st = h.status || 'rascunho';
+        if (isRequestsView) {
+            if (isDiretor) {
+                return ['rascunho', 'pendente_analise', 'rejeitado', 'reprovado', 'em_correcao'].includes(st);
+            } else {
+                return ['pendente_analise', 'em_analise', 'em_correcao', 'rejeitado', 'reprovado'].includes(st);
+            }
+        } else {
+            return ['aprovado', 'publicado'].includes(st);
+        }
+    });
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
             <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Homenageados</h2>
+                    <h2 className="text-5xl font-bold font-serif text-off-white italic">
+                        {isRequestsView ? (isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes') : 'Homenageados'}
+                    </h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
-                        Administre o registro histórico de excelência e mérito institucional.
+                        {isRequestsView 
+                            ? 'Acompanhe e gerencie as solicitações de cadastro no sistema.'
+                            : 'Administre o registro histórico de excelência e mérito institucional aprovados.'}
                     </p>
                 </div>
                 <button
@@ -298,7 +347,7 @@ const HonoreesAdminPage: React.FC = () => {
                 </div>
             ) : (
                 <DataTable
-                    data={honorees}
+                    data={filteredHonorees}
                     columns={columns}
                     actions={actions}
                     searchPlaceholder="Buscar por nome ou prêmio..."

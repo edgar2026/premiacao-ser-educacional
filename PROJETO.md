@@ -1,110 +1,106 @@
 # 🏆 Projeto: Ser Prêmios (Ser Educacional)
 
-Este documento serve como a **Bússola do Projeto** para desenvolvedores e assistentes de IA, garantindo que a estrutura, tecnologias e funcionalidades sejam compreendidas instantaneamente.
+Este documento atua como a **Bússola Diretiva** para desenvolvedores e assistentes de IA envolvidos na sustentação e evolução do sistema *Ser Prêmios*. Ele define as fundações tecnológicas, de design e arquitetura do projeto.
+
+---
+
+## 🎨 Pilar de Design e Estética (A "Gala Editorial")
+
+O sistema exige uma apresentação **Premium, Institucional e Cinematográfica**, projetada para celebrar a excelência, o mérito corporativo e acadêmico.
+
+### Regras de Direção de Arte
+1. **Paleta Mestra**: Fundo Navy profundo (marinho) com destaques em Ouro Metálico (`gold` no Tailwind) e tipografia primária Off-white.
+2. **Tipografia Premium**: 
+   - Títulos e Destaques: **Playfair Display** (Serif)
+   - Corpo do Texto e UI: **Inter** ou **Montserrat** (Sans-serif)
+3. **Efeitos Visuais**:
+   - **Glassmorphism**: Menus e overlays com efeitos "cristal fosco" usando `backdrop-blur` e bordas douradas sutis (`bg-white/[0.02] border-white/5`).
+   - **Grain Texture**: Utilização de malhas e filtros de sombreamento (gradientes mesh) para aplicar profundidade visual (*Depth*).
+   - **Motion Design**: Todo o projeto baseia-se pesadamente em *Framer Motion* para animações cinematográficas (transições de rotas, micro-interações ao pairar o mouse em cards, entradas de página). Modificações visuais devem, mandatoriamente, ter harmonia cinética.
+4. **Versão Mobile**: O conceito *Mobile-First* é absoluto. O luxo não pode quebrar responsividade.
 
 ---
 
 ## 🚀 Pilares Tecnológicos
 
-- **Frontend:** [React 18](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/)
-- **Build Tool:** [Vite](https://vitejs.dev/)
-- **Estilização:** [Tailwind CSS 4.x](https://tailwindcss.com/) + [Lucide React](https://lucide.dev/) (Ícones)
-- **Autenticação:** [Clerk](https://clerk.com/) (Gestão de usuários, sessões e organizações)
-- **Backend / DB:** [Supabase](https://supabase.com/) (PostgreSQL + Edge Functions + Realtime)
-- **Roteamento:** [React Router Dom v7](https://reactrouter.com/)
-- **Componentes Específicos:**
-  - `framer-motion`: Animações cinematográficas
-  - `recharts`: Gráficos e visualização de dados
-  - `leaflet` & `react-leaflet`: Mapas e geolocalização de unidades
-  - `react-easy-crop`: Edição de imagens de perfil/capa
-  - `react-quill`: Editor de texto rico para biografias
-  - `html2pdf.js` & `jspdf`: Geração automática de certificados/relatórios
+- **Core & Build**: React 18 + TypeScript + Vite.
+- **Estilização**: Tailwind CSS v4 + Lucide React (Ícones).
+- **Roteamento**: React Router Dom v7.
+- **Ecossistema Back-end**: 
+  - **Supabase**: PostgreSQL (Autenticação, Dados, RLS, Storage de Mídias, Funções RPC).
+  - **Clerk**: Gestão de identidade de usuários, segurança OTP e sessões B2B. A integração com o Supabase é feita via Tokens e sincronização por Webhooks/Edge Functions.
+- **Bibliotecas Críticas**:
+  - `framer-motion` (Animações de entrada e viewport).
+  - `recharts` (Visualização de métricas e performance administrativa).
+  - `react-leaflet` / `leaflet` (Mapas e visualização regional).
+  - `react-easy-crop` (UX para crop e ajuste no upload de imagens de homenageados).
+  - `html2pdf.js` & `jspdf` (Geração de comprovantes e laudas de certificados).
+
+---
+
+## 🔐 Controle de Acesso, RLS e Organização Geográfica
+
+O modelo de dados obedece estritamente a uma segregação de governança institucional. 
+
+### Divisão Geográfica
+As entidades da organização são fracionadas em hierarquia de localização para restringir quem vê o quê:
+`Marca (Brand)` -> `Regional` -> `Unidade (Unit)`.
+
+### Role-Based Access Control (RBAC) e Supabase RLS
+Os níveis de permissão (`super_admin`, `admin`, `diretor`, `public`) validam a leitura e gravação no DB, implementadas através de **Row Level Security (RLS)**:
+
+1. **Super Administradores e Administradores**:
+   - Acesso irrestrito a todo o módulo Administrativo (`/admin/*`).
+   - Podem cadastrar Premiações, Usuários (Mapeamento Clerk-Supabase), Marcas, Regionais, Unidades e gerenciar a mídia da Home.
+2. **Diretores (`diretor`)**:
+   - **Restrição de RLS**: Diretores SÓ podem cadastrar, visualizar e editar os **Homenageados** vinculados às **suas referidas** Unidades. Tentar acessar rotas ou injetar CUD em unidades das quais não têm poder hierárquico retorna Erro de Permissão.
+   - Limitados às rotas de `/admin/homenageados/*`.
+3. **Público (`public`)**:
+   - Apenas leitura (Galeria Geral, Sobre, Linha do Tempo, Detalhes Públicos de Prêmios).
+
+### Fluxo de Aprovação de Homenageados
+1. Diretor cadastra Homenageado via Wizard (Stepper interativo), definindo a Biografia, os Dados Profissionais e Anexos.
+2. Entra com Status **`pending`**.
+3. O Admin recebe no Dashboard, analisa os critérios e altera o Status para **`approved`**.
+4. Apenas se aprovado E possuir a tag booleana **`is_published = true`**, o homenageado é listado publicamente para consulta externa e indexação.
+
+---
+
+## 🔄 Versionamento por Semestres e Configuração Global
+
+- **Semestres Dinâmicos**: A separação das edições da premiação é fundamentada por "Semestres" no banco de dados.
+- **Identidade Semestral Visual**: Para distiguir as edições no painel visual, algoritmos como o *Golden Angle Algorithm* (`H = (index * 137.508) % 360`) podem ser usados programaticamente na UI para gerar matizes consistentes, porém distintos, na colorização de badges dos prêmios baseados na string do semestre original.
+- **Semestre Padrão (Default)**: O sistema salva a preferência ou carrega um semestre ativo por omissão assim que a aplicação é iniciada.
 
 ---
 
 ## 📂 Arquitetura de Pastas
 
-A estrutura segue o padrão de **Feature-Based Design**, onde cada módulo tem suas próprias páginas e componentes específicos.
-
 ```bash
 /src
-  /components        # Componentes globais (UI, Common, Layout Elements)
-  /features          # Módulos principais com lógica de negócio
-    /about           # Página Sobre
-    /admin           # Painel Administrativo (Homenageados, Prêmios, Mídia, Usuários)
-    /auth            # Lógica de Login, Contexto de Auth e Proteção de Rotas
-    /awards          # Galeria e Detalhes de Prêmios
-    /dashboard       # Dashboard Executivo (Métricas acumuladas)
-    /gallery         # Galeria de Mídia do Projeto
-    /home            # Homepage e Conteúdo Principal
-    /honoree         # Homenageados (Detalhes, Galeria Pública)
-    /partners        # Lista de Parceiros
-    /timeline        # Linha do Tempo e marcos históricos
-  /layouts           # Templates de Layout (Main, Admin, Dashboard)
-  /lib               # Configurações de API (Supabase Client)
-  /services          # Mock data e serviços de integração
-  /types             # Definições de tipos TypeScript e Types do Supabase
-  /utils             # Funções auxiliares (Helper functions)
-/supabase
-  /functions         # Edge Functions (RBAC, Email automation)
+  /components        # Elementos reutilizáveis (UI: Inputs de vidro, Layouts)
+  /features          # Módulos centrais (Verdadeira separação de conceitos)
+    /auth            # Lógica B2B com Clerk e Guards (`RoleGuard`)
+    /home            # Apresentação do Hero (HomeMedia) e Rankings Top Regionais
+    /admin           # Lógica do Painel ADM (Controles de RLS e Cadastros Geográficos)
+    /awards          # Entidades e categorias de Prêmios
+    /honoree         # Cadastro e Exibição de Perfil do Homenageado
+  /layouts           # Embrulho Master (Main Público VS. Admin Dashboard)
+  /lib               # Singleton e Injeção do Supabase (`supabase.ts`)
+  /types             # Interfaces TypeScript e auto-geráveis do Supabase (`global.ts`)
+  /utils             # Helpers de parser seguro
 ```
 
 ---
 
-## 🔑 Fluxos Principais e Segurança
+## 🛠 Comandos de Sustentação
 
-### 1. Sistema de Autenticação (Clerk + Supabase)
-O projeto utiliza um sistema híbrido:
-- **Clerk:** Gerencia o login social, e-mail/senha, sessões seguras e IDs de organização.
-- **Supabase Profiles:** Armazena dados complementares e papéis (roles) para controle de acesso fino no banco de dados.
-- **Sincronização:** Quando um usuário loga pela primeira vez via Clerk, um perfil é criado automaticamente no Supabase via RPC (`create_clerk_profile`).
+- `npm run dev`: Build local.
+- `node promote-edgar.js`: Adicionar cargo super-admin a usuário inicial no Postgres.
+- `node update_clerk_emails.js`: Sincronizador de base do Clerk via Server-Side CLI.
 
-### 2. Níveis de Acesso (RBAC)
-Os papéis são definidos na tabela `profiles` e verificados pelo `RoleGuard`:
-- **`super_admin` / `admin`**: Acesso total ao painel administrativo (`/admin`), incluindo gestão de usuários, geografia e mídia da home.
-- **`diretor`**: Acesso ao painel administrativo para gestão de homenageados, mas com restrições em configurações globais e usuários.
-- **`public`**: Acesso apenas às áreas de consulta e visualização do site institucional.
-
-### 3. Gestão de Homenageados e Workflow de Aprovação
-O sistema possui um fluxo de governança para novos registros:
-1. **Cadastro**: Realizado em etapas (Stepper) por Diretores ou Admins.
-2. **Status `pending`**: O registro aguarda revisão.
-3. **Status `approved`**: O registro foi validado por um Administrador.
-4. **Publicação (`is_published`)**: Somente após a aprovação e a marcação de "Publicado", o homenageado aparece na galeria pública.
-- **Edição Dinâmica**: Suporte a crop de imagens em tempo real para garantir o padrão visual.
-
-### 4. Edge Functions
-Utilizadas para tarefas que exigem privilégios elevados ou integrações externas:
-- **`set-clerk-role`**: Sincroniza a alteração de papel entre a interface administrativa do Supabase e o metadata do usuário no Clerk.
-- **`send-password-changed-email`**: (Em desenvolvimento/SIMULAÇÃO) Envia confirmação de troca de senha via Resend.
+- **Deploy Engine**: Totalmente compatível e rodando sob Vercel (Roteamentos via arquivo `vercel.json` no root controlam o redirect de Single Page Application para a index).
 
 ---
 
-## 🛠 Manutenção e DevOps
-
-### Comandos de Desenvolvimento
-- `npm run dev`: Inicia o ambiente de desenvolvimento.
-- `npm run build`: Gera o bundle de produção.
-- `npm run lint`: Checagem estática de código.
-
-### Scripts de Administração (Root)
-- `promote-edgar.js`: Script Node.js para promover o usuário admin inicial no Supabase.
-- `update_clerk_emails.js`: Script utilitário para manutenção de emails no Clerk.
-
----
-
-## 📝 Notas para o Assistente (IA)
-Sempre que abrir este projeto, leia este arquivo para entender o contexto de:
-1. **Padrão de Nomeclatura:** PascalCase para Componentes, camelCase para funções/variáveis.
-2. **Estilização:** Tailwind CSS v4 sempre priorizado. Utilize gradientes mesh e texturas premium.
-3. **Tipagem:** Nunca use `any`. Utilize `supabase.ts` gerado para o schema do banco.
-4. **Auth:** O `AuthContext` é o centro da verdade para permissões de usuários. Use `useAuth()` para acessar o perfil logado.
-
----
-
-## ✨ Melhorias Premium (Implementadas)
-1. **Tipografia de Luxo:** Mix entre *Playfair Display* e *Montserrat*.
-2. **Efeitos de Vidro (Glassmorphism):** Menus e overlays com `backdrop-blur` e bordas sutis.
-3. **Grain Texture:** Camada de ruído visual para depth cinematográfico.
-4. **Motion Design:** Uso extensivo de `framer-motion` para transições suaves entre rotas e revelação de conteúdo.
-
+> _Lembre-se: Menos é Mais visualmente, mas Tecnologicamente a precisão deve ser cirúrgica. Siga a TypeScript de forma estrita (`no any`) e proteja as sessões do Clerk com a chave do Perfil no Supabase._

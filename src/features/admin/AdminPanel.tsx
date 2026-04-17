@@ -17,8 +17,12 @@ const AdminPanel: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (profile && isDiretor) {
+            navigate('/admin/solicitacoes', { replace: true });
+        } else if (profile) {
+            fetchStats();
+        }
+    }, [profile, isDiretor, navigate]);
 
     const fetchStats = async () => {
         setIsLoading(true);

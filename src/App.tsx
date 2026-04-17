@@ -62,6 +62,7 @@ function App() {
             <Route path="/primeiro-acesso" element={<FirstAccessPage />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminPanel />} />
+              <Route path="solicitacoes" element={<HonoreesAdminPage isRequestsView={true} />} />
               <Route path="homenageados" element={<HonoreesAdminPage />} />
               <Route path="homenageados/novo" element={<HonoreeRegistrationPage />} />
               <Route path="homenageados/novo/:step" element={<HonoreeRegistrationPage />} />
