@@ -40,6 +40,8 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [honoreeToReject, setHonoreeToReject] = useState<Honoree | null>(null);
     const [rejectionReason, setRejectionReason] = useState('');
+    const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
+    const [honoreeToRequestEdit, setHonoreeToRequestEdit] = useState<Honoree | null>(null);
 
     const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
@@ -110,7 +112,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         if (reason !== undefined) updateData.rejection_reason = reason;
         
         if (status === 'publicado') updateData.is_published = true;
-        else if (['aprovado', 'reprovado', 'em_analise'].includes(status)) updateData.is_published = false;
+        else if (['aprovado', 'reprovado', 'em_analise', 'rascunho'].includes(status)) updateData.is_published = false;
 
         const { error } = await dbClient.from('honorees').update(updateData).eq('id', h.id);
 
@@ -154,6 +156,24 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         await handleStatusUpdate(honoreeToReject, 'reprovado', rejectionReason);
         setHonoreeToReject(null);
         setRejectionReason('');
+    };
+
+    const handleEditClick = (h: Honoree) => {
+        if (isDiretor && (h.status === 'publicado' || h.status === 'aprovado')) {
+            setHonoreeToRequestEdit(h);
+            setIsRequestEditModalOpen(true);
+        } else {
+            navigate(`/admin/homenageados/${h.id}/editar`);
+        }
+    };
+
+    const confirmRequestEdit = async () => {
+        if (!honoreeToRequestEdit) return;
+        setIsRequestEditModalOpen(false);
+        
+        // Altera o status para rascunho e despublica antes de ir para a tela de edição
+        await handleStatusUpdate(honoreeToRequestEdit, 'rascunho');
+        navigate(`/admin/homenageados/${honoreeToRequestEdit.id}/editar`);
     };
 
     const columns: Column<Honoree>[] = [
@@ -217,7 +237,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 <span className="material-symbols-outlined text-[20px]">visibility</span>
             </button>
             <button
-                onClick={() => navigate(`/admin/homenageados/${h.id}/editar`)}
+                onClick={() => handleEditClick(h)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
                 title="Editar"
             >
@@ -408,6 +428,30 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                     searchPlaceholder="Buscar por nome ou prêmio..."
                 />
             )}
+
+            {/* MODAL DE SOLICITAÇÃO DE EDIÇÃO (DESPUBLICAR) */}
+            <ConfirmModal
+                isOpen={isRequestEditModalOpen}
+                onClose={() => setIsRequestEditModalOpen(false)}
+                onConfirm={confirmRequestEdit}
+                title="Editar Cadastro Aprovado"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/70">
+                            Este homenageado já foi verificado e aprovado/publicado.
+                        </p>
+                        <p className="text-sm text-gold font-bold">
+                            Para editá-lo, o cadastro retornará ao status de Rascunho e será ocultado do site público. Você precisará enviar para análise novamente após concluir a edição.
+                        </p>
+                        <p className="text-sm text-off-white/70">
+                            Deseja prosseguir com a edição?
+                        </p>
+                    </div>
+                }
+                confirmLabel="Sim, Voltar para Edição"
+                cancelLabel="Cancelar"
+                type="warning"
+            />
 
             <ConfirmModal
                 isOpen={isDeleteModalOpen}

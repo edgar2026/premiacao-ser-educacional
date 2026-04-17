@@ -325,8 +325,11 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                     finalStatus = 'em_analise';
                 } else if (actionType === 'rascunho') {
                     finalStatus = 'rascunho';
-                } else if (actionType === 'atualizar' && ['reprovado'].includes(formData.status)) {
-                    finalStatus = 'em_analise';
+                } else if (actionType === 'atualizar') {
+                    // Segurança adicional: Se um diretor editar um cadastro que de alguma forma estava Aprovado ou Publicado, volta pra Análise.
+                    if (['reprovado', 'aprovado', 'publicado'].includes(formData.status)) {
+                        finalStatus = 'em_analise';
+                    }
                 }
             } else if (isAdmin && !id) {
                 finalStatus = formData.is_published ? 'publicado' : 'aprovado';

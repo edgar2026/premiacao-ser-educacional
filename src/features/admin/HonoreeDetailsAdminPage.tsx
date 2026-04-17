@@ -22,6 +22,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
 
     const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
     const isDirector = profile?.role === 'diretor';
@@ -119,6 +120,35 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         }
     };
 
+    const handleEditClick = () => {
+        if (isDirector && (honoree?.status === 'publicado' || honoree?.status === 'aprovado')) {
+            setIsRequestEditModalOpen(true);
+        } else {
+            navigate(`/admin/homenageados/${id}/editar`);
+        }
+    };
+
+    const confirmRequestEdit = async () => {
+        if (!honoree) return;
+        setIsUpdating(true);
+        try {
+            const { error } = await dbClient
+                .from('honorees')
+                .update({ 
+                    status: 'rascunho', 
+                    is_published: false 
+                })
+                .eq('id', honoree.id);
+
+            if (error) throw error;
+            setIsRequestEditModalOpen(false);
+            navigate(`/admin/homenageados/${honoree.id}/editar`);
+        } catch (err) {
+            console.error('Error requesting edit:', err);
+            setIsUpdating(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center py-20">
@@ -152,22 +182,25 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-4">
-                    {isDirector && (honoree.status === 'aprovado' || honoree.status === 'publicado') && (
+                    {isAdmin && (honoree.status === 'aprovado' || honoree.status === 'publicado') && (
                         <button
                             onClick={handleTogglePublish}
                             disabled={isUpdating}
-                            className={`${honoree.status === 'publicado' ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-green-500 text-white shadow-green-500/20'} px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg border transition-all disabled:opacity-50`}
+                            className={`${honoree.status === 'publicado' ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-green-500 text-white shadow-green-500/20'} px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg border transition-all disabled:opacity-50 flex items-center gap-2`}
                         >
+                            <span className="material-symbols-outlined text-sm">
+                                {honoree.status === 'publicado' ? 'visibility_off' : 'publish'}
+                            </span>
                             {honoree.status === 'publicado' ? 'Despublicar' : 'Publicar Agora'}
                         </button>
                     )}
-                    <Link
-                        to={`/admin/homenageados/${id}/editar`}
+                    <button
+                        onClick={handleEditClick}
                         className="bg-white/5 hover:bg-white/10 text-gold px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all flex items-center gap-2"
                     >
                         <span className="material-symbols-outlined text-sm">edit</span>
                         Editar Perfil
-                    </Link>
+                    </button>
                     {honoree.is_published && (
                         <Link
                             to={`/homenageado/${id}`}
@@ -244,13 +277,13 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                             </button>
                         )}
                         {isDirector && (honoree.status === 'reprovado') && (
-                            <Link
-                                to={`/admin/homenageados/${id}/editar`}
+                            <button
+                                onClick={handleEditClick}
                                 className="bg-gold text-navy-deep px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-gold/20 flex items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-sm">edit</span>
                                 Corrigir
-                            </Link>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -428,6 +461,29 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                 confirmLabel="Confirmar Reprovação"
                 cancelLabel="Voltar"
                 type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isRequestEditModalOpen}
+                onClose={() => setIsRequestEditModalOpen(false)}
+                onConfirm={confirmRequestEdit}
+                title="Editar Cadastro Aprovado"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/70">
+                            Este homenageado já foi verificado e aprovado/publicado.
+                        </p>
+                        <p className="text-sm text-gold font-bold">
+                            Para editá-lo, o cadastro retornará ao status de Rascunho e será ocultado do site público. Você precisará enviar para análise novamente após concluir a edição.
+                        </p>
+                        <p className="text-sm text-off-white/70">
+                            Deseja prosseguir com a edição?
+                        </p>
+                    </div>
+                }
+                confirmLabel="Sim, Voltar para Edição"
+                cancelLabel="Cancelar"
+                type="warning"
             />
         </div>
     );
