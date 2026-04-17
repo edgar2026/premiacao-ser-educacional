@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -33,6 +33,13 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
     const [regionals, setRegionals] = useState<Regional[]>([]);
 
+    const bioQuillRef = useRef(null);
+    const initQuillRef = useRef(null);
+    const recQuillRef = useRef(null);
+
+    // Cliente Autenticado para furar bloqueios de RLS invisível
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
     const [formData, setFormData] = useState({
         type: 'interno' as 'interno' | 'externo',
         name: '',
@@ -62,7 +69,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         initiatives: '',
         recognitions: '',
         rejection_reason: '',
-        status: 'rascunho' as 'rascunho' | 'pendente_analise' | 'em_correcao' | 'aprovado' | 'rejeitado' | 'publicado' | 'reprovado'
+        status: 'rascunho' as 'rascunho' | 'em_analise' | 'aprovado' | 'reprovado' | 'publicado'
     });
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -71,7 +78,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const [videoPreview, setVideoPreview] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    // Cropper State
     const [isCropping, setIsCropping] = useState(false);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
@@ -97,18 +103,21 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         fetchBrands();
         fetchUnits();
         fetchRegionals();
-        if (id) {
-            fetchHonoree();
-        } else if (isDirector && profile?.unit_id) {
-            // Pre-fill unit for directors
+    }, []);
+
+    useEffect(() => {
+        if (!id && isDirector && profile?.unit_id && units.length > 0) {
+            const myUnit = units.find(u => u.id === profile.unit_id);
             setFormData(prev => ({
                 ...prev,
                 unit_id: profile.unit_id || '',
-                brand_id: profile.brand_id || '',
-                regional_id: profile.regional_id || ''
+                brand_id: myUnit?.brand_id || profile.brand_id || '',
+                regional_id: myUnit?.regional_id || profile.regional_id || ''
             }));
+        } else if (id) {
+            fetchHonoree();
         }
-    }, [id, isDirector, profile]);
+    }, [id, isDirector, profile, units.length]);
 
     useEffect(() => {
         if (!step || isNaN(parseInt(step)) || parseInt(step) < 1 || parseInt(step) > 5) {
@@ -138,7 +147,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     };
 
     const fetchHonoree = async () => {
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('honorees')
             .select('*')
             .eq('id', id)
@@ -188,7 +197,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         }
         setIsFetching(false);
     };
-
 
     const uploadPhoto = async (file: File) => {
         const fileExt = file.name.split('.').pop();
@@ -245,7 +253,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 100 * 1024 * 1024) { // 100MB limit
+            if (file.size > 100 * 1024 * 1024) { 
                 showAlert('O vídeo deve ter no máximo 100MB', 'Arquivo muito grande');
                 return;
             }
@@ -254,7 +262,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (actionType: 'rascunho' | 'enviar' | 'atualizar' = 'atualizar') => {
         setIsLoading(true);
 
         try {
@@ -296,13 +304,13 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
             });
 
             const isInterno = formData.type === 'interno';
-            const missingName = !formData.name;
+            const missingName = !formData.name.trim();
             const missingAward = !formData.award_id;
-            const missingInternals = isInterno && (!formData.brand_id || !formData.unit_id);
+            const missingInternals = isInterno && (!formData.unit_id);
 
-            if (missingName || missingAward || missingInternals) {
+            if (actionType !== 'rascunho' && (missingName || missingAward || missingInternals)) {
                 showAlert(
-                    "Existem campos obrigatórios em branco. Verifique Identificação (Nome) e os vínculos obrigatórios.",
+                    "Existem campos obrigatórios em branco. Verifique Identificação e os vínculos obrigatórios institucionais.",
                     "Dados Incompletos",
                     "warning"
                 );
@@ -311,8 +319,20 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
             }
 
             let finalStatus = formData.status;
-            if (isDirector && id && (formData.status === 'rejeitado' || formData.status === 'reprovado' || formData.status === 'em_correcao')) {
-                finalStatus = 'em_correcao';
+
+            if (isDirector) {
+                if (actionType === 'enviar') {
+                    finalStatus = 'em_analise';
+                } else if (actionType === 'rascunho') {
+                    finalStatus = 'rascunho';
+                } else if (actionType === 'atualizar') {
+                    // Segurança adicional: Se um diretor editar um cadastro que de alguma forma estava Aprovado ou Publicado, volta pra Análise.
+                    if (['reprovado', 'aprovado', 'publicado'].includes(formData.status)) {
+                        finalStatus = 'em_analise';
+                    }
+                }
+            } else if (isAdmin && !id) {
+                finalStatus = formData.is_published ? 'publicado' : 'aprovado';
             }
 
             const payload = {
@@ -335,8 +355,6 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 stats: formData.stats,
                 created_by: profile?.id
             };
-
-            const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
             if (id) {
                 const { error } = await dbClient
@@ -438,7 +456,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                 </div>
             </div>
 
-            {isDirector && (formData.status === 'rejeitado' || formData.status === 'reprovado' || formData.status === 'em_correcao') && (
+            {isDirector && (formData.status === 'reprovado') && (
                 <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
                     <div className="flex items-start gap-4">
                         <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
@@ -450,7 +468,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 " {formData.rejection_reason || 'Nenhum motivo especificado.'} "
                             </p>
                             <p className="text-[10px] text-off-white/40 uppercase tracking-widest pt-2">
-                                Por favor, realize as correções solicitadas e retorne à tela de Detalhes para reenviar para uma nova análise. Ao salvar aqui os dados alteram automaticamente seu status para 'Em Correção'.
+                                Por favor, realize as correções solicitadas. Ao salvar no último passo, o sistema irá submeter o perfil automaticamente para uma nova análise da administração.
                             </p>
                         </div>
                     </div>
@@ -586,7 +604,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                                 setFormData({
                                                                     ...formData,
                                                                     unit_id: e.target.value,
-                                                                    unit: selectedUnit?.name || ''
+                                                                    unit: selectedUnit?.name || '',
+                                                                    brand_id: selectedUnit?.brand_id || formData.brand_id,
+                                                                    regional_id: selectedUnit?.regional_id || formData.regional_id
                                                                 });
                                                             }}
                                                         >
@@ -668,7 +688,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                                 setFormData({
                                                                     ...formData,
                                                                     unit_id: e.target.value,
-                                                                    unit: selectedUnit?.name || ''
+                                                                    unit: selectedUnit?.name || '',
+                                                                    brand_id: selectedUnit?.brand_id || formData.brand_id,
+                                                                    regional_id: selectedUnit?.regional_id || formData.regional_id
                                                                 });
                                                             }}
                                                         >
@@ -715,6 +737,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                             <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Biografia / Histórico de Conquistas</label>
                                             <div className="quill-container">
                                                 <ReactQuill
+                                                    ref={bioQuillRef}
                                                     theme="snow"
                                                     value={formData.biography || ''}
                                                     onChange={(content) => setFormData({ ...formData, biography: content })}
@@ -739,15 +762,12 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
                                                     {videoPreview ? (
                                                         <div className="space-y-4">
-                                                            {/* Video Player Container */}
                                                             <div className="relative rounded-[2rem] overflow-hidden bg-black shadow-2xl border border-white/10 aspect-video group/video-container">
                                                                 <video
                                                                     src={videoPreview}
                                                                     className="w-full h-full object-contain"
                                                                     controls
                                                                 />
-
-                                                                {/* Floating Controls Overlay */}
                                                                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover/video-container:opacity-100 transition-opacity z-10">
                                                                     <button
                                                                         type="button"
@@ -957,6 +977,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                 <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Aba: Iniciativas</label>
                                                 <div className="quill-container">
                                                     <ReactQuill
+                                                        ref={initQuillRef}
                                                         theme="snow"
                                                         value={formData.initiatives || ''}
                                                         onChange={(content) => setFormData({ ...formData, initiatives: content })}
@@ -968,6 +989,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                 <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Aba: Reconhecimentos</label>
                                                 <div className="quill-container">
                                                     <ReactQuill
+                                                        ref={recQuillRef}
                                                         theme="snow"
                                                         value={formData.recognitions || ''}
                                                         onChange={(content) => setFormData({ ...formData, recognitions: content })}
@@ -994,7 +1016,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                         Anterior
                     </button>
 
-                    <div className="flex gap-6">
+                    <div className="flex flex-wrap items-center gap-6 justify-end">
                         <button
                             onClick={() => navigate('/admin/homenageados')}
                             className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/20 hover:text-red-400 transition-colors"
@@ -1011,17 +1033,28 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
                             </button>
                         ) : (
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isLoading}
-                                className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-                            >
-                                {isLoading ? 'Salvando...' : (
-                                    isDirector 
-                                        ? (formData.status === 'rascunho' || formData.status === 'reprovado' ? 'Enviar para Análise' : 'Atualizar') 
-                                        : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')
+                            <>
+                                {isDirector && (!id || formData.status === 'rascunho') && (
+                                    <button
+                                        onClick={() => handleSubmit('rascunho')}
+                                        disabled={isLoading}
+                                        className="px-12 py-5 bg-white/5 text-off-white rounded-full font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all disabled:opacity-50 border border-white/10"
+                                    >
+                                        Salvar Rascunho
+                                    </button>
                                 )}
-                            </button>
+                                <button
+                                    onClick={() => handleSubmit(isDirector ? (['rascunho', 'reprovado'].includes(formData.status) || !id ? 'enviar' : 'atualizar') : 'atualizar')}
+                                    disabled={isLoading}
+                                    className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                >
+                                    {isLoading ? 'Processando...' : (
+                                        isDirector 
+                                            ? (['rascunho', 'reprovado'].includes(formData.status) || !id ? 'Enviar para Análise' : 'Atualizar Dados') 
+                                            : (isEdit ? 'Atualizar Cadastro' : 'Finalizar Cadastro')
+                                    )}
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>

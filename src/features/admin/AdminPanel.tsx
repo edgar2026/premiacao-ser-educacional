@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import { useAuth } from '../auth/AuthContext';
 
 const AdminPanel: React.FC = () => {
@@ -16,6 +16,9 @@ const AdminPanel: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
 
+    // Cliente Autenticado para forçar os Headers de RLS
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
+
     useEffect(() => {
         if (profile && isDiretor) {
             navigate('/admin/solicitacoes', { replace: true });
@@ -28,13 +31,13 @@ const AdminPanel: React.FC = () => {
         setIsLoading(true);
         try {
             const queries = [
-                supabase.from('honorees').select('*', { count: 'exact', head: true })
+                dbClient.from('honorees').select('*', { count: 'exact', head: true })
             ];
 
             if (!isDiretor) {
                 queries.push(
-                    supabase.from('awards').select('*', { count: 'exact', head: true }),
-                    supabase.from('regionals').select('*', { count: 'exact', head: true })
+                    dbClient.from('awards').select('*', { count: 'exact', head: true }),
+                    dbClient.from('regionals').select('*', { count: 'exact', head: true })
                 );
             }
 

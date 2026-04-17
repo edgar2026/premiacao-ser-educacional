@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import DataTable from '../../components/ui/DataTable';
 import type { Column } from '../../components/ui/DataTable';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import GlassCard from '../../components/ui/GlassCard';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
     regionals?: { name: string } | null;
     status?: string | null;
-
 };
 
 interface HonoreesAdminPageProps {
@@ -22,20 +22,55 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const navigate = useNavigate();
     const { profile } = useAuth();
     const isDiretor = profile?.role === 'diretor';
+    
     const [honorees, setHonorees] = useState<Honoree[]>([]);
+    const [regionals, setRegionals] = useState<any[]>([]);
+    const [units, setUnits] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Estados de Filtro
+    const [statusFilter, setStatusFilter] = useState<string>(isRequestsView ? 'pendentes' : 'aprovados');
+    const [regionalFilter, setRegionalFilter] = useState<string>('all');
+    const [unitFilter, setUnitFilter] = useState<string>('all');
+
+    // Modais
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [honoreeToReject, setHonoreeToReject] = useState<Honoree | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+    const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
+    const [honoreeToRequestEdit, setHonoreeToRequestEdit] = useState<Honoree | null>(null);
+
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
     useEffect(() => {
-        fetchHonorees();
-    }, []);
+        setStatusFilter(isRequestsView ? 'pendentes' : 'aprovados');
+        fetchInitialData();
+    }, [isRequestsView]);
+
+    const fetchInitialData = async () => {
+        setIsLoading(true);
+        await Promise.all([
+            fetchHonorees(),
+            fetchFiltersData()
+        ]);
+        setIsLoading(false);
+    };
+
+    const fetchFiltersData = async () => {
+        const [regRes, unitRes] = await Promise.all([
+            dbClient.from('regionals').select('id, name').order('name'),
+            dbClient.from('units').select('id, name, regional_id').order('name')
+        ]);
+        if (regRes.data) setRegionals(regRes.data);
+        if (unitRes.data) setUnits(unitRes.data);
+    };
 
     const fetchHonorees = async () => {
-        setIsLoading(true);
-        let query = supabase
+        let query = dbClient
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .order('created_at', { ascending: false });
@@ -45,13 +80,11 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         }
 
         const { data, error } = await query;
-
         if (error) {
             console.error('Error fetching honorees:', error);
         } else {
-            setHonorees(data || []);
+            setHonorees(data as any);
         }
-        setIsLoading(false);
     };
 
     const handleDeleteClick = (id: string) => {
@@ -61,103 +94,109 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
 
     const confirmDelete = async () => {
         if (!itemToDelete) return;
-
-        const { error } = await supabase
-            .from('honorees')
-            .delete()
-            .eq('id', itemToDelete);
-
+        const { error } = await dbClient.from('honorees').delete().eq('id', itemToDelete);
         if (error) {
             setAlertMessage('Erro ao excluir homenageado: ' + error.message);
             setIsAlertModalOpen(true);
         } else {
-            fetchHonorees();
+            await fetchHonoreeBackground();
         }
         setItemToDelete(null);
     };
 
-    const handleStatusUpdate = async (h: Honoree, status: string, rejectionReason?: string | null) => {
+    const handleStatusUpdate = async (h: Honoree, status: string, reason?: string | null) => {
         setIsLoading(true);
         const updateData: any = { status };
         
-        if (rejectionReason !== undefined) {
-            updateData.rejection_reason = rejectionReason;
-        }
+        if (reason !== undefined) updateData.rejection_reason = reason;
         
-        // If status is published, also set is_published flag (for compatibility)
-        if (status === 'publicado') {
-            updateData.is_published = true;
-        } else if (status === 'aprovado' || status === 'rejeitado' || status === 'reprovado' || status === 'pendente_analise' || status === 'em_analise' || status === 'em_correcao') {
-            updateData.is_published = false;
-        }
+        if (status === 'publicado') updateData.is_published = true;
+        else if (['aprovado', 'reprovado', 'em_analise', 'rascunho'].includes(status)) updateData.is_published = false;
 
-        const { error } = await supabase
-            .from('honorees')
-            .update(updateData)
-            .eq('id', h.id);
+        const { error } = await dbClient.from('honorees').update(updateData).eq('id', h.id);
 
         if (error) {
             setAlertMessage('Erro ao atualizar status: ' + error.message);
             setIsAlertModalOpen(true);
         } else {
-            // Send email notification if needed
-            if (h.created_by && (status === 'reprovado' || status === 'aprovado' || status === 'publicado')) {
+            if (h.created_by && ['reprovado', 'aprovado', 'publicado'].includes(status)) {
                 try {
-                    let honoreeName = 'Homenageado';
-                    try {
-                        if (h.professional_data) {
-                            const data = JSON.parse(h.professional_data);
-                            honoreeName = data.name || 'Homenageado';
-                        }
-                    } catch (e) {
-                        console.error('Error parsing professional_data for notification:', e);
-                    }
-                    
+                    const honoreeName = getHonoreeName(h);
                     await supabase.functions.invoke('notify-rejection', {
-                        body: {
-                            honoreeName,
-                            userEmail: h.created_by || '',
-                            reason: rejectionReason,
-                            status
-                        }
+                        body: { honoreeName, userEmail: h.created_by || '', reason, status }
                     });
                 } catch (emailError) {
                     console.error('Failed to send notification email:', emailError);
                 }
             }
-            fetchHonorees();
+            await fetchHonoreeBackground();
         }
         setIsLoading(false);
     };
+
+    const fetchHonoreeBackground = async () => {
+        let query = dbClient.from('honorees').select('*, awards!honorees_award_id_fkey(name), regionals(name)').order('created_at', { ascending: false });
+        if (isDiretor && profile?.unit_id) query = query.eq('unit_id', profile.unit_id);
+        const { data } = await query;
+        if (data) setHonorees(data as any);
+    };
+
+    const confirmReject = async () => {
+        if (!honoreeToReject) return;
+        if (!rejectionReason.trim()) {
+            setAlertMessage('Por favor, informe o motivo da reprovação.');
+            setIsAlertModalOpen(true);
+            return;
+        }
+        setIsRejectModalOpen(false);
+        await handleStatusUpdate(honoreeToReject, 'reprovado', rejectionReason);
+        setHonoreeToReject(null);
+        setRejectionReason('');
+    };
+
+    const handleEditClick = (h: Honoree) => {
+        if (isDiretor && (h.status === 'publicado' || h.status === 'aprovado')) {
+            setHonoreeToRequestEdit(h);
+            setIsRequestEditModalOpen(true);
+        } else {
+            navigate(`/admin/homenageados/${h.id}/editar`);
+        }
+    };
+
+    const confirmRequestEdit = async () => {
+        if (!honoreeToRequestEdit) return;
+        setIsRequestEditModalOpen(false);
+        await handleStatusUpdate(honoreeToRequestEdit, 'rascunho');
+        navigate(`/admin/homenageados/${honoreeToRequestEdit.id}/editar`);
+    };
+
+    const getHonoreeName = (h: Honoree) => {
+        try { return h.professional_data ? JSON.parse(h.professional_data).name : h.name || 'Sem nome'; }
+        catch (e) { return h.name || 'Sem nome'; }
+    };
+
+    // FILTROS ATIVOS PARA O DIRETOR (Itens de Ação Imediata)
+    const rejectedHonorees = useMemo(() => isDiretor ? honorees.filter(h => h.status === 'reprovado') : [], [honorees, isDiretor]);
+    const approvedHonorees = useMemo(() => isDiretor ? honorees.filter(h => h.status === 'aprovado') : [], [honorees, isDiretor]);
 
     const columns: Column<Honoree>[] = [
         {
             header: 'Homenageado',
             accessor: (h: Honoree) => (
                 <div className="flex items-center gap-5">
-                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden">
+                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden shrink-0">
                         <img
                             src={h.photo_url || '/assets/default-fallback.png'}
                             alt="Foto"
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/assets/default-fallback.png';
-                            }}
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/assets/default-fallback.png'; }}
                         />
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-off-white font-serif italic text-lg leading-tight">
-                            {(() => {
-                                try {
-                                    return h.professional_data ? JSON.parse(h.professional_data).name : 'Sem nome';
-                                } catch (e) {
-                                    return h.name || 'Sem nome';
-                                }
-                            })()}
+                            {getHonoreeName(h)}
                         </span>
-                        <span className="text-[10px] text-off-white/30 uppercase tracking-widest">
-                            {h.type}
-                        </span>
+                        <span className="text-[10px] text-off-white/30 uppercase tracking-widest">{h.type}</span>
                     </div>
                 </div>
             )
@@ -177,50 +216,12 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             accessor: (h: Honoree) => {
                 const status = h.status as string;
                 switch (status) {
-                    case 'rascunho':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">
-                                Rascunho
-                            </span>
-                        );
-                    case 'pendente_analise':
-                    case 'em_analise':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                                Pendente Análise
-                            </span>
-                        );
-                    case 'aprovado':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">
-                                Aprovado
-                            </span>
-                        );
-                    case 'rejeitado':
-                    case 'reprovado':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">
-                                Rejeitado
-                            </span>
-                        );
-                    case 'em_correcao':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-orange-500/10 text-orange-500 border-orange-500/20">
-                                Em Correção
-                            </span>
-                        );
-                    case 'publicado':
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">
-                                Publicado
-                            </span>
-                        );
-                    default:
-                        return (
-                            <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">
-                                {status || 'N/A'}
-                            </span>
-                        );
+                    case 'rascunho': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">Rascunho</span>;
+                    case 'em_analise': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Em Análise</span>;
+                    case 'aprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">Aprovado</span>;
+                    case 'reprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">Reprovado</span>;
+                    case 'publicado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">Publicado</span>;
+                    default: return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">{status || 'N/A'}</span>;
                 }
             }
         }
@@ -236,16 +237,30 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 <span className="material-symbols-outlined text-[20px]">visibility</span>
             </button>
             <button
-                onClick={() => navigate(`/admin/homenageados/${h.id}/editar`)}
+                onClick={() => handleEditClick(h)}
                 className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
                 title="Editar"
             >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
 
+            {(h.status === 'aprovado' || h.status === 'publicado') && (
+                <button
+                    onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
+                    className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
+                        ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
+                        : 'text-green-500/60 hover:text-green-500 hover:bg-green-500/10 hover:border-green-500/20'}`}
+                    title={h.status === 'publicado' ? "Despublicar" : "Publicar Agora"}
+                >
+                    <span className="material-symbols-outlined text-[20px]">
+                        {h.status === 'publicado' ? 'visibility_off' : 'publish'}
+                    </span>
+                </button>
+            )}
+
             {!isDiretor && (
                 <>
-                    {(h.status === 'pendente_analise' || h.status === 'em_analise') && (
+                    {(h.status === 'em_analise') && (
                         <>
                             <button
                                 onClick={() => handleStatusUpdate(h, 'aprovado')}
@@ -256,8 +271,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                             </button>
                             <button
                                 onClick={() => {
-                                    const reason = prompt('Motivo da reprovação:');
-                                    if (reason) handleStatusUpdate(h, 'rejeitado', reason);
+                                    setHonoreeToReject(h);
+                                    setRejectionReason('');
+                                    setIsRejectModalOpen(true);
                                 }}
                                 className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
@@ -278,26 +294,13 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
 
             {isDiretor && (
                 <>
-                    {(h.status === 'rascunho' || h.status === 'em_correcao' || h.status === 'rejeitado' || h.status === 'reprovado') && (
+                    {(h.status === 'rascunho' || h.status === 'reprovado') && (
                         <button
-                            onClick={() => handleStatusUpdate(h, 'pendente_analise')}
+                            onClick={() => handleStatusUpdate(h, 'em_analise')}
                             className="size-10 rounded-xl flex items-center justify-center text-yellow-500/60 hover:text-yellow-500 hover:bg-yellow-500/10 transition-all border border-transparent hover:border-yellow-500/20"
                             title="Enviar para Análise"
                         >
                             <span className="material-symbols-outlined text-[20px]">send</span>
-                        </button>
-                    )}
-                    {(h.status === 'aprovado' || h.status === 'publicado') && (
-                        <button
-                            onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
-                            className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
-                                ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
-                                : 'text-off-white/40 hover:text-blue-400 hover:bg-blue-400/10 hover:border-blue-400/20'}`}
-                            title={h.status === 'publicado' ? "Despublicar" : "Publicar"}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">
-                                {h.status === 'publicado' ? 'visibility_off' : 'publish'}
-                            </span>
                         </button>
                     )}
                 </>
@@ -305,31 +308,38 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         </div>
     );
 
-    const filteredHonorees = honorees.filter(h => {
-        const st = h.status || 'rascunho';
-        if (isRequestsView) {
-            if (isDiretor) {
-                return ['rascunho', 'pendente_analise', 'rejeitado', 'reprovado', 'em_correcao'].includes(st);
-            } else {
-                return ['pendente_analise', 'em_analise', 'em_correcao', 'rejeitado', 'reprovado'].includes(st);
-            }
-        } else {
-            return ['aprovado', 'publicado'].includes(st);
-        }
-    });
+    const filteredHonorees = useMemo(() => {
+        return honorees.filter(h => {
+            const st = h.status || 'rascunho';
+            let matchesStatus = true;
+            if (statusFilter === 'pendentes') matchesStatus = st === 'em_analise';
+            else if (statusFilter === 'aprovados') matchesStatus = ['aprovado', 'publicado'].includes(st);
+            else if (statusFilter === 'reprovados') matchesStatus = st === 'reprovado';
+            else if (statusFilter === 'rascunhos') matchesStatus = st === 'rascunho';
+            else if (statusFilter === 'todos') matchesStatus = true;
+
+            const matchesRegional = regionalFilter === 'all' || h.regional_id === regionalFilter;
+            const matchesUnit = unitFilter === 'all' || h.unit_id === unitFilter;
+
+            return matchesStatus && matchesRegional && matchesUnit;
+        });
+    }, [honorees, statusFilter, regionalFilter, unitFilter]);
+
+    const filteredUnitsForDropdown = useMemo(() => {
+        if (regionalFilter === 'all') return units;
+        return units.filter(u => u.regional_id === regionalFilter);
+    }, [units, regionalFilter]);
 
     return (
         <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-6">
                 <div className="space-y-4">
                     <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
                     <h2 className="text-5xl font-bold font-serif text-off-white italic">
-                        {isRequestsView ? (isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes') : 'Homenageados'}
+                        {isRequestsView ? 'Central de Solicitações' : 'Homenageados'}
                     </h2>
                     <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
-                        {isRequestsView 
-                            ? 'Acompanhe e gerencie as solicitações de cadastro no sistema.'
-                            : 'Administre o registro histórico de excelência e mérito institucional aprovados.'}
+                        Acompanhe, gerencie e aprove as indicações de mérito de toda a instituição.
                     </p>
                 </div>
                 <button
@@ -339,6 +349,125 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                     <span className="material-symbols-outlined text-lg">person_add</span>
                     Novo Homenageado
                 </button>
+            </div>
+
+            {/* AÇÕES IMEDIATAS (Visível apenas para o Diretor) - BLOCO UNIFICADO */}
+            {isDiretor && (rejectedHonorees.length > 0 || approvedHonorees.length > 0) && (
+                <GlassCard className="p-6 md:p-8 rounded-[2.5rem] border-gold/20 bg-gradient-to-br from-gold/5 to-transparent shadow-lg shadow-gold/5 animate-slide-up mb-12">
+                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gold/10">
+                        <div className="size-12 rounded-full bg-gold/10 flex items-center justify-center text-gold shrink-0">
+                            <span className="material-symbols-outlined text-2xl">notifications_active</span>
+                        </div>
+                        <div>
+                            <h3 className="text-2xl font-bold font-serif text-gold italic">Ações Necessárias</h3>
+                            <p className="text-[10px] text-off-white/40 uppercase tracking-widest font-bold">Pendências que exigem sua atenção</p>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {rejectedHonorees.map(h => (
+                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-red-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                                        <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[10px] text-red-400 mt-1 line-clamp-1" title={h.rejection_reason || ''}>
+                                            <span className="font-bold uppercase tracking-widest">Motivo:</span> {h.rejection_reason}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleEditClick(h)} 
+                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">edit</span> Corrigir
+                                </button>
+                            </div>
+                        ))}
+
+                        {approvedHonorees.map(h => (
+                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-green-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
+                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                                        <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex flex-col overflow-hidden">
+                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[10px] text-green-400 mt-1">
+                                            <span className="font-bold uppercase tracking-widest">Pronto para Publicação</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleStatusUpdate(h, 'publicado')} 
+                                    disabled={isLoading}
+                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-navy-deep border border-green-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-sm">publish</span> Publicar
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </GlassCard>
+            )}
+
+            {/* BARRA DE CONTROLES (Abas e Filtros) */}
+            <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
+                
+                {/* Abas de Status */}
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { id: 'todos', label: 'Todos' },
+                        { id: 'pendentes', label: 'Pendentes' },
+                        { id: 'aprovados', label: 'Aprovados' },
+                        { id: 'reprovados', label: 'Reprovados' },
+                        ...(isDiretor ? [{ id: 'rascunhos', label: 'Meus Rascunhos' }] : [])
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setStatusFilter(tab.id)}
+                            className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${statusFilter === tab.id ? 'bg-gold text-navy-deep shadow-lg' : 'bg-white/5 text-off-white/40 hover:bg-white/10 hover:text-off-white'}`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Filtros Geográficos */}
+                <div className="flex flex-wrap gap-4 w-full xl:w-auto">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <span className="material-symbols-outlined text-gold/50">map</span>
+                        <select
+                            value={regionalFilter}
+                            onChange={(e) => {
+                                setRegionalFilter(e.target.value);
+                                setUnitFilter('all'); // Reseta unidade ao trocar regional
+                            }}
+                            className="bg-navy-deep border border-white/10 text-off-white text-xs rounded-xl px-4 py-2.5 outline-none focus:border-gold/50 cursor-pointer w-full sm:w-auto min-w-[160px]"
+                        >
+                            <option value="all">Todas as Regionais</option>
+                            {regionals.map(r => (
+                                <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <span className="material-symbols-outlined text-gold/50">location_city</span>
+                        <select
+                            value={unitFilter}
+                            onChange={(e) => setUnitFilter(e.target.value)}
+                            className="bg-navy-deep border border-white/10 text-off-white text-xs rounded-xl px-4 py-2.5 outline-none focus:border-gold/50 cursor-pointer w-full sm:w-auto min-w-[160px]"
+                        >
+                            <option value="all">Todas as Unidades</option>
+                            {filteredUnitsForDropdown.map(u => (
+                                <option key={u.id} value={u.id}>{u.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {isLoading ? (
@@ -354,6 +483,30 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 />
             )}
 
+            {/* MODAL DE SOLICITAÇÃO DE EDIÇÃO (DESPUBLICAR) */}
+            <ConfirmModal
+                isOpen={isRequestEditModalOpen}
+                onClose={() => setIsRequestEditModalOpen(false)}
+                onConfirm={confirmRequestEdit}
+                title="Editar Cadastro Aprovado"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/70">
+                            Este homenageado já foi verificado e aprovado/publicado.
+                        </p>
+                        <p className="text-sm text-gold font-bold">
+                            Para editá-lo, o cadastro retornará ao status de Rascunho e será ocultado do site público. Você precisará enviar para análise novamente após concluir a edição.
+                        </p>
+                        <p className="text-sm text-off-white/70">
+                            Deseja prosseguir com a edição?
+                        </p>
+                    </div>
+                }
+                confirmLabel="Sim, Voltar para Edição"
+                cancelLabel="Cancelar"
+                type="warning"
+            />
+
             <ConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
@@ -361,6 +514,35 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 title="Excluir Homenageado"
                 message="Tem certeza que deseja excluir este homenageado? Esta ação não poderá ser desfeita."
                 confirmLabel="Sim, Excluir"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isRejectModalOpen}
+                onClose={() => {
+                    setIsRejectModalOpen(false);
+                    setHonoreeToReject(null);
+                    setRejectionReason('');
+                }}
+                onConfirm={confirmReject}
+                title="Reprovar Cadastro"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/60">
+                            Ao reprovar, descreva abaixo o que o diretor precisa corrigir para solicitar uma nova análise.
+                        </p>
+                        <textarea
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-off-white outline-none focus:border-red-500/50 transition-all font-serif italic text-lg"
+                            placeholder="Ex: A foto precisa estar em alta resolução; Corrigir o título do prêmio..."
+                            rows={4}
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            required
+                        />
+                    </div>
+                }
+                confirmLabel="Confirmar Reprovação"
                 cancelLabel="Cancelar"
                 type="danger"
             />

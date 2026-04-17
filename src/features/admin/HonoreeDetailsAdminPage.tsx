@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import GlassCard from '../../components/ui/GlassCard';
-import { supabase } from '../../lib/supabase';
+import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import { useAuth } from '../auth/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -22,9 +22,13 @@ const HonoreeDetailsAdminPage: React.FC = () => {
     const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
 
     const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
     const isDirector = profile?.role === 'diretor';
+    
+    // Injeção do cliente autenticado para buscar dados Rascunho/Pendentes
+    const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
     useEffect(() => {
         if (id) {
@@ -34,7 +38,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
 
     const fetchHonoree = async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await dbClient
             .from('honorees')
             .select('*, awards!honorees_award_id_fkey(name), regionals(name)')
             .eq('id', id)
@@ -53,7 +57,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         if (!honoree) return;
         setIsUpdating(true);
         try {
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({
                     status: 'aprovado',
@@ -74,10 +78,10 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         if (!honoree || !rejectionReason.trim()) return;
         setIsUpdating(true);
         try {
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({
-                    status: 'rejeitado',
+                    status: 'reprovado',
                     rejection_reason: rejectionReason,
                     is_published: false
                 })
@@ -99,7 +103,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         setIsUpdating(true);
         try {
             const newStatus = honoree.status === 'publicado' ? 'aprovado' : 'publicado';
-            const { error } = await supabase
+            const { error } = await dbClient
                 .from('honorees')
                 .update({ 
                     is_published: newStatus === 'publicado',
@@ -112,6 +116,35 @@ const HonoreeDetailsAdminPage: React.FC = () => {
         } catch (err) {
             console.error('Error toggling publish:', err);
         } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleEditClick = () => {
+        if (isDirector && (honoree?.status === 'publicado' || honoree?.status === 'aprovado')) {
+            setIsRequestEditModalOpen(true);
+        } else {
+            navigate(`/admin/homenageados/${id}/editar`);
+        }
+    };
+
+    const confirmRequestEdit = async () => {
+        if (!honoree) return;
+        setIsUpdating(true);
+        try {
+            const { error } = await dbClient
+                .from('honorees')
+                .update({ 
+                    status: 'rascunho', 
+                    is_published: false 
+                })
+                .eq('id', honoree.id);
+
+            if (error) throw error;
+            setIsRequestEditModalOpen(false);
+            navigate(`/admin/homenageados/${honoree.id}/editar`);
+        } catch (err) {
+            console.error('Error requesting edit:', err);
             setIsUpdating(false);
         }
     };
@@ -149,22 +182,25 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-4">
-                    {isDirector && (honoree.status === 'aprovado' || honoree.status === 'publicado') && (
+                    {isAdmin && (honoree.status === 'aprovado' || honoree.status === 'publicado') && (
                         <button
                             onClick={handleTogglePublish}
                             disabled={isUpdating}
-                            className={`${honoree.status === 'publicado' ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-green-500 text-white shadow-green-500/20'} px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg border transition-all disabled:opacity-50`}
+                            className={`${honoree.status === 'publicado' ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-green-500 text-white shadow-green-500/20'} px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-lg border transition-all disabled:opacity-50 flex items-center gap-2`}
                         >
+                            <span className="material-symbols-outlined text-sm">
+                                {honoree.status === 'publicado' ? 'visibility_off' : 'publish'}
+                            </span>
                             {honoree.status === 'publicado' ? 'Despublicar' : 'Publicar Agora'}
                         </button>
                     )}
-                    <Link
-                        to={`/admin/homenageados/${id}/editar`}
+                    <button
+                        onClick={handleEditClick}
                         className="bg-white/5 hover:bg-white/10 text-gold px-8 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all flex items-center gap-2"
                     >
                         <span className="material-symbols-outlined text-sm">edit</span>
                         Editar Perfil
-                    </Link>
+                    </button>
                     {honoree.is_published && (
                         <Link
                             to={`/homenageado/${id}`}
@@ -179,20 +215,20 @@ const HonoreeDetailsAdminPage: React.FC = () => {
             </div>
 
             {/* Status & Approval Workflow Bar */}
-            <GlassCard className={`p-8 rounded-[2rem] border-white/5 overflow-hidden relative ${(honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'bg-red-500/5' : honoree.status === 'pendente_analise' ? 'bg-yellow-500/5' : honoree.status === 'em_correcao' ? 'bg-orange-500/5' : honoree.status === 'rascunho' ? 'bg-white/5' : 'bg-green-500/5'}`}>
+            <GlassCard className={`p-8 rounded-[2rem] border-white/5 overflow-hidden relative ${(honoree.status === 'reprovado') ? 'bg-red-500/5' : honoree.status === 'em_analise' ? 'bg-yellow-500/5' : honoree.status === 'rascunho' ? 'bg-white/5' : 'bg-green-500/5'}`}>
                 <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="flex items-center gap-6">
-                        <div className={`size-16 rounded-2xl flex items-center justify-center shrink-0 ${(honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'bg-red-500/20 text-red-500' : honoree.status === 'pendente_analise' ? 'bg-yellow-500/20 text-yellow-500' : honoree.status === 'em_correcao' ? 'bg-orange-500/20 text-orange-500' : honoree.status === 'rascunho' ? 'bg-white/10 text-white' : 'bg-green-500/20 text-green-500'}`}>
+                        <div className={`size-16 rounded-2xl flex items-center justify-center shrink-0 ${(honoree.status === 'reprovado') ? 'bg-red-500/20 text-red-500' : honoree.status === 'em_analise' ? 'bg-yellow-500/20 text-yellow-500' : honoree.status === 'rascunho' ? 'bg-white/10 text-white' : 'bg-green-500/20 text-green-500'}`}>
                             <span className="material-symbols-outlined text-3xl">
-                                {(honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'cancel' : honoree.status === 'pendente_analise' ? 'pending_actions' : honoree.status === 'em_correcao' ? 'edit_note' : honoree.status === 'rascunho' ? 'draft' : 'verified'}
+                                {(honoree.status === 'reprovado') ? 'cancel' : honoree.status === 'em_analise' ? 'pending_actions' : honoree.status === 'rascunho' ? 'draft' : 'verified'}
                             </span>
                         </div>
                         <div className="space-y-1">
                             <p className="text-[10px] text-off-white/30 uppercase tracking-[0.3em] font-bold">Status do Cadastro</p>
                             <h4 className="text-xl font-bold font-serif italic text-off-white">
-                                {(honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'Cadastro Reprovado' : honoree.status === 'pendente_analise' ? 'Aguardando Análise' : honoree.status === 'em_correcao' ? 'Em Correção' : honoree.status === 'rascunho' ? 'Rascunho' : honoree.status === 'publicado' ? 'Cadastro Publicado' : 'Cadastro Aprovado'}
+                                {(honoree.status === 'reprovado') ? 'Cadastro Reprovado' : honoree.status === 'em_analise' ? 'Aguardando Análise' : honoree.status === 'rascunho' ? 'Rascunho' : honoree.status === 'publicado' ? 'Cadastro Publicado' : 'Cadastro Aprovado'}
                             </h4>
-                            {(honoree.status === 'rejeitado' || honoree.status === 'reprovado' || honoree.status === 'em_correcao') && (
+                            {(honoree.status === 'reprovado') && (
                                 <p className="text-red-400 text-sm italic font-serif mt-2">
                                     " {honoree.rejection_reason || 'Nenhum motivo fornecido.'} "
                                 </p>
@@ -201,7 +237,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                     </div>
 
                     <div className="flex gap-4">
-                        {isAdmin && honoree.status === 'pendente_analise' && (
+                        {isAdmin && honoree.status === 'em_analise' && (
                             <>
                                 <button
                                     onClick={handleApprove}
@@ -221,21 +257,14 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 </button>
                             </>
                         )}
-                        {isAdmin && (honoree.status === 'rejeitado' || honoree.status === 'reprovado' || honoree.status === 'em_correcao') && (
-                            <button
-                                onClick={handleApprove}
-                                disabled={isUpdating}
-                                className="bg-white/5 hover:bg-white/10 text-off-white border border-white/10 px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all"
-                            >
-                                Reavaliar e Aprovar
-                            </button>
-                        )}
-                        {isDirector && (honoree.status === 'rejeitado' || honoree.status === 'reprovado' || honoree.status === 'em_correcao' || honoree.status === 'rascunho') && (
+                        {/* Botão de 'Reavaliar e Aprovar' removido do status de reprovado para os admins, aguardando o diretor corrigir e submeter novamente */}
+                        
+                        {isDirector && (honoree.status === 'reprovado' || honoree.status === 'rascunho') && (
                             <button
                                 onClick={async () => {
-                                    if (honoree.status !== 'pendente_analise') {
+                                    if (honoree.status !== 'em_analise') {
                                         setIsUpdating(true);
-                                        await supabase.from('honorees').update({ status: 'pendente_analise' }).eq('id', honoree.id);
+                                        await dbClient.from('honorees').update({ status: 'em_analise' }).eq('id', honoree.id);
                                         await fetchHonoree();
                                         setIsUpdating(false);
                                     }
@@ -247,14 +276,14 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                                 Enviar para Análise
                             </button>
                         )}
-                        {isDirector && (honoree.status === 'rejeitado' || honoree.status === 'reprovado') && (
-                            <Link
-                                to={`/admin/homenageados/${id}/editar`}
+                        {isDirector && (honoree.status === 'reprovado') && (
+                            <button
+                                onClick={handleEditClick}
                                 className="bg-gold text-navy-deep px-8 py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-gold/20 flex items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-sm">edit</span>
                                 Corrigir
-                            </Link>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -278,8 +307,8 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                             <h3 className="text-2xl font-bold text-off-white font-serif italic">{profData.name}</h3>
                             <p className="text-gold text-sm font-medium mt-1 uppercase tracking-widest">{profData.role || profData.external_role}</p>
                         </div>
-                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${honoree.status === 'publicado' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : honoree.status === 'aprovado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : (honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : honoree.status === 'em_correcao' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : honoree.status === 'rascunho' ? 'bg-white/10 text-white/50 border border-white/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
-                            {honoree.status === 'publicado' ? 'Publicado' : honoree.status === 'aprovado' ? 'Aprovado' : (honoree.status === 'rejeitado' || honoree.status === 'reprovado') ? 'Rejeitado' : honoree.status === 'em_correcao' ? 'Em Correção' : honoree.status === 'rascunho' ? 'Rascunho' : 'Em Análise'}
+                        <div className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${honoree.status === 'publicado' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : honoree.status === 'aprovado' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : (honoree.status === 'reprovado') ? 'bg-red-500/10 text-red-400 border border-red-500/20' : honoree.status === 'rascunho' ? 'bg-white/10 text-white/50 border border-white/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
+                            {honoree.status === 'publicado' ? 'Publicado' : honoree.status === 'aprovado' ? 'Aprovado' : (honoree.status === 'reprovado') ? 'Reprovado' : honoree.status === 'rascunho' ? 'Rascunho' : 'Em Análise'}
                         </div>
                         <div className="w-full pt-6 border-t border-white/5 space-y-4">
                             <div className="flex justify-between text-xs">
@@ -432,6 +461,29 @@ const HonoreeDetailsAdminPage: React.FC = () => {
                 confirmLabel="Confirmar Reprovação"
                 cancelLabel="Voltar"
                 type="danger"
+            />
+
+            <ConfirmModal
+                isOpen={isRequestEditModalOpen}
+                onClose={() => setIsRequestEditModalOpen(false)}
+                onConfirm={confirmRequestEdit}
+                title="Editar Cadastro Aprovado"
+                message={
+                    <div className="space-y-4 pt-4 text-left">
+                        <p className="text-sm text-off-white/70">
+                            Este homenageado já foi verificado e aprovado/publicado.
+                        </p>
+                        <p className="text-sm text-gold font-bold">
+                            Para editá-lo, o cadastro retornará ao status de Rascunho e será ocultado do site público. Você precisará enviar para análise novamente após concluir a edição.
+                        </p>
+                        <p className="text-sm text-off-white/70">
+                            Deseja prosseguir com a edição?
+                        </p>
+                    </div>
+                }
+                confirmLabel="Sim, Voltar para Edição"
+                cancelLabel="Cancelar"
+                type="warning"
             />
         </div>
     );
