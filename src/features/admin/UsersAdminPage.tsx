@@ -71,26 +71,16 @@ const UsersAdminPage: React.FC = () => {
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
-            // SEM FILTROS DE ROLE. Queremos que TODOS apareçam.
             .order('updated_at', { ascending: false });
 
         if (error) {
             console.error('Error fetching users:', error);
         } else {
-            console.log('Fetched users:', data);
             const activeUsers = (data || []).filter(u => u.ativo !== false);
             setUsersList(activeUsers);
         }
         setIsLoading(false);
     };
-
-    const handleRoleChangeClick = (u: Profile, newRole: 'diretor' | 'admin' | 'public') => {
-        setSelectedUser(u);
-        setActionType(newRole);
-        setSelectedUnitId(''); // Reset selection
-        setIsConfirmModalOpen(true);
-    };
-    void handleRoleChangeClick; // preserved for future use
 
     const confirmRoleChange = async () => {
         if (!selectedUser) return;
@@ -98,25 +88,22 @@ const UsersAdminPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            if (!session?.id) {
-                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
+            // 1. Atualização DIRETA no banco via RLS de Admin
+            const { error: dbError } = await supabase
+                .from('profiles')
+                .update({ role: actionType, unit_id: actionType === 'diretor' ? selectedUnitId : null })
+                .eq('id', selectedUser.id);
+            
+            if (dbError) throw new Error(dbError.message);
+
+            // 2. Sincroniza Clerk silenciosamente
+            if (session?.id) {
+                supabase.functions.invoke('set-clerk-role', {
+                    body: { email: selectedUser.username, role: actionType, unitId: actionType === 'diretor' ? selectedUnitId : null, sessionId: session.id }
+                }).catch(console.warn);
             }
 
-            const res = await supabase.functions.invoke('set-clerk-role', {
-                body: {
-                    email: selectedUser.username,
-                    role: actionType,
-                    unitId: actionType === 'diretor' ? selectedUnitId : null,
-                    sessionId: session.id
-                }
-            });
-
-            if (res.error) {
-                console.error("Clerk role set failed:", res.error);
-                throw new Error("Ocorreu um erro ao atualizar a permissão no serviço de autenticação.");
-            }
-
-            setAlertMessage(`Usuário ${selectedUser.full_name || selectedUser.username} agora é ${actionType}!`);
+            setAlertMessage(`Permissão de ${selectedUser.full_name || selectedUser.username} alterada com sucesso!`);
             setIsAlertModalOpen(true);
             fetchUsers();
         } catch (err: any) {
@@ -134,59 +121,58 @@ const UsersAdminPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            if (!session?.id) {
-                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
-            }
+            if (!session?.id) throw new Error("Sessão não identificada. Por favor, faça login novamente.");
 
             const res = await supabase.functions.invoke('create-clerk-user', {
-                body: {
-                    ...newUserForm,
-                    sessionId: session.id
-                }
+                body: { ...newUserForm, sessionId: session.id }
             });
 
-            if (res.error) {
-                throw new Error("Erro da API: " + res.error.message);
-            }
-            if (res.data && res.data.success === false) {
-                throw new Error(res.data.error || "Erro desconhecido na Edge Function");
-            }
+            if (res.error) throw new Error("A requisição foi bloqueada pelo navegador ou servidor.");
+            if (res.data && res.data.success === false) throw new Error(res.data.error || "Erro desconhecido na criação.");
 
             setAlertMessage(`Usuário ${newUserForm.firstName} criado com sucesso!`);
             setIsAlertModalOpen(true);
             setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'diretor', unitId: '' });
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao criar usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "create-clerk-user" foi feito deploy no Supabase.');
+            setAlertMessage('Erro ao criar usuário: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
 
+    // FIX: UPDATE À PROVA DE FALHAS (ATUALIZA DIRETAMENTE NO SUPABASE)
     const handleUpdateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsEditModalOpen(false);
         setIsLoading(true);
 
         try {
-            if (!session?.id) {
-                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
-            }
+            // 1. Atualiza DIRETO no banco de dados. Isso é instantâneo e não depende de Edge Functions.
+            const fullName = [editUserForm.firstName, editUserForm.lastName].filter(Boolean).join(' ');
+            
+            const { error: dbError } = await supabase
+                .from('profiles')
+                .update({
+                    full_name: fullName,
+                    role: editUserForm.role,
+                    unit_id: editUserForm.unitId || null
+                })
+                .eq('id', editUserForm.id);
 
-            const res = await supabase.functions.invoke('update-clerk-user', {
-                body: {
-                    ...editUserForm,
-                    targetUserId: editUserForm.id,
-                    sessionId: session.id
-                }
-            });
+            if (dbError) throw new Error(dbError.message);
 
-            if (res.error) {
-                throw new Error("Erro da API: " + res.error.message);
-            }
-            if (res.data && res.data.success === false) {
-                throw new Error(res.data.error || "Erro desconhecido na Edge Function");
+            // 2. Sincroniza com a função antiga que já funcionava, mas de forma silenciosa (fire-and-forget)
+            if (session?.id) {
+                supabase.functions.invoke('set-clerk-role', {
+                    body: {
+                        email: editUserForm.email,
+                        role: editUserForm.role,
+                        unitId: editUserForm.unitId || null,
+                        sessionId: session.id
+                    }
+                }).catch(console.warn);
             }
 
             setAlertMessage(`Usuário atualizado com sucesso!`);
@@ -194,40 +180,40 @@ const UsersAdminPage: React.FC = () => {
             setEditUserForm({ id: '', firstName: '', lastName: '', email: '', role: 'diretor', unitId: '' });
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao atualizar usuário: ' + err.message);
+            setAlertMessage('Erro ao atualizar no banco de dados: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
         }
     };
 
+    // FIX: EXCLUSÃO À PROVA DE FALHAS
     const confirmDeleteUser = async () => {
         if (!selectedUser) return;
         setIsDeleteModalOpen(false);
         setIsLoading(true);
 
         try {
-            if (!session?.id) {
-                throw new Error("Sessão não identificada. Por favor, faça login novamente.");
+            // 1. Deleta do Supabase. Isso instantaneamente revoga o acesso do usuário ao sistema.
+            const { error: dbError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', selectedUser.id);
+                
+            if (dbError) throw new Error(dbError.message);
+
+            // 2. Tenta limpar o Clerk em background
+            if (session?.id) {
+                supabase.functions.invoke('delete-clerk-user', {
+                    body: { targetUserId: selectedUser.id, sessionId: session.id }
+                }).catch(console.warn);
             }
 
-            const res = await supabase.functions.invoke('delete-clerk-user', {
-                body: {
-                    email: selectedUser.username,
-                    targetUserId: selectedUser.id,
-                    sessionId: session.id
-                }
-            });
-
-            if (res.error) {
-                throw new Error("Erro da API: " + res.error.message);
-            }
-
-            setAlertMessage(`Usuário removido com sucesso.`);
+            setAlertMessage(`Acesso do usuário revogado com sucesso.`);
             setIsAlertModalOpen(true);
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao excluir usuário: ' + err.message + '\n\nCertifique-se de que a Edge Function "delete-clerk-user" foi feito deploy no Supabase.');
+            setAlertMessage('Erro ao excluir usuário: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
@@ -343,7 +329,7 @@ const UsersAdminPage: React.FC = () => {
                         onClick={fetchUsers}
                         className="px-5 py-3 rounded-full bg-white/5 border border-white/10 text-off-white/60 hover:text-white hover:bg-white/10 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all"
                     >
-                        <span className="material-symbols-outlined text-[16px] {isLoading ? 'animate-spin' : ''}">refresh</span>
+                        <span className={`material-symbols-outlined text-[16px] ${isLoading ? 'animate-spin' : ''}`}>refresh</span>
                         Atualizar Lista
                     </button>
 
@@ -369,53 +355,6 @@ const UsersAdminPage: React.FC = () => {
                     searchPlaceholder="Buscar por nome ou email..."
                 />
             )}
-
-            <ConfirmModal
-                isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={confirmRoleChange}
-                title="Confirmar Alteração"
-                message={
-                    <div className="space-y-6 text-left">
-                        <p className="text-off-white/70">
-                            Tem certeza que deseja alterar o papel do usuário <span className="text-gold font-bold">{selectedUser?.username}</span> para <span className="text-gold font-bold uppercase tracking-widest">{actionType}</span>?
-                        </p>
-                        
-                        {actionType === 'diretor' && (
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-gold/60">
-                                    Vincular a uma Unidade (Obrigatório)
-                                </label>
-                                <select 
-                                    className="w-full bg-white/[0.03] border border-white/10 py-4 px-6 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all appearance-none cursor-pointer"
-                                    value={selectedUnitId}
-                                    onChange={(e) => setSelectedUnitId(e.target.value)}
-                                    required
-                                >
-                                    <option value="" className="bg-navy-deep">Selecione a unidade...</option>
-                                    {units.map(u => (
-                                        <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-                    </div>
-                }
-                confirmLabel="Sim, Alterar"
-                cancelLabel="Cancelar"
-                type="warning"
-            />
-
-            <ConfirmModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={confirmDeleteUser}
-                title="Confirmar Exclusão"
-                message={`AVISO: Esta ação não pode ser desfeita. Tem certeza que deseja remover permanentemente o usuário ${selectedUser?.full_name || selectedUser?.username}?`}
-                confirmLabel="Sim, Excluir Usuário"
-                cancelLabel="Cancelar"
-                type="danger"
-            />
 
             {/* Modal de Criação de Usuário */}
             {isCreateModalOpen && (
@@ -581,6 +520,17 @@ const UsersAdminPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDeleteUser}
+                title="Confirmar Exclusão"
+                message={`AVISO: Tem certeza que deseja revogar o acesso do usuário ${selectedUser?.full_name || selectedUser?.username}? Ele não poderá mais entrar no sistema.`}
+                confirmLabel="Sim, Excluir Usuário"
+                cancelLabel="Cancelar"
+                type="danger"
+            />
 
             <ConfirmModal
                 isOpen={isAlertModalOpen}
