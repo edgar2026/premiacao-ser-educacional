@@ -6,6 +6,7 @@ import type { Column } from '../../components/ui/DataTable';
 import { supabase, createAuthClient } from '../../lib/supabase';
 import type { Database } from '../../types/supabase';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import GlassCard from '../../components/ui/GlassCard';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'] & {
     awards?: { name: string } | null;
@@ -46,7 +47,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const dbClient = profile?.id ? createAuthClient(profile.id) : supabase;
 
     useEffect(() => {
-        // Atualiza a aba inicial se a prop mudar via navegação
         setStatusFilter(isRequestsView ? 'pendentes' : 'aprovados');
         fetchInitialData();
     }, [isRequestsView]);
@@ -61,7 +61,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     };
 
     const fetchFiltersData = async () => {
-        // Busca Regionais e Unidades para os Dropdowns
         const [regRes, unitRes] = await Promise.all([
             dbClient.from('regionals').select('id, name').order('name'),
             dbClient.from('units').select('id, name, regional_id').order('name')
@@ -122,10 +121,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         } else {
             if (h.created_by && ['reprovado', 'aprovado', 'publicado'].includes(status)) {
                 try {
-                    let honoreeName = 'Homenageado';
-                    if (h.professional_data) {
-                        try { honoreeName = JSON.parse(h.professional_data).name || honoreeName; } catch(e) {}
-                    }
+                    const honoreeName = getHonoreeName(h);
                     await supabase.functions.invoke('notify-rejection', {
                         body: { honoreeName, userEmail: h.created_by || '', reason, status }
                     });
@@ -170,11 +166,18 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     const confirmRequestEdit = async () => {
         if (!honoreeToRequestEdit) return;
         setIsRequestEditModalOpen(false);
-        
-        // Altera o status para rascunho e despublica antes de ir para a tela de edição
         await handleStatusUpdate(honoreeToRequestEdit, 'rascunho');
         navigate(`/admin/homenageados/${honoreeToRequestEdit.id}/editar`);
     };
+
+    const getHonoreeName = (h: Honoree) => {
+        try { return h.professional_data ? JSON.parse(h.professional_data).name : h.name || 'Sem nome'; }
+        catch (e) { return h.name || 'Sem nome'; }
+    };
+
+    // FILTROS ATIVOS PARA O DIRETOR (Itens de Ação Imediata)
+    const rejectedHonorees = useMemo(() => isDiretor ? honorees.filter(h => h.status === 'reprovado') : [], [honorees, isDiretor]);
+    const approvedHonorees = useMemo(() => isDiretor ? honorees.filter(h => h.status === 'aprovado') : [], [honorees, isDiretor]);
 
     const columns: Column<Honoree>[] = [
         {
@@ -191,10 +194,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                     </div>
                     <div className="flex flex-col">
                         <span className="font-bold text-off-white font-serif italic text-lg leading-tight">
-                            {(() => {
-                                try { return h.professional_data ? JSON.parse(h.professional_data).name : 'Sem nome'; }
-                                catch (e) { return h.name || 'Sem nome'; }
-                            })()}
+                            {getHonoreeName(h)}
                         </span>
                         <span className="text-[10px] text-off-white/30 uppercase tracking-widest">{h.type}</span>
                     </div>
@@ -215,7 +215,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             header: 'Status',
             accessor: (h: Honoree) => {
                 const status = h.status as string;
-                // Uso de whitespace-nowrap e inline-block para evitar qualquer quebra de linha
                 switch (status) {
                     case 'rascunho': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">Rascunho</span>;
                     case 'em_analise': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Em Análise</span>;
@@ -245,7 +244,6 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 <span className="material-symbols-outlined text-[20px]">edit</span>
             </button>
 
-            {/* Botão de Publicar / Despublicar - Visível para Admins (e diretores se permitido) */}
             {(h.status === 'aprovado' || h.status === 'publicado') && (
                 <button
                     onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
@@ -310,12 +308,9 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         </div>
     );
 
-    // Lógica unificada de filtros
     const filteredHonorees = useMemo(() => {
         return honorees.filter(h => {
             const st = h.status || 'rascunho';
-            
-            // 1. Filtro de Status
             let matchesStatus = true;
             if (statusFilter === 'pendentes') matchesStatus = st === 'em_analise';
             else if (statusFilter === 'aprovados') matchesStatus = ['aprovado', 'publicado'].includes(st);
@@ -323,17 +318,13 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             else if (statusFilter === 'rascunhos') matchesStatus = st === 'rascunho';
             else if (statusFilter === 'todos') matchesStatus = true;
 
-            // 2. Filtro de Regional
             const matchesRegional = regionalFilter === 'all' || h.regional_id === regionalFilter;
-
-            // 3. Filtro de Unidade
             const matchesUnit = unitFilter === 'all' || h.unit_id === unitFilter;
 
             return matchesStatus && matchesRegional && matchesUnit;
         });
     }, [honorees, statusFilter, regionalFilter, unitFilter]);
 
-    // Unidades filtradas pela Regional selecionada
     const filteredUnitsForDropdown = useMemo(() => {
         if (regionalFilter === 'all') return units;
         return units.filter(u => u.regional_id === regionalFilter);
@@ -359,6 +350,96 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                     Novo Homenageado
                 </button>
             </div>
+
+            {/* AÇÕES IMEDIATAS (Visível apenas para o Diretor) */}
+            {isDiretor && (rejectedHonorees.length > 0 || approvedHonorees.length > 0) && (
+                <div className="space-y-8 animate-slide-up mb-12">
+                    
+                    {/* Lista de Reprovados - Prioridade MÁXIMA */}
+                    {rejectedHonorees.length > 0 && (
+                        <GlassCard className="p-8 rounded-[2.5rem] border-red-500/30 bg-gradient-to-br from-red-500/10 to-transparent shadow-lg shadow-red-900/10">
+                            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-red-500/20">
+                                <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+                                    <span className="material-symbols-outlined text-2xl">error</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold font-serif text-red-400 italic">Itens que precisam de correção</h3>
+                                    <p className="text-[10px] text-red-300/60 uppercase tracking-widest font-bold">Ação Urgente Necessária</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {rejectedHonorees.map(h => (
+                                    <div key={h.id} className="bg-navy-deep/80 border border-red-500/20 p-6 rounded-[1.5rem] flex flex-col justify-between gap-6 hover:border-red-500/40 transition-colors">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-10 rounded-full overflow-hidden shrink-0">
+                                                    <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
+                                                </div>
+                                                <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                            </div>
+                                            <div className="bg-red-500/5 p-3 rounded-lg border border-red-500/10">
+                                                <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Motivo:</p>
+                                                <p className="text-xs text-red-300/80 italic line-clamp-2">"{h.rejection_reason}"</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleEditClick(h)} 
+                                            className="w-full py-4 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">edit</span> Corrigir Agora
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </GlassCard>
+                    )}
+
+                    {/* Lista de Aprovados - Prontos para Publicação */}
+                    {approvedHonorees.length > 0 && (
+                        <GlassCard className="p-8 rounded-[2.5rem] border-green-500/30 bg-gradient-to-br from-green-500/10 to-transparent shadow-lg shadow-green-900/10">
+                            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-green-500/20">
+                                <div className="size-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
+                                    <span className="material-symbols-outlined text-2xl">verified</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold font-serif text-green-400 italic">Tudo que precisa ser publicado</h3>
+                                    <p className="text-[10px] text-green-300/60 uppercase tracking-widest font-bold">Conteúdos Aprovados pela Administração</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {approvedHonorees.map(h => (
+                                    <div key={h.id} className="bg-navy-deep/80 border border-green-500/20 p-6 rounded-[1.5rem] flex flex-col justify-between gap-6 hover:border-green-500/40 transition-colors">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-10 rounded-full overflow-hidden shrink-0">
+                                                    <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
+                                                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest bg-green-500/20 text-green-400">Pronto</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-green-300/70">
+                                                <span className="material-symbols-outlined text-sm">calendar_today</span>
+                                                Aprovado em {new Date(h.updated_at || h.created_at || '').toLocaleDateString('pt-BR')}
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleStatusUpdate(h, 'publicado')} 
+                                            disabled={isLoading}
+                                            className="w-full py-4 bg-green-500 text-navy-deep rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-green-400 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">publish</span> Publicar no Site
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </GlassCard>
+                    )}
+                </div>
+            )}
 
             {/* BARRA DE CONTROLES (Abas e Filtros) */}
             <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
