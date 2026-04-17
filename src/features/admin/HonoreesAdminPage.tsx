@@ -181,7 +181,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             header: 'Homenageado',
             accessor: (h: Honoree) => (
                 <div className="flex items-center gap-5">
-                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden">
+                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden shrink-0">
                         <img
                             src={h.photo_url || '/assets/default-fallback.png'}
                             alt="Foto"
@@ -215,13 +215,14 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             header: 'Status',
             accessor: (h: Honoree) => {
                 const status = h.status as string;
+                // Uso de whitespace-nowrap e inline-block para evitar qualquer quebra de linha
                 switch (status) {
-                    case 'rascunho': return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">Rascunho</span>;
-                    case 'em_analise': return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pendente Análise</span>;
-                    case 'aprovado': return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">Aprovado</span>;
-                    case 'reprovado': return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">Reprovado</span>;
-                    case 'publicado': return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">Publicado</span>;
-                    default: return <span className="px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">{status || 'N/A'}</span>;
+                    case 'rascunho': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">Rascunho</span>;
+                    case 'em_analise': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Em Análise</span>;
+                    case 'aprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">Aprovado</span>;
+                    case 'reprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">Reprovado</span>;
+                    case 'publicado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">Publicado</span>;
+                    default: return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">{status || 'N/A'}</span>;
                 }
             }
         }
