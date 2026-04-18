@@ -49,13 +49,19 @@ As entidades da organização são fracionadas em hierarquia de localização pa
 ### Role-Based Access Control (RBAC) e Supabase RLS
 Os níveis de permissão (`super_admin`, `admin`, `diretor`, `public`) validam a leitura e gravação no DB, implementadas através de **Row Level Security (RLS)**:
 
-1. **Super Administradores e Administradores**:
+1. **Super Administradores (`super_admin`)**:
+   - **Poder Absoluto**: Unificação técnica dos cargos `admin` e `super_admin`.
    - Acesso irrestrito a todo o módulo Administrativo (`/admin/*`).
+   - Isentos de restrições de `unit_id` (Visão Global).
    - Podem cadastrar Premiações, Usuários (Mapeamento Clerk-Supabase), Marcas, Regionais, Unidades e gerenciar a mídia da Home.
 2. **Diretores (`diretor`)**:
    - **Restrição de RLS**: Diretores SÓ podem cadastrar, visualizar e editar os **Homenageados** vinculados às **suas referidas** Unidades. Tentar acessar rotas ou injetar CUD em unidades das quais não têm poder hierárquico retorna Erro de Permissão.
    - Limitados às rotas de `/admin/homenageados/*`.
-3. **Público (`public`)**:
+3. **Diretores Executivos (`diretor_executivo`)**:
+   - **Visão Estratégica**: Possuem permissão de leitura global (RLS similar ao Admin) para todos os Homenageados, Unidades e Regionais, permitindo uma análise consolidada de toda a rede.
+   - **Interface Restrita**: O menu é filtrado para exibir apenas o **Dashboard Estratégico** e a listagem de **Homenageados**, ocultando ferramentas de configuração técnica (Prêmios, Geografia, Usuários) para foco em BI e análise.
+   - Rotas concentradas em `/admin/dashboard` e `/admin/homenageados`.
+4. **Público (`public`)**:
    - Apenas leitura (Galeria Geral, Sobre, Linha do Tempo, Detalhes Públicos de Prêmios).
 
 ### Fluxo de Aprovação de Homenageados
@@ -63,6 +69,18 @@ Os níveis de permissão (`super_admin`, `admin`, `diretor`, `public`) validam a
 2. Entra com Status **`pending`**.
 3. O Admin recebe no Dashboard, analisa os critérios e altera o Status para **`approved`**.
 4. Apenas se aprovado E possuir a tag booleana **`is_published = true`**, o homenageado é listado publicamente para consulta externa e indexação.
+
+### Sincronização e Gestão de Usuários (Clerk ↔ Supabase)
+A gestão de usuários é híbrida e resiliente a bloqueios de rede:
+1. **Edge Functions**: As operações críticas são processadas via **Supabase Edge Functions** para garantir bypass de RLS e integração segura com Clerk:
+   - `create-clerk-user`: Cria no Clerk e espelha no Supabase com `ativo: true`.
+   - `sync-clerk-users`: Varre todo o Clerk e atualiza a tabela `profiles` (Upsert), garantindo que todos os usuários existentes estejam ativos.
+   - `set-clerk-role`: Altera `public_metadata` no Clerk (Roles de sistema).
+   - `sync-clerk-profile`: Sincroniza dados individuais (nome, email, cargo) forçando a ativação do perfil. Possui flag `forceRole` para permitir revogação total de acesso.
+2. **Exclusão Atômica (Remoção Definitiva)**: No painel administrativo, a exclusão de um usuário executa uma limpeza física:
+   - Apaga o usuário permanentemente do **Clerk**.
+   - Apaga o registro da tabela **`profiles`** no Supabase.
+   - Caso o banco possua vínculos históricos (FKs), o sistema executa um *downgrade* forçado para `role: public`, removendo todo e qualquer poder de acesso.
 
 ---
 
@@ -98,6 +116,7 @@ Os níveis de permissão (`super_admin`, `admin`, `diretor`, `public`) validam a
 - `npm run dev`: Build local.
 - `node promote-edgar.js`: Adicionar cargo super-admin a usuário inicial no Postgres.
 - `node update_clerk_emails.js`: Sincronizador de base do Clerk via Server-Side CLI.
+- `npx supabase functions deploy <nome-da-funcao>`: Atualizar lógica no servidor (Requer privilégios).
 
 - **Deploy Engine**: Totalmente compatível e rodando sob Vercel (Roteamentos via arquivo `vercel.json` no root controlam o redirect de Single Page Application para a index).
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import GlassCard from '../../components/ui/GlassCard';
 import { supabase } from '../../lib/supabase';
-import { useSession } from '@clerk/clerk-react';
+import { useUser } from '@clerk/clerk-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend, LabelList, LineChart, Line
@@ -27,7 +27,7 @@ interface Honoree {
 }
 
 const DashboardPage: React.FC = () => {
-    const { session } = useSession();
+    const { user } = useUser();
     const [isLoading, setIsLoading] = useState(true);
     
     // Data states
@@ -48,31 +48,24 @@ const DashboardPage: React.FC = () => {
     });
 
     useEffect(() => {
-        if (session?.id) {
+        if (user?.id) {
             fetchData();
         }
-    }, [session?.id]);
+    }, [user?.id]);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
             // Chamada Edge Function Mestra para Homenageados! (Burla RLS com segurança p/ Executivo)
             const dashboardRes = await supabase.functions.invoke('get-dashboard-data', {
-                body: { sessionId: session?.id }
+                body: { userId: user?.id }
             });
 
-            const [unitsRes, regionalsRes, profilesRes] = await Promise.all([
-                supabase.from('units').select('*').order('name'),
-                supabase.from('regionals').select('*').order('name'),
-                supabase.from('profiles').select('id, full_name, username')
-            ]);
-
-            if (unitsRes.data) setUnits(unitsRes.data);
-            if (regionalsRes.data) setRegionals(regionalsRes.data);
-            if (profilesRes.data) setProfiles(profilesRes.data as any);
-            
-            if (dashboardRes.data?.honorees) {
-                setHonorees(dashboardRes.data.honorees);
+            if (dashboardRes.data) {
+                if (dashboardRes.data.units) setUnits(dashboardRes.data.units);
+                if (dashboardRes.data.regionals) setRegionals(dashboardRes.data.regionals);
+                if (dashboardRes.data.profiles) setProfiles(dashboardRes.data.profiles);
+                if (dashboardRes.data.honorees) setHonorees(dashboardRes.data.honorees);
             }
 
         } catch (error) {
@@ -184,6 +177,19 @@ const DashboardPage: React.FC = () => {
         });
         return Object.values(byDirector).sort((a, b) => b.count - a.count).slice(0, 5);
     }, [filteredHonorees, profiles]);
+
+    const regionalRanking = useMemo(() => {
+        const byRegional: Record<string, number> = {};
+        filteredHonorees.forEach(h => {
+            const unit = units.find(u => u.id === h.unit_id);
+            const regional = regionals.find(r => r.id === unit?.regional_id);
+            const name = regional?.name || 'Sem Regional';
+            byRegional[name] = (byRegional[name] || 0) + 1;
+        });
+        return Object.entries(byRegional)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+    }, [filteredHonorees, units, regionals]);
 
     // Helper formatting
     const formatStatus = (status: string) => {
@@ -409,60 +415,79 @@ const DashboardPage: React.FC = () => {
                 </GlassCard>
             </div>
 
-            {/* Tabela Completa */}
-            <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5 overflow-hidden">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                    <h3 className="text-2xl font-serif italic text-off-white">Relação Completa</h3>
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-widest bg-gold/10 px-4 py-2 rounded-full">
-                        {filteredHonorees.length} Registros
-                    </span>
-                </div>
+            {/* Análise Estratégica Avançada */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Evolution Chart */}
+                <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5">
+                    <div className="flex items-center gap-3 mb-8">
+                        <span className="material-symbols-outlined text-blue-400">trending_up</span>
+                        <h3 className="text-2xl font-serif italic text-off-white">Evolução Mensal</h3>
+                    </div>
+                    <div className="h-[300px] w-full">
+                        {evolutionData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={evolutionData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                    <XAxis 
+                                        dataKey="period" 
+                                        axisLine={false} 
+                                        tickLine={false} 
+                                        tick={{ fill: '#ffffff40', fontSize: 10 }}
+                                        tickFormatter={(val) => {
+                                            const [y, m] = val.split('-');
+                                            return `${m}/${y.slice(2)}`;
+                                        }}
+                                    />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff40', fontSize: 10 }} />
+                                    <RechartsTooltip 
+                                        contentStyle={{ backgroundColor: '#0A1128', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                        itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
+                                    />
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="count" 
+                                        name="Registros" 
+                                        stroke="#3b82f6" 
+                                        strokeWidth={4} 
+                                        dot={{ fill: '#3b82f6', r: 6, strokeWidth: 2, stroke: '#fff' }}
+                                        activeDot={{ r: 8, strokeWidth: 0 }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : <p className="text-off-white/20 italic text-sm text-center py-20">Sem histórico disponível.</p>}
+                    </div>
+                </GlassCard>
 
-                <div className="overflow-x-auto custom-scrollbar pb-4">
-                    <table className="w-full text-left border-collapse min-w-[900px]">
-                        <thead>
-                            <tr className="border-b border-white/10">
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Nome / Cargo</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Unidade</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Regional</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Responsável</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest">Status</th>
-                                <th className="px-4 py-4 text-[10px] font-bold text-off-white/40 uppercase tracking-widest text-right">Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredHonorees.map(h => {
-                                const unit = units.find(u => u.id === h.unit_id);
-                                const reg = regionals.find(r => r.id === unit?.regional_id);
-                                const profData = h.professional_data ? JSON.parse(h.professional_data) : {};
-                                const creator = profiles.find(p => p.id === h.created_by);
+                {/* Regional Ranking */}
+                <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5">
+                    <div className="flex items-center gap-3 mb-8">
+                        <span className="material-symbols-outlined text-gold">map</span>
+                        <h3 className="text-2xl font-serif italic text-off-white">Performance por Regional</h3>
+                    </div>
+                    <div className="space-y-6 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                        {regionalRanking.length > 0 ? (
+                            regionalRanking.map((reg, i) => {
+                                const percentage = Math.round((reg.count / Math.max(metrics.total, 1)) * 100);
                                 return (
-                                    <tr key={h.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-4 py-4">
-                                            <p className="font-bold text-off-white text-sm">{getHonoreeName(h)}</p>
-                                            <p className="text-[10px] text-gold mt-1 uppercase">{profData.role || profData.external_role || 'Sem Cargo'}</p>
-                                        </td>
-                                        <td className="px-4 py-4 text-sm text-off-white/70">{unit?.name || '-'}</td>
-                                        <td className="px-4 py-4 text-sm text-off-white/70">{reg?.name || '-'}</td>
-                                        <td className="px-4 py-4 text-xs font-bold text-off-white/50">{creator?.full_name || 'Sistema'}</td>
-                                        <td className="px-4 py-4">{formatStatus(h.status)}</td>
-                                        <td className="px-4 py-4 text-right text-xs text-off-white/40 font-mono">
-                                            {new Date(h.created_at || h.awarded_at).toLocaleDateString('pt-BR')}
-                                        </td>
-                                    </tr>
+                                    <div key={i} className="group">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm font-bold text-off-white group-hover:text-gold transition-colors">{reg.name}</span>
+                                            <span className="text-xs font-mono text-off-white/40">{reg.count} registros</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-gold rounded-full transition-all duration-1000"
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                        </div>
+                                    </div>
                                 );
-                            })}
-                            {filteredHonorees.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="py-16 text-center text-off-white/30 italic">
-                                        Nenhum registro encontrado com os filtros atuais.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </GlassCard>
+                            })
+                        ) : <p className="text-off-white/20 italic text-sm text-center py-20">Nenhuma regional ativa.</p>}
+                    </div>
+                </GlassCard>
+            </div>
+
 
             <ConfirmModal
                 isOpen={isAlertModalOpen}

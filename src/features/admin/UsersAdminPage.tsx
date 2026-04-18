@@ -38,18 +38,17 @@ const UsersAdminPage: React.FC = () => {
         lastName: '',
         email: '',
         password: '',
-        role: 'diretor' as 'admin' | 'diretor' | 'public' | 'diretor_executivo',
+        role: 'diretor' as 'super_admin' | 'diretor' | 'public' | 'diretor_executivo',
         unitId: ''
     });
 
-    // --- State for editing users ---
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editUserForm, setEditUserForm] = useState({
         id: '',
         firstName: '',
         lastName: '',
         email: '',
-        role: 'diretor' as 'admin' | 'diretor' | 'public' | 'diretor_executivo',
+        role: 'diretor' as 'super_admin' | 'diretor' | 'public' | 'diretor_executivo',
         unitId: ''
     });
 
@@ -76,8 +75,8 @@ const UsersAdminPage: React.FC = () => {
         if (error) {
             console.error('Error fetching users:', error);
         } else {
-            const activeUsers = (data || []).filter(u => u.ativo !== false);
-            setUsersList(activeUsers);
+            // Agora mostramos todos os usuários sincronizados
+            setUsersList(data || []);
         }
         setIsLoading(false);
     };
@@ -90,19 +89,49 @@ const UsersAdminPage: React.FC = () => {
         try {
             if (!session?.id) throw new Error("Sessão não identificada. Por favor, faça login novamente.");
 
-            const res = await supabase.functions.invoke('create-clerk-user', {
+            console.log("Chamando Edge Function create-clerk-user...");
+            const { data, error } = await supabase.functions.invoke('create-clerk-user', {
                 body: { ...newUserForm, sessionId: session.id }
             });
 
-            if (res.error) throw new Error("A requisição foi bloqueada pelo navegador. Tente desativar os bloqueadores de anúncios.");
-            if (res.data && res.data.success === false) throw new Error(res.data.error || "Erro desconhecido na criação.");
+            if (error) {
+                console.error("Erro na chamada da função:", error);
+                throw new Error("A requisição falhou ou foi bloqueada. Verifique o console ou tente novamente.");
+            }
+            
+            if (data && data.success === false) {
+                throw new Error(data.error || "Erro desconhecido na criação.");
+            }
 
-            setAlertMessage(`Usuário ${newUserForm.firstName} criado com sucesso!`);
+            setAlertMessage(`Usuário ${newUserForm.firstName} criado e sincronizado com sucesso!`);
             setIsAlertModalOpen(true);
             setNewUserForm({ firstName: '', lastName: '', email: '', password: '', role: 'diretor', unitId: '' });
-            fetchUsers();
+            
+            // Força a atualização da lista
+            await fetchUsers();
         } catch (err: any) {
+            console.error("Erro ao criar usuário:", err);
             setAlertMessage('Erro ao criar usuário: ' + err.message);
+            setIsAlertModalOpen(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSyncUsers = async () => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('sync-clerk-users');
+            if (error) throw error;
+            if (data.success) {
+                setAlertMessage(`${data.count} usuários sincronizados com sucesso.`);
+            } else {
+                setAlertMessage(`Erro na sincronização: ${data.error}`);
+            }
+            setIsAlertModalOpen(true);
+            await fetchUsers();
+        } catch (err: any) {
+            setAlertMessage('Erro fatal ao sincronizar: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
@@ -163,19 +192,22 @@ const UsersAdminPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // 1. Tenta a exclusão física direta
+            // 1. Tenta a exclusão física direta primeiro
             const { error: dbError } = await dbClient.from('profiles').delete().eq('id', selectedUser.id);
             
-            // 2. Tenta remover do Clerk e rebaixar a permissão no servidor
-            if (session?.id) {
-                supabase.functions.invoke('set-clerk-role', {
-                    body: { email: selectedUser.username, role: 'public', unitId: null, sessionId: session.id }
-                }).catch(() => {});
-            }
+            // 2. Independente de conseguir apagar o registro no banco agora, 
+            // vamos dar a ordem de EXCLUSÃO REAL (CLERK + BANCO) via Edge Function!
+            // Isso vai varrer o usuário do sistema de login e da base.
+            const res = await supabase.functions.invoke('sync-clerk-profile', {
+                body: {
+                    action: 'delete',
+                    email: selectedUser.username,
+                    sessionId: session?.id
+                }
+            });
 
-            // Se o banco proteger a exclusão física por causa de algum relacionamento (ex: usuário criou um prêmio),
-            // nós rebaixamos ele para "Sem Acesso (Publico)" usando a Chave Mestra para revogar todo o poder.
-            if (dbError) {
+            if (res.error || !res.data?.success) {
+                // Se der erro na exclusão real, tentamos pelo menos o downgrade forçado pra segurança
                 await supabase.functions.invoke('sync-clerk-profile', {
                     body: {
                         id: selectedUser.id,
@@ -183,18 +215,26 @@ const UsersAdminPage: React.FC = () => {
                         firstName: selectedUser.full_name?.split(' ')[0] || '',
                         lastName: selectedUser.full_name?.split(' ').slice(1).join(' ') || '',
                         role: 'public',
-                        unitId: null
+                        unitId: null,
+                        forceRole: true
                     }
                 });
-                setAlertMessage(`Usuário desativado. Todos os acessos administrativos foram revogados com sucesso.`);
+                setAlertMessage(`O usuário não pôde ser excluído totalmente do login, mas todos os acessos dele foram revogados.`);
             } else {
-                setAlertMessage(`Usuário excluído definitivamente com sucesso.`);
+                setAlertMessage(`Usuário EXCLUÍDO TOTALMENTE do sistema e do banco de dados.`);
+            }
+
+            if (dbError) {
+                // Se deu erro de banco (FK constraint), avisamos que foi desativado
+                setAlertMessage(`O usuário possui dados vinculados e não pôde ser removido fisicamente, mas TODOS os seus acessos foram revogados e ele agora é um 'Novo Usuário' sem permissões.`);
+            } else {
+                setAlertMessage(`Usuário removido com sucesso de todas as bases.`);
             }
 
             setIsAlertModalOpen(true);
             fetchUsers();
         } catch (err: any) {
-            setAlertMessage('Erro ao excluir usuário: ' + err.message);
+            setAlertMessage('Erro técnico ao processar exclusão: ' + err.message);
             setIsAlertModalOpen(true);
         } finally {
             setIsLoading(false);
@@ -215,9 +255,16 @@ const UsersAdminPage: React.FC = () => {
                         )}
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-bold text-off-white text-md">
-                            {u.full_name || 'Usuário Novo / Sem Nome'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-off-white text-md">
+                                {u.full_name || 'Usuário Novo / Sem Nome'}
+                            </span>
+                            {u.ativo === false && (
+                                <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-bold uppercase tracking-tighter border border-red-500/30">
+                                    Desativado
+                                </span>
+                            )}
+                        </div>
                         <span className="text-[11px] text-off-white/40">
                             {u.username}
                         </span>
@@ -242,14 +289,21 @@ const UsersAdminPage: React.FC = () => {
                 }
                 
                 const unitName = units.find(unit => unit.id === u.unit_id)?.name;
+                const showUnit = r !== 'super_admin' && r !== 'admin' && r !== 'diretor_executivo' && unitName;
 
                 return (
                     <div className="flex flex-col items-start gap-1">
                         {roleBadge}
-                        {unitName && (
+                        {showUnit && (
                             <span className="text-[10px] text-off-white/40 italic flex items-center gap-1 mt-1">
                                 <span className="material-symbols-outlined text-[12px]">location_on</span>
                                 {unitName}
+                            </span>
+                        )}
+                        {(r === 'super_admin' || r === 'admin' || r === 'diretor_executivo') && (
+                             <span className="text-[10px] text-gold/40 italic flex items-center gap-1 mt-1 font-bold tracking-tighter uppercase">
+                                <span className="material-symbols-outlined text-[12px]">public</span>
+                                Acesso Global
                             </span>
                         )}
                     </div>
@@ -271,8 +325,8 @@ const UsersAdminPage: React.FC = () => {
                             firstName: first,
                             lastName: rest,
                             email: u.username,
-                            role: (u.role || 'public') as any,
-                            unitId: u.unit_id || ''
+                            role: (u.role === 'admin' ? 'super_admin' : (u.role || 'public')) as any,
+                            unitId: (u.role === 'super_admin' || u.role === 'admin' || u.role === 'diretor_executivo') ? '' : (u.unit_id || '')
                         });
                         setIsEditModalOpen(true);
                     }}
@@ -306,6 +360,15 @@ const UsersAdminPage: React.FC = () => {
                 </div>
                 
                 <div className="flex gap-4">
+                    <button 
+                        onClick={handleSyncUsers}
+                        className="px-5 py-3 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-500/20 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all shadow-lg shadow-blue-500/5"
+                        title="Sincroniza todos os usuários do Clerk para o Banco de Dados"
+                    >
+                        <span className={`material-symbols-outlined text-[16px] ${isLoading ? 'animate-spin' : ''}`}>sync</span>
+                        Sincronizar Clerk
+                    </button>
+
                     <button 
                         onClick={fetchUsers}
                         className="px-5 py-3 rounded-full bg-white/5 border border-white/10 text-off-white/60 hover:text-white hover:bg-white/10 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all"
@@ -384,12 +447,19 @@ const UsersAdminPage: React.FC = () => {
                                         <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo / Permissão</label>
                                         <select 
                                             value={newUserForm.role}
-                                            onChange={(e) => setNewUserForm({...newUserForm, role: e.target.value as any})}
+                                            onChange={(e) => {
+                                                const newRole = e.target.value as any;
+                                                setNewUserForm({
+                                                    ...newUserForm, 
+                                                    role: newRole,
+                                                    unitId: (newRole === 'super_admin' || newRole === 'diretor_executivo') ? '' : newUserForm.unitId
+                                                });
+                                            }}
                                             className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all"
                                         >
                                             <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
-                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo</option>
-                                            <option value="admin" className="bg-navy-deep">Administrador</option>
+                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo (Global)</option>
+                                            <option value="super_admin" className="bg-navy-deep">Administrador (Global)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
@@ -464,12 +534,19 @@ const UsersAdminPage: React.FC = () => {
                                         <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo / Permissão</label>
                                         <select 
                                             value={editUserForm.role}
-                                            onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value as any})}
+                                            onChange={(e) => {
+                                                const newRole = e.target.value as any;
+                                                setEditUserForm({
+                                                    ...editUserForm, 
+                                                    role: newRole,
+                                                    unitId: (newRole === 'super_admin' || newRole === 'diretor_executivo') ? '' : editUserForm.unitId
+                                                });
+                                            }}
                                             className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all"
                                         >
                                             <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
-                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo</option>
-                                            <option value="admin" className="bg-navy-deep">Administrador</option>
+                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo (Global)</option>
+                                            <option value="super_admin" className="bg-navy-deep">Administrador (Global)</option>
                                             <option value="public" className="bg-navy-deep text-red-400">Público (Revogar Acesso)</option>
                                         </select>
                                     </div>
@@ -478,7 +555,8 @@ const UsersAdminPage: React.FC = () => {
                                         <select 
                                             value={editUserForm.unitId}
                                             onChange={(e) => setEditUserForm({...editUserForm, unitId: e.target.value})}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all"
+                                            disabled={editUserForm.role === 'super_admin' || editUserForm.role === 'diretor_executivo'}
+                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all disabled:opacity-30"
                                         >
                                             <option value="" className="bg-navy-deep">Nenhuma (Global)</option>
                                             {units.map(u => (

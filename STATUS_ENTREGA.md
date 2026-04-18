@@ -10,12 +10,15 @@ Este documento atesta a verificação de todos os módulos críticos do sistema 
 - [x] **Sincronização de Banco:** Espelhamento em tempo real do Clerk para o Supabase (Tabela `profiles`).
 - [x] **Proteção de Rotas (RoleGuard):** Rotas administrativas inacessíveis sem token válido.
 - [x] **Segregação de Diretores:** Diretores gerenciam **apenas** suas próprias unidades.
+- [x] **Super Admin Global (Unificado):** Cargos `admin` e `super_admin` unificados em um único papel com acesso total e irrestrito, sem travas de unidade.
 - [x] **Easter Egg de Login:** Botão de acesso ao portal administrativo oculto (opacidade 0) na página pública para evitar intrusos.
 
 ## 👥 2. Gestão de Usuários (Painel Admin)
-- [x] **Resiliência de Rede:** Sistema de criação, edição e exclusão atualizado para comunicação direta com o DB, ignorando bloqueios de AdBlockers/Brave.
-- [x] **Atribuição de Papéis:** Promoção instantânea entre `Público`, `Diretor`, `Diretor Executivo` e `Administrador`.
-- [x] **Revogação de Acesso:** Exclusão de conta remove instantaneamente a sessão do usuário.
+- [x] **Resiliência de Rede:** Operações via Supabase Edge Functions eliminam falhas causadas por AdBlockers/Brave.
+- [x] **Sincronização Atômica:** Botão "Sincronizar Clerk" realiza UPSERT completo, recuperando usuários deletados/desativados se ainda existirem no Clerk.
+- [x] **Visibilidade Total:** Usuários desativados agora aparecem com badge de alerta, permitindo gestão completa da base.
+- [x] **Atribuição de Papéis:** Promoção instantânea entre `Público`, `Diretor`, `Diretor Executivo` e `Super Admin` com persistência Clerk.
+- [x] **Exclusão Atômica:** Remoção física definitiva do usuário no Clerk E no Supabase simultaneamente via Edge Function, sem rastros.
 
 ## 🏆 3. Motor de Homenageados (Workflow de Curadoria)
 - [x] **Wizard de 5 Passos:** Criação fluida com validação de dados obrigatórios.
@@ -24,7 +27,8 @@ Este documento atesta a verificação de todos os módulos críticos do sistema 
 - [x] **Auditoria de Reprovação:** Diretores recebem o feedback exato do motivo da recusa para correção.
 
 ## 📊 4. Dashboards e Relatórios
-- [x] **Visão Executiva:** Gráficos (Recharts) renderizando os KPIs em tempo real.
+- [x] **Visão Executiva (Resiliência Total):** Dashboard Estratégico otimizado via Edge Function mestre, eliminando vazios de dados causados por políticas de RLS.
+- [x] **Acesso Restrito:** Perfil `Diretor Executivo` configurado com visão global analítica e menus filtrados para foco total em resultados.
 - [x] **Ranking de Unidades:** Cálculo dinâmico das unidades e regionais que mais aprovaram méritos.
 - [x] **Filtros Globais:** Cruzamento de dados por Ano, Regional, Unidade e Status.
 

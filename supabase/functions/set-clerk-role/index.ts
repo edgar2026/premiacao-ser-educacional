@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const CLERK_SECRET_KEY = Deno.env.get("CLERK_SECRET_KEY") || "sk_test_PNalfIULMiOQaxOn64dzkf21izvnQwCm0PipUYj7ni";
+const CLERK_SECRET_KEY = Deno.env.get("CLERK_SECRET_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,13 +27,30 @@ serve(async (req) => {
     if (!sessionData.user_id) throw new Error("Session has no user_id");
     const callerId = sessionData.user_id;
 
-    // 2. Verify caller is admin
+    // 2. Verify caller is admin/super_admin
     const callerRes = await fetch(`https://api.clerk.com/v1/users/${callerId}`, {
          headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
     if (!callerRes.ok) throw new Error("Failed to fetch caller");
     const callerData = await callerRes.json();
-    if (callerData.public_metadata?.role !== 'admin' && callerData.public_metadata?.role !== 'super_admin') {
+    
+    // Tenta pegar o role do Clerk ou do Banco de Dados
+    let callerRole = callerData.public_metadata?.role;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!callerRole && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const dbCallerRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${callerId}&select=role`, {
+            headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            }
+        });
+        const dbCallerData = await dbCallerRes.json();
+        callerRole = dbCallerData[0]?.role;
+    }
+
+    if (callerRole !== 'admin' && callerRole !== 'super_admin') {
        throw new Error("Unauthorized (Not Admin)");
     }
 
@@ -43,43 +60,67 @@ serve(async (req) => {
     });
     const targetData = await targetRes.json();
     const targetUser = targetData[0];
-    if (!targetUser) throw new Error("User not found in Clerk");
+    
+    if (!targetUser) {
+        // Se não tem no Clerk mas tem no banco, a gente "finge" sucesso pra limpar o banco
+        return new Response(JSON.stringify({ success: true, message: "User not in Clerk" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+        });
+    }
 
-    // 4. Update target user's role
-    const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}/metadata`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${CLERK_SECRET_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        public_metadata: { 
-          role,
-          unit_id: unitId || targetUser.public_metadata?.unit_id
-        }
-      }),
-    });
+    const { action } = await req.clone().json();
 
-    if (!updateRes.ok) throw new Error("Failed to update Clerk metadata");
+    if (action === 'delete') {
+        // EXCLUSÃO REAL NO CLERK
+        const delRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
+        });
+        if (!delRes.ok) throw new Error("Failed to delete user from Clerk");
+    } else {
+        // 4. Update target user's metadata
+        const updateRes = await fetch(`https://api.clerk.com/v1/users/${targetUser.id}/metadata`, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${CLERK_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                public_metadata: { 
+                role,
+                unit_id: unitId || targetUser.public_metadata?.unit_id
+                }
+            }),
+        });
+        if (!updateRes.ok) throw new Error("Failed to update Clerk metadata");
+    }
 
     // 5. Update Supabase profiles
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(email)}`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ 
-                role: role,
-                unit_id: unitId || undefined
-            })
-        });
+        if (action === 'delete') {
+            await fetch(`${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(email)}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                }
+            });
+        } else {
+            await fetch(`${SUPABASE_URL}/rest/v1/profiles?username=eq.${encodeURIComponent(email)}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ 
+                    role: role,
+                    unit_id: unitId || undefined
+                })
+            });
+        }
     }
     
     return new Response(JSON.stringify({ success: true }), {

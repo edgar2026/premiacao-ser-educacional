@@ -62,13 +62,15 @@ serve(async (req) => {
     // 3. Cria instantaneamente o perfil espelhado no Supabase
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const fullName = [firstName, lastName].filter(Boolean).join(' ') || email.split('@')[0];
-      await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+      console.log(`Creating profile for ${email} with ID ${newUser.id}`);
+      
+      const supabaseRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_SERVICE_ROLE_KEY,
           'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify({
           id: newUser.id,
@@ -80,6 +82,16 @@ serve(async (req) => {
           ativo: true
         })
       });
+
+      if (!supabaseRes.ok) {
+        const supabaseError = await supabaseRes.text();
+        console.error(`Supabase error: ${supabaseError}`);
+        // Consider if we should delete the Clerk user if Supabase fail? 
+        // For now, let's just throw to notify the UI.
+        throw new Error(`User created in Clerk but failed to sync to Database: ${supabaseError}`);
+      }
+      
+      console.log('Profile created successfully in Supabase');
     }
 
     return new Response(JSON.stringify({ success: true, user: newUser }), {

@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const CLERK_SECRET_KEY = Deno.env.get("CLERK_SECRET_KEY") || "sk_test_PNalfIULMiOQaxOn64dzkf21izvnQwCm0PipUYj7ni";
+const CLERK_SECRET_KEY = Deno.env.get("CLERK_SECRET_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,9 +27,6 @@ serve(async (req) => {
     }
     const clerkUsers = await clerkRes.json();
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
         throw new Error("Missing Supabase env vars in Edge Function");
     }
@@ -44,30 +43,14 @@ serve(async (req) => {
         const role = u.public_metadata?.role || 'public';
         const unitId = u.public_metadata?.unit_id || null;
 
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${u.id}`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ 
-                username: email,
-                full_name: fullName,
-                role: role,
-                unit_id: unitId
-            })
-        });
-
-        // Try insert as well (upsert alternative since PATCH doesn't create if missing)
-        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+        // Upsert (Insert or Update if exists)
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
             method: 'POST',
             headers: {
                 'apikey': SUPABASE_SERVICE_ROLE_KEY,
                 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
                 'Content-Type': 'application/json',
-                'Prefer': 'resolution=ignore-duplicates'
+                'Prefer': 'resolution=merge-duplicates,return=minimal'
             },
             body: JSON.stringify({ 
                 id: u.id,
@@ -75,7 +58,8 @@ serve(async (req) => {
                 full_name: fullName,
                 role: role,
                 unit_id: unitId,
-                ativo: true
+                ativo: true,
+                updated_at: new Date().toISOString()
             })
         });
         

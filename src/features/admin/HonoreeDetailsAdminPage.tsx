@@ -24,7 +24,7 @@ const HonoreeDetailsAdminPage: React.FC = () => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
 
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+    const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin';
     const isDirector = profile?.role === 'diretor';
     
     // Injeção do cliente autenticado para buscar dados Rascunho/Pendentes

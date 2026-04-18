@@ -18,20 +18,20 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = 'dashboard' }) => {
         fill?: boolean;
     }
 
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+    const isAdmin = profile?.role === 'super_admin' || profile?.role === 'admin';
     const isExecutivo = profile?.role === 'diretor_executivo';
     const isDiretor = profile?.role === 'diretor';
 
     const dashboardLinks: SidebarLink[] = [
         ...(isAdmin || isExecutivo ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' }] : []),
-        { to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' },
-        { to: '/admin', icon: 'stars', label: 'Gestão de Homenageados' },
+        ...(isAdmin ? [{ to: '/dashboard', icon: 'grid_view', label: 'Dashboard Executivo' }] : []),
+        { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados' },
     ];
 
     const adminLinks: SidebarLink[] = [
         ...(isAdmin || isExecutivo ? [{ to: '/admin/dashboard', icon: 'bar_chart', label: 'Dashboard Estratégico' }] : []),
-        { to: '/admin', icon: 'grid_view', label: 'Painel de Controle' },
-        { to: '/admin/solicitacoes', icon: 'mark_email_unread', label: isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes' },
+        ...(isAdmin ? [{ to: '/admin', icon: 'grid_view', label: 'Painel de Controle' }] : []),
+        ...(isAdmin || isDiretor ? [{ to: '/admin/solicitacoes', icon: 'mark_email_unread', label: isDiretor ? 'Minhas Solicitações' : 'Solicitações Pendentes' }] : []),
         { to: '/admin/homenageados', icon: 'stars', label: 'Homenageados', fill: true },
         // Links exclusivos para Administradores
         ...(isAdmin ? [

@@ -37,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
-    const isSuperAdmin = profile?.role === 'super_admin';
-    const isAdmin = profile?.role === 'admin' || isSuperAdmin;
+    const isSuperAdmin = profile?.role === 'super_admin' || profile?.role === 'admin';
+    const isAdmin = isSuperAdmin;
     const isDirector = profile?.role === 'diretor';
 
     const fetchProfile = async (userId: string, email: string, clerkOrgId?: string) => {

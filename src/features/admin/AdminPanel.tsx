@@ -22,6 +22,8 @@ const AdminPanel: React.FC = () => {
     useEffect(() => {
         if (profile && isDiretor) {
             navigate('/admin/solicitacoes', { replace: true });
+        } else if (profile && profile.role === 'diretor_executivo') {
+            navigate('/admin/dashboard', { replace: true });
         } else if (profile) {
             fetchStats();
         }
