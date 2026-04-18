@@ -191,21 +191,7 @@ const DashboardPage: React.FC = () => {
             .sort((a, b) => b.count - a.count);
     }, [filteredHonorees, units, regionals]);
 
-    // Helper formatting
-    const formatStatus = (status: string) => {
-        switch (status) {
-            case 'aprovado': return <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-500/30">Aprovado</span>;
-            case 'publicado': return <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-green-500/30">Publicado</span>;
-            case 'reprovado': return <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-red-500/30">Reprovado</span>;
-            case 'em_analise': return <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-yellow-500/30">Pendente</span>;
-            default: return <span className="px-3 py-1 bg-white/10 text-white/50 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-white/20">Rascunho</span>;
-        }
-    };
 
-    const getHonoreeName = (h: Honoree) => {
-        try { return h.professional_data ? JSON.parse(h.professional_data).name : h.name || 'Sem nome'; }
-        catch { return h.name || 'Sem nome'; }
-    };
 
     if (isLoading) {
         return (
