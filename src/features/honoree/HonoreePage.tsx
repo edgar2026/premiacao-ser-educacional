@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
 import VideoModal from '../../components/ui/VideoModal';
 import CertificateTemplate from './components/CertificateTemplate';
 import TimelineModal from './components/TimelineModal';
 import { supabase } from '../../lib/supabase';
+import { motion } from 'framer-motion';
 import type { Database } from '../../types/supabase';
 
 type Honoree = Database['public']['Tables']['honorees']['Row'];
@@ -18,9 +18,7 @@ const HonoreePage: React.FC = () => {
     const [isTimelineModalOpen, setIsTimelineModalOpen] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            fetchHonoree();
-        }
+        if (id) fetchHonoree();
     }, [id]);
 
     const fetchHonoree = async () => {
@@ -39,32 +37,29 @@ const HonoreePage: React.FC = () => {
         setIsLoading(false);
     };
 
-
-
     if (isLoading) {
         return (
-            <div className="w-full min-h-screen mesh-gradient-premium flex items-center justify-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gold"></div>
+            <div className="w-full min-h-screen bg-transparent flex items-center justify-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-blue"></div>
             </div>
         );
     }
 
     if (!honoree) {
         return (
-            <div className="w-full min-h-screen mesh-gradient-premium flex flex-col items-center justify-center text-off-white">
-                <h2 className="text-4xl font-serif italic mb-6">Homenageado não encontrado</h2>
-                <Link to="/" className="text-gold uppercase tracking-widest font-bold text-sm border-b border-gold/30 pb-1">Voltar para Galeria</Link>
+            <div className="w-full min-h-screen bg-transparent flex flex-col items-center justify-center">
+                <h2 className="text-3xl font-[800] mb-6 text-brand-dark">Homenageado não encontrado</h2>
+                <Link to="/homenageados" className="btn-premium">Voltar para Galeria</Link>
             </div>
         );
     }
 
     const profData = honoree.professional_data ? JSON.parse(honoree.professional_data) : {};
-
     const timeline = (honoree.timeline as any[]) || [];
     const awardName = (honoree as any).awards?.name || 'Prêmio de Excelência';
 
     return (
-        <div className="w-full mesh-gradient-premium min-h-screen print:bg-white print:mesh-gradient-none">
+        <div className="w-full bg-transparent min-h-screen text-brand-dark font-sans relative print:bg-white">
             {/* Certificate Template for Printing */}
             <CertificateTemplate
                 honoreeName={profData.name}
@@ -73,47 +68,70 @@ const HonoreePage: React.FC = () => {
                 biography={honoree.biography || ''}
             />
 
-            <div className="max-w-7xl mx-auto px-6 py-20 print:hidden">
-                {/* Breadcrumbs & Back Button */}
-                <div className="flex items-center justify-between mb-10 animate-fade-in">
-                    <div className="flex flex-wrap gap-4 items-center">
-                        <Link to="/" className="text-off-white/40 text-[10px] font-bold uppercase tracking-[0.3em] hover:text-gold transition-colors">Galeria de Notáveis</Link>
-                        <span className="text-gold/30 text-xs">/</span>
-                        <span className="text-gold text-[10px] font-bold uppercase tracking-[0.3em]">{profData.name}</span>
+            {/* Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none print:hidden">
+                <img src="/assets/tech_award_bg.png" alt="" className="w-full h-full object-cover opacity-50 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-b from-bg-main/60 via-bg-main/80 to-bg-main/95"></div>
+            </div>
+
+            <div className="max-w-[1280px] mx-auto px-6 lg:px-[80px] py-24 relative z-10 print:hidden">
+                {/* Breadcrumbs */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-wrap items-center justify-between mb-10 gap-4"
+                >
+                    <div className="flex flex-wrap items-center gap-3 text-[13px] font-semibold">
+                        <Link to="/homenageados" className="text-brand-text-secondary hover:text-brand-blue transition-colors">Homenageados</Link>
+                        <span className="text-brand-text-secondary/30">/</span>
+                        <span className="text-brand-blue">{profData.name}</span>
                     </div>
-                    <Link to="/" className="flex items-center gap-3 text-off-white/60 hover:text-gold transition-all group">
-                        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:-translate-x-2">arrow_back</span>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Retornar</span>
+                    <Link to="/homenageados" className="flex items-center gap-2 text-brand-text-secondary hover:text-brand-blue transition-all group text-[13px] font-semibold">
+                        <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                        Voltar
                     </Link>
-                </div>
+                </motion.div>
 
                 {/* Profile Header */}
-                <div className="relative glass-card rounded-[3rem] p-10 md:p-16 mb-12 overflow-hidden border-white/5">
-                    <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] pointer-events-none"></div>
-                    <div className="relative flex flex-col lg:flex-row gap-16 items-center lg:items-start text-center lg:text-left">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="card-static p-10 md:p-16 mb-12"
+                >
+                    <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start">
+                        {/* Photo */}
                         <div className="relative shrink-0">
-                            <div className="p-2 glass-card rounded-[2.5rem] border-white/10">
-                                <div
-                                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-[2rem] w-72 h-72 shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000"
-                                    style={{ backgroundImage: `url("${honoree.photo_url || '/assets/default-fallback.png'}")` }}
-                                ></div>
+                            <div className="w-64 h-64 lg:w-72 lg:h-72 overflow-hidden border-[3px] border-brand-blue shadow-2xl shadow-brand-blue/20 rounded-2xl">
+                                <img
+                                    className="w-full h-full object-cover"
+                                    src={honoree.photo_url || '/assets/default-fallback.png'}
+                                    alt={profData.name}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = '/assets/default-fallback.png'; }}
+                                />
                             </div>
-                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[-20px] lg:translate-x-0 bg-gold text-navy-deep px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(212,175,55,0.4)] whitespace-nowrap">
+                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 lg:left-auto lg:right-[-16px] lg:translate-x-0 bg-brand-blue text-white px-6 py-2.5 font-[700] text-[11px] uppercase tracking-[0.15em] shadow-lg whitespace-nowrap rounded-lg">
                                 {awardName}
                             </div>
                         </div>
-                        <div className="flex flex-col flex-1 py-4">
-                            <h1 className="font-serif text-6xl md:text-8xl text-off-white font-bold mb-6 tracking-tighter leading-[0.9]">{profData.name}</h1>
-                            <p className="text-gold text-2xl font-light mb-10 tracking-wide italic font-serif">{profData.role || profData.external_role}</p>
+
+                        {/* Info */}
+                        <div className="flex flex-col flex-1 text-center lg:text-left">
+                            <h1 className="text-[40px] lg:text-[56px] font-[800] leading-[1.1] tracking-[-1px] mb-4 text-brand-dark">
+                                {profData.name}
+                            </h1>
+                            <p className="text-brand-blue text-[20px] font-[600] mb-8">
+                                {profData.role || profData.external_role}
+                            </p>
                             <div
-                                className="text-off-white/70 text-xl leading-relaxed font-light max-w-3xl italic prose prose-invert break-words"
+                                className="text-brand-text-secondary text-[17px] leading-[1.8] max-w-3xl prose prose-slate break-words"
                                 dangerouslySetInnerHTML={{ __html: honoree.biography || '' }}
                             />
                             {honoree.video_url && (
-                                <div className="flex justify-center lg:justify-start mt-12">
+                                <div className="flex justify-center lg:justify-start mt-10">
                                     <button
                                         onClick={() => setIsVideoModalOpen(true)}
-                                        className="flex items-center gap-4 px-12 py-5 bg-gold text-navy-deep rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-105 transition-all"
+                                        className="btn-premium flex items-center gap-3"
                                     >
                                         <span className="material-symbols-outlined text-[20px]">play_circle</span>
                                         Ver Homenagem
@@ -122,7 +140,7 @@ const HonoreePage: React.FC = () => {
                             )}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Video Modal */}
                 {honoree.video_url && (
@@ -142,29 +160,34 @@ const HonoreePage: React.FC = () => {
                     timeline={timeline}
                 />
 
-
-
                 {/* Content Sections */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-                    <div className="lg:col-span-2 space-y-12">
-                        <div className="flex gap-12 border-b border-white/10 px-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Tabs */}
+                        <div className="flex gap-1 border-b border-brand-gray">
                             {['Iniciativas', 'Reconhecimentos'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`relative pb-6 text-[10px] font-bold uppercase tracking-[0.3em] transition-all ${activeTab === tab ? 'text-gold' : 'text-off-white/40 hover:text-off-white'}`}
+                                    className={`relative px-6 py-4 text-[13px] font-[700] uppercase tracking-[0.12em] transition-all ${
+                                        activeTab === tab
+                                            ? 'text-brand-blue'
+                                            : 'text-brand-text-secondary hover:text-brand-dark'
+                                    }`}
                                 >
                                     {tab}
-                                    {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gold rounded-full"></span>}
+                                    {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-brand-blue"></span>}
                                 </button>
                             ))}
                         </div>
-                        <article className="glass-card p-12 md:p-16 rounded-[3rem] border-white/5">
-                            <h3 className="font-serif text-4xl text-off-white mb-10 italic">
+
+                        {/* Tab Content */}
+                        <div className="card-static p-10 md:p-14">
+                            <h3 className="text-[28px] font-[700] text-brand-dark mb-8">
                                 {activeTab === 'Iniciativas' && 'Projetos & Impacto'}
                                 {activeTab === 'Reconhecimentos' && 'Láureas & Mérito'}
                             </h3>
-                            <div className="space-y-10 text-off-white/60 leading-relaxed text-xl font-light italic prose prose-invert max-w-none break-words">
+                            <div className="text-brand-text-secondary text-[16px] leading-[1.8] prose prose-slate max-w-none break-words">
                                 {activeTab === 'Iniciativas' && (
                                     <div dangerouslySetInnerHTML={{ __html: honoree.initiatives || '<p>Informações sobre iniciativas em breve.</p>' }} />
                                 )}
@@ -172,45 +195,53 @@ const HonoreePage: React.FC = () => {
                                     <div dangerouslySetInnerHTML={{ __html: honoree.recognitions || '<p>Informações sobre reconhecimentos em breve.</p>' }} />
                                 )}
                             </div>
-                        </article>
+                        </div>
                     </div>
 
                     {/* Timeline Sidebar */}
                     <div className="lg:col-span-1">
-                        <div className="glass-card rounded-[3rem] p-10 sticky top-32 border-white/5">
-                            <h3 className="font-serif text-2xl text-off-white mb-12 flex items-center gap-4 italic">
-                                <span className="material-symbols-outlined text-gold text-[28px]">history_edu</span>
+                        <div className="card-static p-8 sticky top-28">
+                            <h3 className="text-[20px] font-[700] text-brand-dark mb-8 flex items-center gap-3">
+                                <span className="material-symbols-outlined text-brand-blue text-[24px]">history_edu</span>
                                 Marco Histórico
                             </h3>
-                            <div className="relative space-y-12 before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-[18px] before:w-[1px] before:bg-gradient-to-b before:from-gold before:via-gold/20 before:to-transparent">
+                            <div className="relative space-y-8 before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-[14px] before:w-[2px] before:bg-gradient-to-b before:from-brand-blue before:via-brand-blue/20 before:to-transparent">
                                 {timeline.map((item, index) => (
-                                    <div key={item.id} className="relative pl-14 group">
-                                        <div className={`absolute left-0 top-1 flex items-center justify-center w-[36px] h-[36px] rounded-full z-10 transition-all duration-500 ${index === 0 ? 'bg-gold text-navy-deep shadow-[0_0_20px_rgba(212,175,55,0.5)]' : 'glass-card text-gold border-gold/30'}`}>
-                                            <span className="material-symbols-outlined text-[18px]">
+                                    <div key={item.id} className="relative pl-10 group">
+                                        <div className={`absolute left-0 top-1 flex items-center justify-center w-[30px] h-[30px] z-10 transition-all ${
+                                            index === 0
+                                                ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/30'
+                                                : 'bg-white text-brand-blue border-2 border-brand-blue/30'
+                                        }`}>
+                                            <span className="material-symbols-outlined text-[16px]">
                                                 {index === 0 ? 'star' : 'verified'}
                                             </span>
                                         </div>
-                                        <div className="transition-all duration-500 group-hover:translate-x-2">
-                                            <time className="font-bold text-gold/50 text-[9px] uppercase tracking-[0.2em] mb-2 block">{item.semester}</time>
-                                            <div className="text-off-white font-bold text-lg mb-1 font-serif italic">{item.title}</div>
-                                            <div className="text-off-white/40 text-[10px] font-bold uppercase tracking-widest">{item.category}</div>
+                                        <div className="group-hover:translate-x-1 transition-transform">
+                                            <time className="font-[700] text-brand-blue/50 text-[11px] uppercase tracking-[0.15em] mb-1 block">{item.semester}</time>
+                                            <div className="text-brand-dark font-[700] text-[16px] mb-1">{item.title}</div>
+                                            <div className="text-brand-text-secondary text-[11px] font-[600] uppercase tracking-[0.1em]">{item.category}</div>
                                         </div>
                                     </div>
                                 ))}
                                 {timeline.length === 0 && (
-                                    <p className="text-off-white/20 text-sm italic pl-4">Nenhum marco registrado.</p>
+                                    <p className="text-brand-text-secondary/50 text-sm pl-4">Nenhum marco registrado.</p>
                                 )}
                             </div>
-                            <button
-                                onClick={() => setIsTimelineModalOpen(true)}
-                                className="w-full mt-16 py-5 glass-card rounded-2xl text-gold text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-gold hover:text-navy-deep transition-all duration-500"
-                            >
-                                Ver Registro Completo
-                            </button>
+                            {timeline.length > 0 && (
+                                <button
+                                    onClick={() => setIsTimelineModalOpen(true)}
+                                    className="btn-premium-outline w-full mt-10 !h-14 !text-[12px]"
+                                >
+                                    Ver Registro Completo
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     );
-}; export default HonoreePage;
+};
+
+export default HonoreePage;

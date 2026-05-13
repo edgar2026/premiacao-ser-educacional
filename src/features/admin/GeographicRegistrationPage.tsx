@@ -165,12 +165,12 @@ const GeographicRegistrationPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Administração Central</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Gestão <span className="text-gold-gradient">Regional</span></h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-12">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Administração Central</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">Gestão <span className="text-brand-blue">Regional</span></h2>
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Configure regionais, marcas e unidades em um único lugar.
                     </p>
                 </div>
@@ -178,113 +178,113 @@ const GeographicRegistrationPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Regionais Section */}
-                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 flex flex-col h-fit">
+                <div className="card-static p-8 rounded-[2.5rem] flex flex-col h-fit">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-xl font-bold font-serif text-off-white italic">Regionais</h3>
+                        <h3 className="text-xl font-[800] text-brand-dark tracking-tight">Regionais</h3>
                         <button
                             onClick={() => { resetForm(); setEditType('regional'); }}
-                            className="size-10 rounded-full bg-gold/10 text-gold flex items-center justify-center hover:bg-gold hover:text-navy-deep transition-all"
+                            className="size-10 rounded-xl bg-brand-blue/5 text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all border border-brand-blue/10"
                         >
                             <span className="material-symbols-outlined">add</span>
                         </button>
                     </div>
 
                     {editType === 'regional' && (
-                        <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-gold/20 space-y-4 animate-slide-down">
+                        <div className="mb-8 p-6 rounded-2xl bg-bg-main border border-brand-blue/20 space-y-4 animate-slide-down">
                             <input
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-medium"
                                 placeholder="Nome da Regional"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
                             <div className="flex gap-2">
-                                <button onClick={() => handleSave('regional')} className="flex-1 bg-gold text-navy-deep py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Salvar</button>
-                                <button onClick={resetForm} className="flex-1 bg-white/5 text-off-white/40 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Cancelar</button>
+                                <button onClick={() => handleSave('regional')} className="btn-premium flex-1 !py-3 !text-[11px]">Salvar</button>
+                                <button onClick={resetForm} className="flex-1 bg-brand-gray text-brand-text-secondary py-3 rounded-xl font-[800] text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Cancelar</button>
                             </div>
                         </div>
                     )}
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                         {regionals.map(reg => (
-                            <div key={reg.id} className="flex justify-between items-center p-4 rounded-xl bg-white/[0.02] border border-white/5 group hover:border-gold/20 transition-all">
-                                <span className="text-off-white font-medium">{reg.name}</span>
+                            <div key={reg.id} className="flex justify-between items-center p-5 rounded-2xl bg-bg-main border border-brand-gray group hover:border-brand-blue/30 transition-all shadow-sm">
+                                <span className="text-brand-dark font-[700] text-[15px]">{reg.name}</span>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => startEdit('regional', reg)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                    <button onClick={() => handleDeleteClick('regional', reg.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                    <button onClick={() => startEdit('regional', reg)} className="text-brand-blue hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
+                                    <button onClick={() => handleDeleteClick('regional', reg.id)} className="text-red-500 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Marcas Section */}
-                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 flex flex-col h-fit">
+                <div className="card-static p-8 rounded-[2.5rem] flex flex-col h-fit">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-xl font-bold font-serif text-off-white italic">Marcas</h3>
+                        <h3 className="text-xl font-[800] text-brand-dark tracking-tight">Marcas</h3>
                         <button
                             onClick={() => { resetForm(); setEditType('brand'); }}
-                            className="size-10 rounded-full bg-gold/10 text-gold flex items-center justify-center hover:bg-gold hover:text-navy-deep transition-all"
+                            className="size-10 rounded-xl bg-brand-blue/5 text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all border border-brand-blue/10"
                         >
                             <span className="material-symbols-outlined">add</span>
                         </button>
                     </div>
 
                     {editType === 'brand' && (
-                        <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-gold/20 space-y-4 animate-slide-down">
+                        <div className="mb-8 p-6 rounded-2xl bg-bg-main border border-brand-blue/20 space-y-4 animate-slide-down">
                             <input
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-medium"
                                 placeholder="Nome da Marca"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
                             <div className="flex gap-2">
-                                <button onClick={() => handleSave('brand')} className="flex-1 bg-gold text-navy-deep py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Salvar</button>
-                                <button onClick={resetForm} className="flex-1 bg-white/5 text-off-white/40 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Cancelar</button>
+                                <button onClick={() => handleSave('brand')} className="btn-premium flex-1 !py-3 !text-[11px]">Salvar</button>
+                                <button onClick={resetForm} className="flex-1 bg-brand-gray text-brand-text-secondary py-3 rounded-xl font-[800] text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Cancelar</button>
                             </div>
                         </div>
                     )}
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                         {brands.map(brand => (
-                            <div key={brand.id} className="flex justify-between items-center p-4 rounded-xl bg-white/[0.02] border border-white/5 group hover:border-gold/20 transition-all">
-                                <span className="text-off-white font-medium">{brand.name}</span>
+                            <div key={brand.id} className="flex justify-between items-center p-5 rounded-2xl bg-bg-main border border-brand-gray group hover:border-brand-blue/30 transition-all shadow-sm">
+                                <span className="text-brand-dark font-[700] text-[15px]">{brand.name}</span>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => startEdit('brand', brand)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                    <button onClick={() => handleDeleteClick('brand', brand.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                    <button onClick={() => startEdit('brand', brand)} className="text-brand-blue hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
+                                    <button onClick={() => handleDeleteClick('brand', brand.id)} className="text-red-500 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Unidades Section */}
-                <GlassCard className="p-8 rounded-[2.5rem] border-white/5 flex flex-col h-fit lg:col-span-1">
+                <div className="card-static p-8 rounded-[2.5rem] flex flex-col h-fit lg:col-span-1">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-xl font-bold font-serif text-off-white italic">Unidades</h3>
+                        <h3 className="text-xl font-[800] text-brand-dark tracking-tight">Unidades</h3>
                         <button
                             onClick={() => { resetForm(); setEditType('unit'); }}
-                            className="size-10 rounded-full bg-gold/10 text-gold flex items-center justify-center hover:bg-gold hover:text-navy-deep transition-all"
+                            className="size-10 rounded-xl bg-brand-blue/5 text-brand-blue flex items-center justify-center hover:bg-brand-blue hover:text-white transition-all border border-brand-blue/10"
                         >
                             <span className="material-symbols-outlined">add</span>
                         </button>
                     </div>
 
                     {editType === 'unit' && (
-                        <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-gold/20 space-y-4 animate-slide-down">
+                        <div className="mb-8 p-6 rounded-2xl bg-bg-main border border-brand-blue/20 space-y-4 animate-slide-down">
                             <input
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-medium"
                                 placeholder="Nome da Unidade"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
                             <input
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-medium"
                                 placeholder="Localização (Cidade, UF)"
                                 value={formData.location}
                                 onChange={e => setFormData({ ...formData, location: e.target.value })}
                             />
                             <select
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-[700]"
                                 value={formData.brandId}
                                 onChange={e => setFormData({ ...formData, brandId: e.target.value })}
                             >
@@ -292,7 +292,7 @@ const GeographicRegistrationPage: React.FC = () => {
                                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                             </select>
                             <select
-                                className="w-full bg-navy-deep border border-white/10 p-3 rounded-xl text-off-white outline-none focus:border-gold/50"
+                                className="w-full bg-white border border-brand-gray p-4 rounded-xl text-brand-dark outline-none focus:border-brand-blue/50 font-[700]"
                                 value={formData.regionalId}
                                 onChange={e => setFormData({ ...formData, regionalId: e.target.value })}
                             >
@@ -300,29 +300,29 @@ const GeographicRegistrationPage: React.FC = () => {
                                 {regionals.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                             </select>
                             <div className="flex gap-2">
-                                <button onClick={() => handleSave('unit')} className="flex-1 bg-gold text-navy-deep py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Salvar</button>
-                                <button onClick={resetForm} className="flex-1 bg-white/5 text-off-white/40 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest">Cancelar</button>
+                                <button onClick={() => handleSave('unit')} className="btn-premium flex-1 !py-3 !text-[11px]">Salvar</button>
+                                <button onClick={resetForm} className="flex-1 bg-brand-gray text-brand-text-secondary py-3 rounded-xl font-[800] text-[11px] uppercase tracking-widest hover:bg-gray-200 transition-colors">Cancelar</button>
                             </div>
                         </div>
                     )}
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                         {units.map(unit => (
-                            <div key={unit.id} className="flex flex-col p-4 rounded-xl bg-white/[0.02] border border-white/5 group hover:border-gold/20 transition-all">
+                            <div key={unit.id} className="flex flex-col p-5 rounded-2xl bg-bg-main border border-brand-gray group hover:border-brand-blue/30 transition-all shadow-sm">
                                 <div className="flex justify-between items-start">
                                     <div className="flex flex-col">
-                                        <span className="text-off-white font-medium">{unit.name}</span>
-                                        <span className="text-[9px] text-gold uppercase tracking-widest font-bold">{unit.brands?.name} • {unit.regionals?.name || 'Sem Regional'}</span>
+                                        <span className="text-brand-dark font-[700] text-[15px]">{unit.name}</span>
+                                        <span className="text-[10px] text-brand-blue uppercase tracking-widest font-[800] mt-1">{unit.brands?.name} • {unit.regionals?.name || 'Sem Regional'}</span>
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => startEdit('unit', unit)} className="text-gold hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
-                                        <button onClick={() => handleDeleteClick('unit', unit.id)} className="text-red-400 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                        <button onClick={() => startEdit('unit', unit)} className="text-brand-blue hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">edit</span></button>
+                                        <button onClick={() => handleDeleteClick('unit', unit.id)} className="text-red-500 hover:scale-110 transition-transform"><span className="material-symbols-outlined text-sm">delete</span></button>
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
             </div>
 
             <ConfirmModal

@@ -439,36 +439,36 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
     }
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-12">
                 <div className="space-y-4">
                     <button
                         onClick={() => navigate('/admin/homenageados')}
-                        className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-[0.2em] hover:opacity-70 transition-opacity mb-4"
+                        className="flex items-center gap-2 text-brand-blue text-[11px] font-[800] uppercase tracking-[0.2em] hover:opacity-70 transition-opacity mb-4"
                     >
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
                         Voltar para listagem
                     </button>
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">
-                        {isEdit ? 'Editar' : 'Novo'} <span className="text-gold-gradient">Homenageado</span>
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Gestão de Talentos</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">
+                        {isEdit ? 'Editar' : 'Novo'} <span className="text-brand-blue">Homenageado</span>
                     </h2>
                 </div>
             </div>
 
             {isDirector && (formData.status === 'reprovado') && (
-                <div className="p-8 rounded-[2rem] bg-red-500/10 border border-red-500/20 animate-slide-up">
-                    <div className="flex items-start gap-4">
-                        <div className="size-12 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-red-500">error</span>
+                <div className="p-8 rounded-[2.5rem] bg-red-50 border border-red-100 animate-slide-up">
+                    <div className="flex items-start gap-6">
+                        <div className="size-14 rounded-2xl bg-red-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-red-200">
+                            <span className="material-symbols-outlined">error</span>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="text-lg font-bold text-red-500 uppercase tracking-widest">Cadastro com Pendências</h4>
-                            <p className="text-off-white/70 italic font-serif">
-                                " {formData.rejection_reason || 'Nenhum motivo especificado.'} "
+                            <h4 className="text-lg font-[800] text-red-600 uppercase tracking-tight">Cadastro com Pendências</h4>
+                            <p className="text-brand-dark font-medium italic opacity-80">
+                                "{formData.rejection_reason || 'Nenhum motivo especificado.'}"
                             </p>
-                            <p className="text-[10px] text-off-white/40 uppercase tracking-widest pt-2">
-                                Por favor, realize as correções solicitadas. Ao salvar no último passo, o sistema irá submeter o perfil automaticamente para uma nova análise da administração.
+                            <p className="text-[11px] text-brand-text-secondary/60 font-[800] uppercase tracking-widest pt-2">
+                                Por favor, realize as correções solicitadas e submeta novamente.
                             </p>
                         </div>
                     </div>
@@ -477,7 +477,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
             <StepIndicator steps={steps} currentStep={currentStep} />
 
-            <GlassCard className="p-10 rounded-[3rem] border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+            <div className="card-static p-10 rounded-[2.5rem] min-h-[600px]">
                 <div className="min-h-[400px]">
                     {(() => {
                         switch (currentStep) {
@@ -485,51 +485,51 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 return (
                                     <div className="space-y-10 animate-slide-up">
                                         <div className="space-y-2">
-                                            <h3 className="text-2xl font-serif italic text-off-white">Identificação Básica</h3>
-                                            <p className="text-off-white/40 text-sm">Comece definindo o tipo de público e os dados de contato.</p>
+                                            <h3 className="text-[28px] font-[800] text-brand-dark tracking-tight">Identificação Básica</h3>
+                                            <p className="text-brand-text-secondary font-medium opacity-60">Comece definindo o tipo de público e os dados de contato.</p>
                                         </div>
 
-                                        <div className="flex p-1 bg-white/5 rounded-2xl w-fit mb-10">
+                                        <div className="flex p-1.5 bg-bg-main border border-brand-gray rounded-2xl w-fit mb-10 shadow-sm">
                                             <button
                                                 onClick={() => setFormData({ ...formData, type: 'interno' })}
-                                                className={`px-10 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${formData.type === 'interno' ? 'bg-gold text-navy-deep shadow-lg' : 'text-off-white/40 hover:text-off-white'}`}
+                                                className={`px-10 py-4 rounded-xl text-[11px] font-[800] uppercase tracking-widest transition-all ${formData.type === 'interno' ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'text-brand-text-secondary/40 hover:text-brand-dark'}`}
                                             >
                                                 Público Interno
                                             </button>
                                             <button
                                                 onClick={() => setFormData({ ...formData, type: 'externo' })}
-                                                className={`px-10 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${formData.type === 'externo' ? 'bg-gold text-navy-deep shadow-lg' : 'text-off-white/40 hover:text-off-white'}`}
+                                                className={`px-10 py-4 rounded-xl text-[11px] font-[800] uppercase tracking-widest transition-all ${formData.type === 'externo' ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'text-brand-text-secondary/40 hover:text-brand-dark'}`}
                                             >
                                                 Público Externo
                                             </button>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                            <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Nome Completo</label>
+                                            <div className="space-y-3">
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Nome Completo</label>
                                                 <input
-                                                    className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg font-serif italic"
+                                                    className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-[18px] font-[800] tracking-tight"
                                                     placeholder="Ex: Dr. Roberto Santos"
                                                     type="text"
                                                     value={formData.name}
                                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                                 />
                                             </div>
-                                            <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">E-mail de Contato</label>
+                                            <div className="space-y-3">
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">E-mail de Contato</label>
                                                 <input
-                                                    className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg"
+                                                    className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg font-medium"
                                                     placeholder="roberto.santos@exemplo.com"
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                 />
                                             </div>
-                                            <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Data da Premiação</label>
+                                            <div className="space-y-3">
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Data da Premiação</label>
                                                 <input
                                                     required
-                                                    className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg"
+                                                    className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg font-[800]"
                                                     type="date"
                                                     value={formData.awarded_at}
                                                     onChange={(e) => setFormData({ ...formData, awarded_at: e.target.value })}
@@ -539,209 +539,209 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                     </div>
                                 );
                             case 1:
-                                return (
-                                    <div className="space-y-10 animate-slide-up">
-                                        <div className="space-y-2">
-                                            <h3 className="text-2xl font-serif italic text-off-white">Vínculo Institucional</h3>
-                                            <p className="text-off-white/40 text-sm">Especifique a relação do homenageado com o grupo.</p>
-                                        </div>
+                                 return (
+                                     <div className="space-y-10 animate-slide-up">
+                                         <div className="space-y-2">
+                                             <h3 className="text-[28px] font-[800] text-brand-dark tracking-tight">Vínculo Institucional</h3>
+                                             <p className="text-brand-text-secondary font-medium opacity-60">Especifique a relação do homenageado com o grupo.</p>
+                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                            <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Prêmio Vinculado</label>
-                                                <select
-                                                    className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
-                                                    value={formData.award_id}
-                                                    onChange={(e) => setFormData({ ...formData, award_id: e.target.value })}
-                                                >
-                                                    <option value="" className="bg-navy-deep">Selecione um prêmio...</option>
-                                                    {awards.map(a => (
-                                                        <option key={a.id} value={a.id} className="bg-navy-deep">{a.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                             <div className="space-y-3">
+                                                 <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Prêmio Vinculado</label>
+                                                 <select
+                                                     className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg font-[800]"
+                                                     value={formData.award_id}
+                                                     onChange={(e) => setFormData({ ...formData, award_id: e.target.value })}
+                                                 >
+                                                     <option value="">Selecione um prêmio...</option>
+                                                     {awards.map(a => (
+                                                         <option key={a.id} value={a.id}>{a.name}</option>
+                                                     ))}
+                                                 </select>
+                                             </div>
 
-                                            {formData.type === 'interno' ? (
-                                                <>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Marca Institucional</label>
-                                                        <select
-                                                            required
-                                                            disabled={isDirector}
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
-                                                            value={formData.brand_id}
-                                                            onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma marca...</option>
-                                                            {brands.map(b => (
-                                                                <option key={b.id} value={b.id} className="bg-navy-deep">{b.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Regional</label>
-                                                        <select
-                                                            disabled={isDirector}
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
-                                                            value={formData.regional_id}
-                                                            onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma regional...</option>
-                                                            {regionals.map(r => (
-                                                                <option key={r.id} value={r.id} className="bg-navy-deep">{r.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
-                                                        <select
-                                                            required
-                                                            disabled={!formData.brand_id || isDirector}
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
-                                                            value={formData.unit_id}
-                                                            onChange={(e) => {
-                                                                const selectedUnit = units.find(u => u.id === e.target.value);
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    unit_id: e.target.value,
-                                                                    unit: selectedUnit?.name || '',
-                                                                    brand_id: selectedUnit?.brand_id || formData.brand_id,
-                                                                    regional_id: selectedUnit?.regional_id || formData.regional_id
-                                                                });
-                                                            }}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma unidade...</option>
-                                                            {units.filter(u => u.brand_id === formData.brand_id).map(u => (
-                                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Matrícula / ID</label>
-                                                        <input
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg tracking-widest"
-                                                            placeholder="000000"
-                                                            type="text"
-                                                            value={formData.registration_id}
-                                                            onChange={(e) => setFormData({ ...formData, registration_id: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Cargo Atual</label>
-                                                        <input
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg italic"
-                                                            placeholder="Ex: Coordenador Acadêmico"
-                                                            type="text"
-                                                            value={formData.role}
-                                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Tempo de Casa (Anos)</label>
-                                                        <input
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg"
-                                                            placeholder="Ex: 5"
-                                                            type="number"
-                                                            value={formData.years_at_company}
-                                                            onChange={(e) => setFormData({ ...formData, years_at_company: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Marca Institucional</label>
-                                                        <select
-                                                            required
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
-                                                            value={formData.brand_id}
-                                                            onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma marca...</option>
-                                                            {brands.map(b => (
-                                                                <option key={b.id} value={b.id} className="bg-navy-deep">{b.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Regional</label>
-                                                        <select
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg"
-                                                            value={formData.regional_id}
-                                                            onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma regional...</option>
-                                                            {regionals.map(r => (
-                                                                <option key={r.id} value={r.id} className="bg-navy-deep">{r.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Unidade / Campus</label>
-                                                        <select
-                                                            required
-                                                            disabled={!formData.brand_id}
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white outline-none focus:border-gold/50 transition-all appearance-none cursor-pointer text-lg disabled:opacity-30"
-                                                            value={formData.unit_id}
-                                                            onChange={(e) => {
-                                                                const selectedUnit = units.find(u => u.id === e.target.value);
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    unit_id: e.target.value,
-                                                                    unit: selectedUnit?.name || '',
-                                                                    brand_id: selectedUnit?.brand_id || formData.brand_id,
-                                                                    regional_id: selectedUnit?.regional_id || formData.regional_id
-                                                                });
-                                                            }}
-                                                        >
-                                                            <option value="" className="bg-navy-deep">Selecione uma unidade...</option>
-                                                            {units.filter(u => u.brand_id === formData.brand_id).map(u => (
-                                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Instituição / Empresa</label>
-                                                        <input
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg font-serif italic"
-                                                            placeholder="Nome da organização"
-                                                            type="text"
-                                                            value={formData.institution}
-                                                            onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Cargo / Título Externo</label>
-                                                        <input
-                                                            className="w-full bg-white/[0.03] border border-white/10 py-5 px-8 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all text-lg italic"
-                                                            placeholder="Ex: CEO / Diretor Executivo"
-                                                            type="text"
-                                                            value={formData.external_role}
-                                                            onChange={(e) => setFormData({ ...formData, external_role: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
+                                             {formData.type === 'interno' ? (
+                                                 <>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Marca Institucional</label>
+                                                         <select
+                                                             required
+                                                             disabled={isDirector}
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg disabled:opacity-30 font-[800]"
+                                                             value={formData.brand_id}
+                                                             onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
+                                                         >
+                                                             <option value="">Selecione uma marca...</option>
+                                                             {brands.map(b => (
+                                                                 <option key={b.id} value={b.id}>{b.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Regional</label>
+                                                         <select
+                                                             disabled={isDirector}
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg disabled:opacity-30 font-[800]"
+                                                             value={formData.regional_id}
+                                                             onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
+                                                         >
+                                                             <option value="">Selecione uma regional...</option>
+                                                             {regionals.map(r => (
+                                                                 <option key={r.id} value={r.id}>{r.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Unidade / Campus</label>
+                                                         <select
+                                                             required
+                                                             disabled={!formData.brand_id || isDirector}
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg disabled:opacity-30 font-[800]"
+                                                             value={formData.unit_id}
+                                                             onChange={(e) => {
+                                                                 const selectedUnit = units.find(u => u.id === e.target.value);
+                                                                 setFormData({
+                                                                     ...formData,
+                                                                     unit_id: e.target.value,
+                                                                     unit: selectedUnit?.name || '',
+                                                                     brand_id: selectedUnit?.brand_id || formData.brand_id,
+                                                                     regional_id: selectedUnit?.regional_id || formData.regional_id
+                                                                 });
+                                                             }}
+                                                         >
+                                                             <option value="">Selecione uma unidade...</option>
+                                                             {units.filter(u => u.brand_id === formData.brand_id).map(u => (
+                                                                 <option key={u.id} value={u.id}>{u.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Matrícula / ID</label>
+                                                         <input
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg tracking-widest font-medium"
+                                                             placeholder="000000"
+                                                             type="text"
+                                                             value={formData.registration_id}
+                                                             onChange={(e) => setFormData({ ...formData, registration_id: e.target.value })}
+                                                         />
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Cargo Atual</label>
+                                                         <input
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg italic font-medium"
+                                                             placeholder="Ex: Coordenador Acadêmico"
+                                                             type="text"
+                                                             value={formData.role}
+                                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                                         />
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Tempo de Casa (Anos)</label>
+                                                         <input
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg font-medium"
+                                                             placeholder="Ex: 5"
+                                                             type="number"
+                                                             value={formData.years_at_company}
+                                                             onChange={(e) => setFormData({ ...formData, years_at_company: e.target.value })}
+                                                         />
+                                                     </div>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Marca Institucional</label>
+                                                         <select
+                                                             required
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg font-[800]"
+                                                             value={formData.brand_id}
+                                                             onChange={(e) => setFormData({ ...formData, brand_id: e.target.value, unit_id: '', unit: '' })}
+                                                         >
+                                                             <option value="">Selecione uma marca...</option>
+                                                             {brands.map(b => (
+                                                                 <option key={b.id} value={b.id}>{b.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Regional</label>
+                                                         <select
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg font-[800]"
+                                                             value={formData.regional_id}
+                                                             onChange={(e) => setFormData({ ...formData, regional_id: e.target.value })}
+                                                         >
+                                                             <option value="">Selecione uma regional...</option>
+                                                             {regionals.map(r => (
+                                                                 <option key={r.id} value={r.id}>{r.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Unidade / Campus</label>
+                                                         <select
+                                                             required
+                                                             disabled={!formData.brand_id}
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark outline-none focus:border-brand-blue/50 transition-all cursor-pointer text-lg disabled:opacity-30 font-[800]"
+                                                             value={formData.unit_id}
+                                                             onChange={(e) => {
+                                                                 const selectedUnit = units.find(u => u.id === e.target.value);
+                                                                 setFormData({
+                                                                     ...formData,
+                                                                     unit_id: e.target.value,
+                                                                     unit: selectedUnit?.name || '',
+                                                                     brand_id: selectedUnit?.brand_id || formData.brand_id,
+                                                                     regional_id: selectedUnit?.regional_id || formData.regional_id
+                                                                 });
+                                                             }}
+                                                         >
+                                                             <option value="">Selecione uma unidade...</option>
+                                                             {units.filter(u => u.brand_id === formData.brand_id).map(u => (
+                                                                 <option key={u.id} value={u.id}>{u.name}</option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Instituição / Empresa</label>
+                                                         <input
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg font-[800] tracking-tight italic"
+                                                             placeholder="Nome da organização"
+                                                             type="text"
+                                                             value={formData.institution}
+                                                             onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                                                         />
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                         <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Cargo / Título Externo</label>
+                                                         <input
+                                                             className="w-full bg-bg-main border border-brand-gray py-5 px-8 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-lg italic font-medium"
+                                                             placeholder="Ex: CEO / Diretor Executivo"
+                                                             type="text"
+                                                             value={formData.external_role}
+                                                             onChange={(e) => setFormData({ ...formData, external_role: e.target.value })}
+                                                         />
+                                                     </div>
+                                                 </>
+                                             )}
+                                         </div>
+                                     </div>
                                 );
                             case 2:
                                 return (
                                     <div className="space-y-10 animate-slide-up">
                                         <div className="space-y-2">
-                                            <h3 className="text-2xl font-serif italic text-off-white">Biografia</h3>
-                                            <p className="text-off-white/40 text-sm">Conte a história e as conquistas do homenageado.</p>
+                                            <h3 className="text-[28px] font-[800] text-brand-dark tracking-tight">Biografia</h3>
+                                            <p className="text-brand-text-secondary font-medium opacity-60">Conte a história e as conquistas do homenageado.</p>
                                         </div>
 
                                         <div className="space-y-4">
-                                            <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Biografia / Histórico de Conquistas</label>
-                                            <div className="quill-container">
+                                            <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Biografia / Histórico de Conquistas</label>
+                                            <div className="quill-container-premium">
                                                 <ReactQuill
                                                     ref={bioQuillRef}
                                                     theme="snow"
                                                     value={formData.biography || ''}
                                                     onChange={(content) => setFormData({ ...formData, biography: content })}
-                                                    className="bg-white/[0.03] border border-white/10 rounded-3xl text-off-white overflow-hidden"
+                                                    className="bg-bg-main border border-brand-gray rounded-[2rem] text-brand-dark overflow-hidden"
                                                 />
                                             </div>
                                         </div>
@@ -751,18 +751,18 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 return (
                                     <div className="space-y-10 animate-slide-up">
                                         <div className="space-y-2">
-                                            <h3 className="text-2xl font-serif italic text-off-white">Mídia & Visibilidade</h3>
-                                            <p className="text-off-white/40 text-sm">Adicione uma foto oficial e um vídeo de homenagem.</p>
+                                            <h3 className="text-[28px] font-[800] text-brand-dark tracking-tight">Mídia & Visibilidade</h3>
+                                            <p className="text-brand-text-secondary font-medium opacity-60">Adicione uma foto oficial e um vídeo de homenagem.</p>
                                         </div>
 
                                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                                             <div className="lg:col-span-2 space-y-8">
                                                 <div className="space-y-4">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30">Vídeo de Homenagem (Premium)</label>
+                                                    <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Vídeo de Homenagem</label>
 
                                                     {videoPreview ? (
                                                         <div className="space-y-4">
-                                                            <div className="relative rounded-[2rem] overflow-hidden bg-black shadow-2xl border border-white/10 aspect-video group/video-container">
+                                                            <div className="relative rounded-[2.5rem] overflow-hidden bg-black shadow-2xl border border-brand-gray aspect-video group/video-container">
                                                                 <video
                                                                     src={videoPreview}
                                                                     className="w-full h-full object-contain"
@@ -772,7 +772,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => document.getElementById('video-upload')?.click()}
-                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-gold/20 hover:border-gold/30 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                                                        className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/90 backdrop-blur-md text-brand-blue border border-brand-blue/20 hover:bg-white transition-all text-[11px] font-[800] uppercase tracking-widest shadow-lg"
                                                                     >
                                                                         <span className="material-symbols-outlined text-sm">edit</span>
                                                                         Alterar
@@ -783,26 +783,26 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                                             e.stopPropagation();
                                                                             setIsConfirmModalOpen(true);
                                                                         }}
-                                                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 backdrop-blur-md text-red-400 border border-red-500/30 hover:bg-red-500 transition-all text-[10px] font-bold uppercase tracking-widest"
+                                                                        className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-500 text-white border border-red-600 hover:bg-red-600 transition-all text-[11px] font-[800] uppercase tracking-widest shadow-lg"
                                                                     >
                                                                         <span className="material-symbols-outlined text-sm">delete</span>
                                                                         Remover
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                            <p className="text-center text-[10px] text-off-white/20 uppercase tracking-[0.2em]">Preview do vídeo selecionado</p>
+                                                            <p className="text-center text-[10px] text-brand-text-secondary/40 uppercase tracking-[0.2em] font-[700]">Preview do vídeo selecionado</p>
                                                         </div>
                                                     ) : (
                                                         <div
-                                                            className="aspect-video border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] relative"
+                                                            className="aspect-video border-2 border-dashed border-brand-gray rounded-[2.5rem] flex flex-col items-center justify-center hover:border-brand-blue/30 transition-all cursor-pointer group bg-bg-main relative"
                                                             onClick={() => document.getElementById('video-upload')?.click()}
                                                         >
                                                             <div className="text-center p-8">
-                                                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                                                                    <span className="material-symbols-outlined text-4xl text-off-white/20 group-hover:text-gold transition-colors">videocam</span>
+                                                                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform shadow-sm">
+                                                                    <span className="material-symbols-outlined text-4xl text-brand-text-secondary/20 group-hover:text-brand-blue transition-colors">videocam</span>
                                                                 </div>
-                                                                <p className="text-xs font-bold text-off-white/40 uppercase tracking-[0.2em] mb-1">Upload de Vídeo</p>
-                                                                <p className="text-[10px] text-off-white/20 uppercase tracking-widest">MP4, WebM ou MOV (máx. 100MB)</p>
+                                                                <p className="text-[11px] font-[800] text-brand-text-secondary/40 uppercase tracking-[0.2em] mb-2">Upload de Vídeo</p>
+                                                                <p className="text-[10px] text-brand-text-secondary/20 uppercase tracking-widest">MP4, WebM ou MOV (máx. 100MB)</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -816,14 +816,14 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                     />
 
                                                     {uploadProgress > 0 && uploadProgress < 100 && (
-                                                        <div className="p-4 rounded-xl bg-gold/5 border border-gold/10 animate-pulse">
-                                                            <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-gold mb-2">
+                                                        <div className="p-6 rounded-2xl bg-brand-blue/5 border border-brand-blue/10 animate-pulse">
+                                                            <div className="flex justify-between text-[11px] font-[800] uppercase tracking-widest text-brand-blue mb-3">
                                                                 <span>Preparando arquivo...</span>
                                                                 <span>{Math.round(uploadProgress)}%</span>
                                                             </div>
-                                                            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                                            <div className="h-1.5 bg-brand-gray rounded-full overflow-hidden">
                                                                 <div
-                                                                    className="h-full bg-gold transition-all duration-300"
+                                                                    className="h-full bg-brand-blue transition-all duration-300"
                                                                     style={{ width: `${uploadProgress}%` }}
                                                                 />
                                                             </div>
@@ -832,17 +832,17 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                 </div>
 
                                                     {!isDirector && (
-                                                        <div className="flex items-center gap-4 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                                                        <div className="flex items-center gap-4 p-8 rounded-[2rem] bg-bg-main border border-brand-gray shadow-sm">
                                                             <label className="flex items-center gap-4 cursor-pointer group">
                                                                 <input
                                                                     type="checkbox"
-                                                                    className="size-6 rounded-lg bg-white/5 border-white/10 text-gold focus:ring-gold/20 transition-all"
+                                                                    className="size-6 rounded-lg border-brand-gray text-brand-blue focus:ring-brand-blue/20 transition-all"
                                                                     checked={formData.is_published}
                                                                     onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
                                                                 />
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-xs font-bold uppercase tracking-widest text-off-white group-hover:text-gold transition-colors">Publicar Imediatamente</span>
-                                                                    <span className="text-[10px] text-off-white/20 uppercase tracking-tighter">O perfil ficará visível na galeria pública</span>
+                                                                    <span className="text-[11px] font-[800] uppercase tracking-widest text-brand-dark group-hover:text-brand-blue transition-colors">Publicar Imediatamente</span>
+                                                                    <span className="text-[10px] text-brand-text-secondary/40 uppercase tracking-tighter font-[700]">O perfil ficará visível na galeria pública</span>
                                                                 </div>
                                                             </label>
                                                         </div>
@@ -850,22 +850,22 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                             </div>
 
                                             <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 text-center">Foto de Perfil (Premium)</label>
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 text-center">Foto de Perfil</label>
                                                 <div
-                                                    className="aspect-[4/5] border-2 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center hover:border-gold/30 transition-all cursor-pointer group bg-white/[0.02] overflow-hidden relative"
+                                                    className="aspect-[4/5] border-2 border-dashed border-brand-gray rounded-[2.5rem] flex flex-col items-center justify-center hover:border-brand-blue/30 transition-all cursor-pointer group bg-bg-main overflow-hidden relative"
                                                     onClick={() => document.getElementById('photo-upload')?.click()}
                                                 >
                                                     {photoPreview ? (
                                                         <>
                                                             <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                                                            <div className="absolute inset-0 bg-navy-deep/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <span className="text-gold font-bold text-[10px] uppercase tracking-widest">Alterar Foto</span>
+                                                            <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <span className="text-white font-[800] text-[11px] uppercase tracking-widest">Alterar Foto</span>
                                                             </div>
                                                         </>
                                                     ) : (
                                                         <div className="text-center p-8">
-                                                            <span className="material-symbols-outlined text-5xl text-off-white/10 group-hover:text-gold transition-colors mb-4">add_a_photo</span>
-                                                            <p className="text-[10px] font-bold text-off-white/30 uppercase tracking-widest text-center leading-relaxed">
+                                                            <span className="material-symbols-outlined text-5xl text-brand-text-secondary/10 group-hover:text-brand-blue transition-colors mb-6">add_a_photo</span>
+                                                            <p className="text-[11px] font-[800] text-brand-text-secondary/30 uppercase tracking-widest text-center leading-relaxed">
                                                                 Upload de imagem<br />em alta resolução
                                                             </p>
                                                         </div>
@@ -886,8 +886,8 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 return (
                                     <div className="space-y-12 animate-slide-up">
                                         <div className="space-y-2">
-                                            <h3 className="text-2xl font-serif italic text-off-white">Currículo & Métricas</h3>
-                                            <p className="text-off-white/40 text-sm">Dados de impacto e linha do tempo histórica.</p>
+                                            <h3 className="text-[28px] font-[800] text-brand-dark tracking-tight">Currículo & Métricas</h3>
+                                            <p className="text-brand-text-secondary font-medium opacity-60">Dados de impacto e linha do tempo histórica.</p>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -898,9 +898,9 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                 { label: 'Unidades Lideradas', key: 'units' }
                                             ].map((stat) => (
                                                 <div key={stat.key} className="space-y-3">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">{stat.label}</label>
+                                                    <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">{stat.label}</label>
                                                     <input
-                                                        className="w-full bg-white/[0.03] border border-white/10 py-4 px-6 rounded-xl text-off-white focus:border-gold/50 outline-none transition-all text-center text-2xl font-serif italic"
+                                                        className="w-full bg-bg-main border border-brand-gray py-5 px-6 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all text-center text-3xl font-[800] tracking-tight"
                                                         type="number"
                                                         value={formData.stats ? (formData.stats as any)[stat.key] : '0'}
                                                         onChange={(e) => setFormData({
@@ -912,44 +912,44 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                             ))}
                                         </div>
 
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center">
-                                                <h4 className="text-xl font-serif italic text-off-white">Linha do Tempo (Marcos)</h4>
+                                        <div className="space-y-8">
+                                            <div className="flex justify-between items-center border-b border-brand-gray pb-6">
+                                                <h4 className="text-2xl font-[800] text-brand-dark tracking-tight">Linha do Tempo (Marcos)</h4>
                                                 <button
                                                     onClick={addTimelineItem}
-                                                    className="flex items-center gap-2 text-gold text-[10px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
+                                                    className="flex items-center gap-2 text-brand-blue text-[11px] font-[800] uppercase tracking-widest hover:opacity-70 transition-opacity"
                                                 >
-                                                    <span className="material-symbols-outlined text-sm">add_circle</span>
+                                                    <span className="material-symbols-outlined text-sm font-black">add_circle</span>
                                                     Adicionar Marco
                                                 </button>
                                             </div>
 
-                                            <div className="space-y-4">
+                                            <div className="space-y-6">
                                                 {formData.timeline.map((item) => (
-                                                    <div key={item.id} className="flex gap-4 items-end bg-white/[0.02] p-6 rounded-2xl border border-white/5 group">
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                                                            <div className="space-y-2">
-                                                                <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20">Ano/Semestre</label>
+                                                    <div key={item.id} className="flex gap-6 items-end bg-bg-main p-8 rounded-[2rem] border border-brand-gray group hover:border-brand-blue/30 transition-all">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                                                            <div className="space-y-3">
+                                                                <label className="block text-[10px] font-[800] uppercase tracking-widest text-brand-text-secondary/40 ml-1">Ano/Semestre</label>
                                                                 <input
-                                                                    className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-lg text-off-white text-sm outline-none focus:border-gold/30"
+                                                                    className="w-full bg-white border border-brand-gray py-4 px-5 rounded-xl text-brand-dark text-sm font-[800] outline-none focus:border-brand-blue/50"
                                                                     placeholder="Ex: 2023.2"
                                                                     value={item.semester}
                                                                     onChange={(e) => updateTimelineItem(item.id, 'semester', e.target.value)}
                                                                 />
                                                             </div>
-                                                            <div className="space-y-2">
-                                                                <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20">Título do Marco</label>
+                                                            <div className="space-y-3">
+                                                                <label className="block text-[10px] font-[800] uppercase tracking-widest text-brand-text-secondary/40 ml-1">Título do Marco</label>
                                                                 <input
-                                                                    className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-lg text-off-white text-sm outline-none focus:border-gold/30"
+                                                                    className="w-full bg-white border border-brand-gray py-4 px-5 rounded-xl text-brand-dark text-sm font-[800] outline-none focus:border-brand-blue/50"
                                                                     placeholder="Ex: Prêmio de Excelência"
                                                                     value={item.title}
                                                                     onChange={(e) => updateTimelineItem(item.id, 'title', e.target.value)}
                                                                 />
                                                             </div>
-                                                            <div className="space-y-2">
-                                                                <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20">Categoria</label>
+                                                            <div className="space-y-3">
+                                                                <label className="block text-[10px] font-[800] uppercase tracking-widest text-brand-text-secondary/40 ml-1">Categoria</label>
                                                                 <input
-                                                                    className="w-full bg-white/5 border border-white/10 py-3 px-4 rounded-lg text-off-white text-sm outline-none focus:border-gold/30"
+                                                                    className="w-full bg-white border border-brand-gray py-4 px-5 rounded-xl text-brand-dark text-sm font-[800] outline-none focus:border-brand-blue/50"
                                                                     placeholder="Ex: Liderança Executiva"
                                                                     value={item.category}
                                                                     onChange={(e) => updateTimelineItem(item.id, 'category', e.target.value)}
@@ -958,15 +958,15 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                                         </div>
                                                         <button
                                                             onClick={() => removeTimelineItem(item.id)}
-                                                            className="p-3 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                            className="p-4 text-red-500 hover:bg-red-50 rounded-2xl transition-colors shrink-0"
                                                         >
-                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                            <span className="material-symbols-outlined text-2xl font-bold">delete</span>
                                                         </button>
                                                     </div>
                                                 ))}
                                                 {formData.timeline.length === 0 && (
-                                                    <div className="py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
-                                                        <p className="text-off-white/20 text-sm italic">Nenhum marco histórico adicionado.</p>
+                                                    <div className="py-16 text-center border-2 border-dashed border-brand-gray rounded-[2.5rem] bg-bg-main">
+                                                        <p className="text-brand-text-secondary/30 text-sm font-[700] uppercase tracking-widest">Nenhum marco histórico adicionado.</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -974,26 +974,26 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                             <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Aba: Iniciativas</label>
-                                                <div className="quill-container">
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Aba: Iniciativas</label>
+                                                <div className="quill-container-premium">
                                                     <ReactQuill
                                                         ref={initQuillRef}
                                                         theme="snow"
                                                         value={formData.initiatives || ''}
                                                         onChange={(content) => setFormData({ ...formData, initiatives: content })}
-                                                        className="bg-white/[0.03] border border-white/10 rounded-2xl text-off-white overflow-hidden"
+                                                        className="bg-bg-main border border-brand-gray rounded-[2rem] text-brand-dark overflow-hidden"
                                                     />
                                                 </div>
                                             </div>
                                             <div className="space-y-4">
-                                                <label className="block text-[9px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Aba: Reconhecimentos</label>
-                                                <div className="quill-container">
+                                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Aba: Reconhecimentos</label>
+                                                <div className="quill-container-premium">
                                                     <ReactQuill
                                                         ref={recQuillRef}
                                                         theme="snow"
                                                         value={formData.recognitions || ''}
                                                         onChange={(content) => setFormData({ ...formData, recognitions: content })}
-                                                        className="bg-white/[0.03] border border-white/10 rounded-2xl text-off-white overflow-hidden"
+                                                        className="bg-bg-main border border-brand-gray rounded-[2rem] text-brand-dark overflow-hidden"
                                                     />
                                                 </div>
                                             </div>
@@ -1006,20 +1006,20 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                     })()}
                 </div>
 
-                <div className="mt-16 pt-10 border-t border-white/5 flex justify-between items-center">
+                <div className="mt-16 pt-10 border-t border-brand-gray flex justify-between items-center">
                     <button
                         onClick={prevStep}
                         disabled={currentStep === 0}
-                        className={`text-[10px] font-bold uppercase tracking-[0.3em] transition-all flex items-center gap-2 ${currentStep === 0 ? 'text-off-white/10 cursor-not-allowed' : 'text-off-white/40 hover:text-off-white'}`}
+                        className={`text-[11px] font-[800] uppercase tracking-[0.3em] transition-all flex items-center gap-2 ${currentStep === 0 ? 'text-brand-text-secondary/10 cursor-not-allowed' : 'text-brand-text-secondary/40 hover:text-brand-blue'}`}
                     >
-                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                        <span className="material-symbols-outlined text-sm font-black">chevron_left</span>
                         Anterior
                     </button>
 
                     <div className="flex flex-wrap items-center gap-6 justify-end">
                         <button
                             onClick={() => navigate('/admin/homenageados')}
-                            className="text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/20 hover:text-red-400 transition-colors"
+                            className="text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/40 hover:text-red-500 transition-colors"
                         >
                             Cancelar
                         </button>
@@ -1027,10 +1027,10 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                         {currentStep < steps.length - 1 ? (
                             <button
                                 onClick={nextStep}
-                                className="px-12 py-5 bg-white/5 hover:bg-white/10 text-gold rounded-full font-bold text-[10px] uppercase tracking-[0.3em] border border-gold/30 transition-all flex items-center gap-2"
+                                className="px-12 py-5 bg-bg-main hover:bg-white text-brand-blue rounded-full font-[800] text-[11px] uppercase tracking-[0.3em] border border-brand-blue/30 shadow-sm transition-all flex items-center gap-2"
                             >
                                 Próximo Passo
-                                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                <span className="material-symbols-outlined text-sm font-black">chevron_right</span>
                             </button>
                         ) : (
                             <>
@@ -1038,7 +1038,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                     <button
                                         onClick={() => handleSubmit('rascunho')}
                                         disabled={isLoading}
-                                        className="px-12 py-5 bg-white/5 text-off-white rounded-full font-bold text-[10px] uppercase tracking-[0.3em] hover:bg-white/10 transition-all disabled:opacity-50 border border-white/10"
+                                        className="px-12 py-5 bg-white text-brand-text-secondary rounded-full font-[800] text-[11px] uppercase tracking-[0.3em] hover:bg-bg-main transition-all disabled:opacity-50 border border-brand-gray shadow-sm"
                                     >
                                         Salvar Rascunho
                                     </button>
@@ -1046,7 +1046,7 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                 <button
                                     onClick={() => handleSubmit(isDirector ? (['rascunho', 'reprovado'].includes(formData.status) || !id ? 'enviar' : 'atualizar') : 'atualizar')}
                                     disabled={isLoading}
-                                    className="px-12 py-5 bg-gold text-navy-deep rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                                    className="btn-premium !px-12 !py-5 !text-[11px] !tracking-[0.3em] shadow-xl shadow-brand-blue/20"
                                 >
                                     {isLoading ? 'Processando...' : (
                                         isDirector 
@@ -1058,33 +1058,33 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                         )}
                     </div>
                 </div>
-            </GlassCard>
+            </div>
 
             {/* Image Cropper Modal */}
             {isCropping && tempPhotoUrl && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-2xl animate-fade-in">
-                    <div className="w-full max-w-4xl max-h-[96vh] flex flex-col bg-navy-deep rounded-[1.5rem] md:rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl relative shadow-gold/5">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-brand-dark/90 backdrop-blur-2xl animate-fade-in">
+                    <div className="w-full max-w-4xl max-h-[96vh] flex flex-col bg-white rounded-[2.5rem] border border-brand-gray overflow-hidden shadow-2xl relative">
 
-                        {/* Header Compacto */}
-                        <div className="p-3 md:p-5 border-b border-white/5 flex justify-between items-center bg-navy-deep/95 shrink-0">
-                            <div className="space-y-0.5">
-                                <h3 className="text-lg md:text-xl font-serif italic text-white leading-tight">
+                        {/* Header */}
+                        <div className="p-6 md:p-8 border-b border-brand-gray flex justify-between items-center bg-white shrink-0">
+                            <div className="space-y-1">
+                                <h3 className="text-2xl font-[800] text-brand-dark tracking-tight leading-tight">
                                     Ajuste de Fotografia
                                 </h3>
-                                <p className="text-gold/80 text-[9px] uppercase tracking-widest font-bold hidden sm:block">
+                                <p className="text-brand-blue text-[11px] uppercase tracking-widest font-[800]">
                                     PADRÃO DE QUALIDADE PREMIUM
                                 </p>
                             </div>
                             <button
                                 onClick={() => setIsCropping(false)}
-                                className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-red-500/20 hover:text-red-400 transition-all border border-white/10"
+                                className="w-12 h-12 rounded-2xl bg-bg-main flex items-center justify-center text-brand-text-secondary/40 hover:bg-red-50 hover:text-red-500 transition-all border border-brand-gray"
                             >
-                                <span className="material-symbols-outlined text-xl">close</span>
+                                <span className="material-symbols-outlined text-2xl font-bold">close</span>
                             </button>
                         </div>
 
                         {/* Cropper Area */}
-                        <div className="relative w-full h-[35vh] md:h-[40vh] min-h-[250px] bg-black overflow-hidden flex-grow shadow-inner">
+                        <div className="relative w-full h-[35vh] md:h-[40vh] min-h-[300px] bg-black overflow-hidden flex-grow shadow-inner">
 
                             <Cropper
                                 image={tempPhotoUrl}
@@ -1103,22 +1103,22 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                             />
                         </div>
 
-                        {/* Footer Compacto */}
-                        <div className="p-4 md:p-6 border-t border-white/5 bg-navy-deep/98 shrink-0">
+                        {/* Footer */}
+                        <div className="p-6 md:p-10 border-t border-brand-gray bg-bg-main shrink-0">
 
                             {/* Zoom Slider */}
-                            <div className="max-w-md mx-auto w-full space-y-3 mb-4">
-                                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-white/40">
-                                    <span className="flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-sm font-bold">zoom_out</span>
+                            <div className="max-w-md mx-auto w-full space-y-4 mb-8">
+                                <div className="flex justify-between items-center text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60">
+                                    <span className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg font-bold">zoom_out</span>
                                         ZOOM
                                     </span>
-                                    <span className="text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/20 font-bold">
+                                    <span className="text-brand-blue bg-white px-4 py-1.5 rounded-full border border-brand-blue/20 font-[800] shadow-sm">
                                         {Math.round(zoom * 100)}%
                                     </span>
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-2">
                                         MÁX
-                                        <span className="material-symbols-outlined text-sm font-bold">zoom_in</span>
+                                        <span className="material-symbols-outlined text-lg font-bold">zoom_in</span>
                                     </span>
                                 </div>
                                 <input
@@ -1128,21 +1128,21 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
                                     max={3}
                                     step={0.1}
                                     onChange={(e) => setZoom(Number(e.target.value))}
-                                    className="w-full accent-gold bg-white/10 h-1.5 rounded-full appearance-none cursor-pointer"
+                                    className="w-full accent-brand-blue bg-brand-gray h-2 rounded-full appearance-none cursor-pointer"
                                 />
                             </div>
 
                             {/* Actions Buttons */}
-                            <div className="flex justify-center sm:justify-end items-center gap-3">
+                            <div className="flex justify-center sm:justify-end items-center gap-4">
                                 <button
                                     onClick={() => setIsCropping(false)}
-                                    className="px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white bg-white/5 border border-white/10 transition-all font-sans"
+                                    className="px-8 py-3 rounded-xl text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 hover:text-brand-dark bg-white border border-brand-gray transition-all shadow-sm"
                                 >
                                     Descartar
                                 </button>
                                 <button
                                     onClick={handleCropSave}
-                                    className="px-8 py-2.5 bg-gradient-to-r from-gold to-yellow-500 text-navy-deep rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-gold/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
+                                    className="px-10 py-4 bg-brand-blue text-white rounded-xl font-[800] text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-brand-blue/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2"
                                 >
                                     <span className="material-symbols-outlined text-sm font-black">done</span>
                                     Finalizar Ajuste
@@ -1154,34 +1154,35 @@ const HonoreeRegistrationPage: React.FC<HonoreeRegistrationPageProps> = ({ isEdi
             )}
 
             <style>{`
-                .quill-container .ql-toolbar {
-                    background: rgba(255, 255, 255, 0.05);
+                .quill-container-premium .ql-toolbar {
+                    background: #f8fafc;
                     border: none !important;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    border-bottom: 1px solid #e2e8f0 !important;
                     padding: 1rem !important;
+                    border-radius: 2rem 2rem 0 0;
                 }
-                .quill-container .ql-container {
+                .quill-container-premium .ql-container {
                     border: none !important;
                     font-family: 'Inter', sans-serif !important;
                     font-size: 1rem !important;
-                    min-height: 200px;
+                    min-height: 250px;
                 }
-                .quill-container .ql-editor {
-                    color: rgba(255, 255, 255, 0.8) !important;
-                    padding: 1.5rem !important;
+                .quill-container-premium .ql-editor {
+                    color: #1e293b !important;
+                    padding: 2rem !important;
                 }
-                .quill-container .ql-editor.ql-blank::before {
-                    color: rgba(255, 255, 255, 0.1) !important;
+                .quill-container-premium .ql-editor.ql-blank::before {
+                    color: #94a3b8 !important;
                     font-style: italic !important;
                 }
-                .quill-container .ql-stroke {
-                    stroke: rgba(255, 255, 255, 0.4) !important;
+                .quill-container-premium .ql-stroke {
+                    stroke: #64748b !important;
                 }
-                .quill-container .ql-fill {
-                    fill: rgba(255, 255, 255, 0.4) !important;
+                .quill-container-premium .ql-fill {
+                    fill: #64748b !important;
                 }
-                .quill-container .ql-picker {
-                    color: rgba(255, 255, 255, 0.4) !important;
+                .quill-container-premium .ql-picker {
+                    color: #64748b !important;
                 }
             `}</style>
 

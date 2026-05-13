@@ -184,7 +184,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
             header: 'Homenageado',
             accessor: (h: Honoree) => (
                 <div className="flex items-center gap-5">
-                    <div className="size-12 rounded-2xl bg-gold/5 text-gold border border-gold/20 flex items-center justify-center font-serif italic text-lg overflow-hidden shrink-0">
+                    <div className="size-12 rounded-2xl bg-brand-blue/5 text-brand-blue border border-brand-blue/10 flex items-center justify-center overflow-hidden shrink-0">
                         <img
                             src={h.photo_url || '/assets/default-fallback.png'}
                             alt="Foto"
@@ -193,10 +193,10 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         />
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-bold text-off-white font-serif italic text-lg leading-tight">
+                        <span className="font-[800] text-brand-dark text-[15px] leading-tight">
                             {getHonoreeName(h)}
                         </span>
-                        <span className="text-[10px] text-off-white/30 uppercase tracking-widest">{h.type}</span>
+                        <span className="text-[10px] text-brand-text-secondary font-[700] uppercase tracking-widest mt-0.5">{h.type}</span>
                     </div>
                 </div>
             )
@@ -204,24 +204,24 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         {
             header: 'Regional',
             accessor: (h: Honoree) => h.regionals?.name || 'Sem Regional',
-            className: 'text-sm text-off-white/40 font-medium uppercase tracking-widest'
+            className: 'text-[12px] text-brand-text-secondary/60 font-[800] uppercase tracking-widest'
         },
         {
             header: 'Prêmio Vinculado',
             accessor: (h: Honoree) => h.awards?.name || 'Nenhum',
-            className: 'text-sm text-off-white/40 font-medium uppercase tracking-widest'
+            className: 'text-[12px] text-brand-text-secondary/60 font-[800] uppercase tracking-widest'
         },
         {
             header: 'Status',
             accessor: (h: Honoree) => {
                 const status = h.status as string;
                 switch (status) {
-                    case 'rascunho': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">Rascunho</span>;
-                    case 'em_analise': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Em Análise</span>;
-                    case 'aprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-blue-500/10 text-blue-500 border-blue-500/20">Aprovado</span>;
-                    case 'reprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-red-500/10 text-red-500 border-red-500/20">Reprovado</span>;
-                    case 'publicado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-green-500/10 text-green-500 border-green-500/20">Publicado</span>;
-                    default: return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-off-white/5 text-off-white/40 border-white/10">{status || 'N/A'}</span>;
+                    case 'rascunho': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-brand-gray text-brand-text-secondary/60 border-brand-gray/50">Rascunho</span>;
+                    case 'em_analise': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-yellow-50 text-yellow-600 border-yellow-200">Em Análise</span>;
+                    case 'aprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-brand-blue/5 text-brand-blue border-brand-blue/20">Aprovado</span>;
+                    case 'reprovado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-red-50 text-red-600 border-red-200">Reprovado</span>;
+                    case 'publicado': return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-green-50 text-green-600 border-green-200">Publicado</span>;
+                    default: return <span className="inline-block whitespace-nowrap px-4 py-1.5 rounded-xl text-[9px] font-[800] uppercase tracking-widest border bg-brand-gray text-brand-text-secondary/60 border-brand-gray/50">{status || 'N/A'}</span>;
                 }
             }
         }
@@ -231,14 +231,14 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
         <div className="flex gap-2">
             <button
                 onClick={() => navigate(`/admin/homenageados/${h.id}`)}
-                className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
+                className="size-10 rounded-xl flex items-center justify-center text-brand-text-secondary/40 hover:text-brand-blue hover:bg-brand-blue/5 transition-all border border-transparent hover:border-brand-blue/20"
                 title="Ver detalhes"
             >
                 <span className="material-symbols-outlined text-[20px]">visibility</span>
             </button>
             <button
                 onClick={() => handleEditClick(h)}
-                className="size-10 rounded-xl flex items-center justify-center text-off-white/40 hover:text-gold hover:bg-gold/10 transition-all border border-transparent hover:border-gold/20"
+                className="size-10 rounded-xl flex items-center justify-center text-brand-text-secondary/40 hover:text-brand-blue hover:bg-brand-blue/5 transition-all border border-transparent hover:border-brand-blue/20"
                 title="Editar"
             >
                 <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -248,8 +248,8 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 <button
                     onClick={() => handleStatusUpdate(h, h.status === 'publicado' ? 'aprovado' : 'publicado')}
                     className={`size-10 rounded-xl flex items-center justify-center transition-all border border-transparent ${h.status === 'publicado' 
-                        ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 hover:border-blue-400/20' 
-                        : 'text-green-500/60 hover:text-green-500 hover:bg-green-500/10 hover:border-green-500/20'}`}
+                        ? 'text-brand-blue hover:text-brand-blue/80 hover:bg-brand-blue/5 hover:border-brand-blue/20' 
+                        : 'text-green-500/60 hover:text-green-500 hover:bg-green-500/5 hover:border-green-500/20'}`}
                     title={h.status === 'publicado' ? "Despublicar" : "Publicar Agora"}
                 >
                     <span className="material-symbols-outlined text-[20px]">
@@ -264,7 +264,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         <>
                             <button
                                 onClick={() => handleStatusUpdate(h, 'aprovado')}
-                                className="size-10 rounded-xl flex items-center justify-center text-green-500/40 hover:text-green-500 hover:bg-green-500/10 transition-all border border-transparent hover:border-green-500/20"
+                                className="size-10 rounded-xl flex items-center justify-center text-green-500/40 hover:text-green-500 hover:bg-green-500/5 transition-all border border-transparent hover:border-green-500/20"
                                 title="Aprovar"
                             >
                                 <span className="material-symbols-outlined text-[20px]">check_circle</span>
@@ -275,7 +275,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                                     setRejectionReason('');
                                     setIsRejectModalOpen(true);
                                 }}
-                                className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
+                                className="size-10 rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 hover:bg-red-500/5 transition-all border border-transparent hover:border-red-500/20"
                                 title="Reprovar"
                             >
                                 <span className="material-symbols-outlined text-[20px]">cancel</span>
@@ -284,7 +284,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                     )}
                     <button
                         onClick={() => handleDeleteClick(h.id)}
-                        className="size-10 rounded-xl flex items-center justify-center text-off-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all border border-transparent hover:border-red-400/20"
+                        className="size-10 rounded-xl flex items-center justify-center text-brand-text-secondary/20 hover:text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-200"
                         title="Excluir"
                     >
                         <span className="material-symbols-outlined text-[20px]">delete</span>
@@ -331,56 +331,58 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
     }, [units, regionalFilter]);
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-6">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Talentos</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-12">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Gestão de Talentos</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">
                         {isRequestsView ? 'Central de Solicitações' : 'Homenageados'}
                     </h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Acompanhe, gerencie e aprove as indicações de mérito de toda a instituição.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/admin/homenageados/novo')}
-                    className="bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep px-10 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] flex items-center gap-3"
+                    className="btn-premium !px-10 !py-5"
                 >
-                    <span className="material-symbols-outlined text-lg">person_add</span>
-                    Novo Homenageado
+                    <span className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-lg">person_add</span>
+                        Novo Homenageado
+                    </span>
                 </button>
             </div>
 
             {/* AÇÕES IMEDIATAS (Visível apenas para o Diretor) - BLOCO UNIFICADO */}
             {isDiretor && (rejectedHonorees.length > 0 || approvedHonorees.length > 0) && (
-                <GlassCard className="p-6 md:p-8 rounded-[2.5rem] border-gold/20 bg-gradient-to-br from-gold/5 to-transparent shadow-lg shadow-gold/5 animate-slide-up mb-12">
-                    <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gold/10">
-                        <div className="size-12 rounded-full bg-gold/10 flex items-center justify-center text-gold shrink-0">
-                            <span className="material-symbols-outlined text-2xl">notifications_active</span>
+                <div className="p-8 md:p-10 rounded-[2.5rem] border-brand-blue/20 bg-brand-blue/5 shadow-xl shadow-brand-blue/5 animate-slide-up mb-12">
+                    <div className="flex items-center gap-5 mb-8 pb-8 border-b border-brand-blue/10">
+                        <div className="size-14 rounded-2xl bg-brand-blue/10 flex items-center justify-center text-brand-blue shrink-0">
+                            <span className="material-symbols-outlined text-3xl">notifications_active</span>
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold font-serif text-gold italic">Ações Necessárias</h3>
-                            <p className="text-[10px] text-off-white/40 uppercase tracking-widest font-bold">Pendências que exigem sua atenção</p>
+                            <h3 className="text-[24px] font-[800] text-brand-blue tracking-tight leading-none">Ações Necessárias</h3>
+                            <p className="text-[11px] text-brand-blue/60 uppercase tracking-widest font-[800] mt-1.5">Pendências que exigem sua atenção</p>
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {rejectedHonorees.map(h => (
-                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-red-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
-                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                            <div key={h.id} className="bg-white border-l-4 border-l-red-500 border-y border-r border-brand-gray p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:shadow-lg transition-all shadow-sm">
+                                <div className="flex items-center gap-5 flex-1 overflow-hidden">
+                                    <div className="size-14 rounded-2xl overflow-hidden shrink-0 border-2 border-bg-main shadow-sm">
                                         <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex flex-col overflow-hidden">
-                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
-                                        <p className="text-[10px] text-red-400 mt-1 line-clamp-1" title={h.rejection_reason || ''}>
-                                            <span className="font-bold uppercase tracking-widest">Motivo:</span> {h.rejection_reason}
+                                        <p className="font-[800] text-brand-dark text-[18px] leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[12px] text-red-500 mt-1.5 line-clamp-1 bg-red-50 px-3 py-1 rounded-lg w-fit" title={h.rejection_reason || ''}>
+                                            <span className="font-[800] uppercase tracking-wider text-[10px]">Motivo:</span> {h.rejection_reason}
                                         </p>
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => handleEditClick(h)} 
-                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                    className="shrink-0 w-full sm:w-auto px-6 py-3.5 bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/10 rounded-2xl text-[11px] font-[800] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                                 >
                                     <span className="material-symbols-outlined text-sm">edit</span> Corrigir
                                 </button>
@@ -388,36 +390,36 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         ))}
 
                         {approvedHonorees.map(h => (
-                            <div key={h.id} className="bg-navy-deep/60 border-l-4 border-l-green-500 border-y border-r border-white/5 p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors">
-                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
-                                    <div className="size-12 rounded-full overflow-hidden shrink-0 border border-white/10">
+                            <div key={h.id} className="bg-white border-l-4 border-l-green-500 border-y border-r border-brand-gray p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:shadow-lg transition-all shadow-sm">
+                                <div className="flex items-center gap-5 flex-1 overflow-hidden">
+                                    <div className="size-14 rounded-2xl overflow-hidden shrink-0 border-2 border-bg-main shadow-sm">
                                         <img src={h.photo_url || '/assets/default-fallback.png'} alt="Foto" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex flex-col overflow-hidden">
-                                        <p className="font-bold text-off-white font-serif text-lg leading-tight truncate">{getHonoreeName(h)}</p>
-                                        <p className="text-[10px] text-green-400 mt-1">
-                                            <span className="font-bold uppercase tracking-widest">Pronto para Publicação</span>
+                                        <p className="font-[800] text-brand-dark text-[18px] leading-tight truncate">{getHonoreeName(h)}</p>
+                                        <p className="text-[11px] text-green-600 mt-1.5 bg-green-50 px-3 py-1 rounded-lg w-fit font-[800] uppercase tracking-widest">
+                                            Pronto para Publicação
                                         </p>
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => handleStatusUpdate(h, 'publicado')} 
                                     disabled={isLoading}
-                                    className="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-navy-deep border border-green-500/20 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="shrink-0 w-full sm:w-auto px-6 py-3.5 bg-green-500/10 hover:bg-green-500 text-green-600 hover:text-white border border-green-500/10 rounded-2xl text-[11px] font-[800] uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                                 >
                                     <span className="material-symbols-outlined text-sm">publish</span> Publicar
                                 </button>
                             </div>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
             )}
 
             {/* BARRA DE CONTROLES (Abas e Filtros) */}
-            <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
+            <div className="flex flex-col xl:flex-row gap-8 justify-between items-start xl:items-center bg-white border border-brand-gray p-6 rounded-[2.5rem] shadow-sm">
                 
                 {/* Abas de Status */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 p-1.5 bg-bg-main border border-brand-gray rounded-[2rem]">
                     {[
                         { id: 'todos', label: 'Todos' },
                         { id: 'pendentes', label: 'Pendentes' },
@@ -428,7 +430,7 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         <button
                             key={tab.id}
                             onClick={() => setStatusFilter(tab.id)}
-                            className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${statusFilter === tab.id ? 'bg-gold text-navy-deep shadow-lg' : 'bg-white/5 text-off-white/40 hover:bg-white/10 hover:text-off-white'}`}
+                            className={`px-6 py-2.5 rounded-[1.5rem] text-[11px] font-[800] uppercase tracking-widest transition-all ${statusFilter === tab.id ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'text-brand-text-secondary/60 hover:text-brand-blue'}`}
                         >
                             {tab.label}
                         </button>
@@ -436,16 +438,16 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                 </div>
 
                 {/* Filtros Geográficos */}
-                <div className="flex flex-wrap gap-4 w-full xl:w-auto">
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <span className="material-symbols-outlined text-gold/50">map</span>
+                <div className="flex flex-wrap gap-5 w-full xl:w-auto">
+                    <div className="flex items-center gap-3 w-full sm:w-auto bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 group focus-within:border-brand-blue transition-all">
+                        <span className="material-symbols-outlined text-brand-blue/50 text-xl">map</span>
                         <select
                             value={regionalFilter}
                             onChange={(e) => {
                                 setRegionalFilter(e.target.value);
                                 setUnitFilter('all'); // Reseta unidade ao trocar regional
                             }}
-                            className="bg-navy-deep border border-white/10 text-off-white text-xs rounded-xl px-4 py-2.5 outline-none focus:border-gold/50 cursor-pointer w-full sm:w-auto min-w-[160px]"
+                            className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full sm:w-auto min-w-[180px]"
                         >
                             <option value="all">Todas as Regionais</option>
                             {regionals.map(r => (
@@ -454,12 +456,12 @@ const HonoreesAdminPage: React.FC<HonoreesAdminPageProps> = ({ isRequestsView = 
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <span className="material-symbols-outlined text-gold/50">location_city</span>
+                    <div className="flex items-center gap-3 w-full sm:w-auto bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 group focus-within:border-brand-blue transition-all">
+                        <span className="material-symbols-outlined text-brand-blue/50 text-xl">location_city</span>
                         <select
                             value={unitFilter}
                             onChange={(e) => setUnitFilter(e.target.value)}
-                            className="bg-navy-deep border border-white/10 text-off-white text-xs rounded-xl px-4 py-2.5 outline-none focus:border-gold/50 cursor-pointer w-full sm:w-auto min-w-[160px]"
+                            className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full sm:w-auto min-w-[180px]"
                         >
                             <option value="all">Todas as Unidades</option>
                             {filteredUnitsForDropdown.map(u => (

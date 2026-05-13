@@ -216,12 +216,12 @@ const HomeMediaAdminPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-center gap-8 mb-16">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Identidade Visual</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Mídia da <span className="text-gold-gradient">Home</span></h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-center gap-8 mb-12">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Identidade Visual</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">Mídia da <span className="text-brand-blue">Home</span></h2>
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Configure o conteúdo de destaque exibido na página inicial pública.
                     </p>
                 </div>
@@ -229,17 +229,19 @@ const HomeMediaAdminPage: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => window.open('/', '_blank')}
-                        className="px-8 py-4 rounded-full border border-white/10 text-off-white text-[10px] font-bold uppercase tracking-widest hover:bg-white/5 transition-all flex items-center gap-2"
+                        className="px-8 py-4 rounded-2xl bg-white border border-brand-gray text-brand-text-secondary text-[11px] font-[800] uppercase tracking-widest hover:border-brand-blue hover:text-brand-blue transition-all flex items-center gap-2 shadow-sm"
                     >
                         Ver Site <span className="material-symbols-outlined text-sm">open_in_new</span>
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className="bg-gold hover:bg-gold-light transition-all text-navy-deep px-10 py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] flex items-center gap-2 disabled:opacity-50"
+                        className="btn-premium !px-10 !py-4"
                     >
-                        {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-                        <span className="material-symbols-outlined text-sm">done_all</span>
+                        <span className="flex items-center gap-2">
+                            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                            <span className="material-symbols-outlined text-sm">done_all</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -247,41 +249,41 @@ const HomeMediaAdminPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-12">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                     <div className="lg:col-span-2 space-y-10">
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-10 bg-gradient-to-br from-white/[0.02] to-transparent">
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Headline Institucional</label>
+                        <div className="card-static p-10 rounded-[2.5rem] space-y-10">
+                            <div className="space-y-3">
+                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Headline Institucional</label>
                                 <input
                                     required
-                                    className="w-full bg-white/[0.03] border border-white/10 px-6 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10 text-xl font-serif italic"
+                                    className="w-full bg-bg-main border border-brand-gray px-6 py-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-[800] text-2xl tracking-tight"
                                     placeholder="Ex: Premiações Ser Educacional"
                                     value={formData.headline}
                                     onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
                                 />
                             </div>
 
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Texto Curto Explicativo</label>
+                            <div className="space-y-3">
+                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Texto Curto Explicativo</label>
                                 <textarea
                                     rows={4}
-                                    className="w-full bg-white/[0.03] border border-white/10 px-6 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10 resize-none"
+                                    className="w-full bg-bg-main border border-brand-gray px-6 py-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium resize-none"
                                     placeholder="Uma breve introdução sobre a plataforma..."
                                     value={formData.description || ''}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 />
                             </div>
 
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2">Vídeo de Apresentação</label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-6">
+                                <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2">Vídeo de Apresentação</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* URL Input */}
-                                    <div className="space-y-4">
-                                        <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Link do YouTube ou Direto</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-[800] uppercase tracking-widest text-brand-text-secondary/40 ml-2">Link do YouTube ou Direto</label>
                                         <div className="relative group">
-                                            <span className={`material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${formData.video_url ? 'text-gold' : 'text-off-white/20'}`}>
+                                            <span className={`material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${formData.video_url ? 'text-brand-blue' : 'text-brand-text-secondary/20'}`}>
                                                 {youtubeId ? 'smart_display' : 'link'}
                                             </span>
                                             <input
-                                                className="w-full bg-white/[0.03] border border-white/10 pl-16 pr-24 py-5 rounded-2xl text-off-white focus:border-gold/50 outline-none transition-all placeholder:text-off-white/10"
+                                                className="w-full bg-bg-main border border-brand-gray pl-16 pr-24 py-4 rounded-xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                                 placeholder="https://youtube.com/watch?v=..."
                                                 value={formData.video_url || ''}
                                                 onChange={(e) => {
@@ -302,7 +304,7 @@ const HomeMediaAdminPage: React.FC = () => {
                                                                 showAlert('Link reconhecido. Certifique-se que seja um link direto para o arquivo de vídeo.', 'Link Direto', 'info');
                                                             }
                                                         }}
-                                                        className="px-3 py-1.5 rounded-lg bg-gold/10 text-gold text-[8px] font-bold uppercase tracking-widest hover:bg-gold/20 transition-all border border-gold/20"
+                                                        className="px-3 py-1.5 rounded-lg bg-brand-blue/5 text-brand-blue text-[9px] font-[800] uppercase tracking-widest hover:bg-brand-blue/10 transition-all border border-brand-blue/10"
                                                     >
                                                         Testar
                                                     </button>
@@ -312,19 +314,19 @@ const HomeMediaAdminPage: React.FC = () => {
                                     </div>
 
                                     {/* File Upload */}
-                                    <div className="space-y-4">
-                                        <label className="block text-[8px] font-bold uppercase tracking-widest text-off-white/20 ml-2">Ou Upload de Arquivo</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-[800] uppercase tracking-widest text-brand-text-secondary/40 ml-2">Ou Upload de Arquivo</label>
                                         <div className="relative group/video-container">
                                             <div
-                                                className={`relative border-2 border-dashed rounded-2xl p-5 hover:border-gold/30 transition-all cursor-pointer bg-white/[0.02] flex items-center gap-4 ${videoFile || (videoPreview && !formData.video_url) ? 'border-gold/30' : 'border-white/10'}`}
+                                                className={`relative border-2 border-dashed rounded-xl p-4 hover:border-brand-blue/30 transition-all cursor-pointer bg-bg-main flex items-center gap-4 ${videoFile || (videoPreview && !formData.video_url) ? 'border-brand-blue/30' : 'border-brand-gray'}`}
                                                 onClick={() => document.getElementById('home-video-upload')?.click()}
                                             >
-                                                <span className={`material-symbols-outlined text-2xl transition-colors ${videoFile || (videoPreview && !formData.video_url) ? 'text-gold' : 'text-off-white/20'}`}>videocam</span>
+                                                <span className={`material-symbols-outlined text-2xl transition-colors ${videoFile || (videoPreview && !formData.video_url) ? 'text-brand-blue' : 'text-brand-text-secondary/20'}`}>videocam</span>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest truncate">
+                                                    <p className="text-[11px] font-[800] text-brand-dark uppercase tracking-widest truncate">
                                                         {videoFile ? videoFile.name : (videoPreview && !formData.video_url ? 'Vídeo atual (Upload)' : 'Selecionar vídeo local...')}
                                                     </p>
-                                                    <p className="text-[8px] text-off-white/20 uppercase tracking-tighter">MP4, WebM (Máx 100MB)</p>
+                                                    <p className="text-[9px] text-brand-text-secondary/40 uppercase tracking-tight font-[700]">MP4, WebM (Máx 100MB)</p>
                                                 </div>
                                                 <input
                                                     id="home-video-upload"
@@ -343,7 +345,7 @@ const HomeMediaAdminPage: React.FC = () => {
                                                         setVideoPreview(null);
                                                         setFormData(prev => ({ ...prev, video_url: '' }));
                                                     }}
-                                                    className="absolute -top-2 -right-2 size-8 rounded-full bg-red-500/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg z-10"
+                                                    className="absolute -top-2 -right-2 size-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-lg z-10"
                                                     title="Remover vídeo"
                                                 >
                                                     <span className="material-symbols-outlined text-sm">close</span>
@@ -390,27 +392,27 @@ const HomeMediaAdminPage: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                        </GlassCard>
+                        </div>
                     </div>
 
                     <div className="space-y-10">
-                        <GlassCard className="p-10 rounded-[3rem] border-white/5 space-y-8 bg-gradient-to-br from-white/[0.02] to-transparent">
-                            <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-off-white/30 ml-2 text-center">Imagem de Destaque</label>
+                        <div className="card-static p-10 rounded-[2.5rem] space-y-8">
+                            <label className="block text-[11px] font-[800] uppercase tracking-[0.3em] text-brand-text-secondary/60 ml-2 text-center">Imagem de Destaque</label>
                             <div
-                                className="relative aspect-[4/5] rounded-[2rem] bg-white/[0.03] border-2 border-dashed border-white/10 flex flex-col items-center justify-center overflow-hidden group hover:border-gold/30 transition-all cursor-pointer"
+                                className="relative aspect-[4/5] rounded-[2rem] bg-bg-main border-2 border-dashed border-brand-gray flex flex-col items-center justify-center overflow-hidden group hover:border-brand-blue/30 transition-all cursor-pointer"
                                 onClick={() => document.getElementById('home-image-upload')?.click()}
                             >
                                 {imagePreview ? (
                                     <>
                                         <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-navy-deep/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="text-gold font-bold text-[10px] uppercase tracking-widest">Alterar Imagem</span>
+                                        <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="text-white font-[800] text-[11px] uppercase tracking-widest">Alterar Imagem</span>
                                         </div>
                                     </>
                                 ) : (
                                     <div className="text-center p-8">
-                                        <span className="material-symbols-outlined text-4xl text-white/10 mb-4">image</span>
-                                        <p className="text-[10px] font-bold text-off-white/20 uppercase tracking-widest leading-relaxed">
+                                        <span className="material-symbols-outlined text-4xl text-brand-text-secondary/20 mb-4">image</span>
+                                        <p className="text-[11px] font-[800] text-brand-text-secondary/30 uppercase tracking-widest leading-relaxed">
                                             Upload da Imagem<br />Principal
                                         </p>
                                     </div>
@@ -423,15 +425,15 @@ const HomeMediaAdminPage: React.FC = () => {
                                     onChange={handleImageChange}
                                 />
                             </div>
-                            <p className="text-[9px] text-off-white/20 text-center uppercase tracking-tighter">
-                                Recomendado: 1200x1500px (Proporção 4:5)
+                            <p className="text-[10px] text-brand-text-secondary/40 text-center uppercase tracking-widest font-[700]">
+                                Recomendado: 1200x1500px (4:5)
                             </p>
-                        </GlassCard>
+                        </div>
 
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep py-6 rounded-full font-bold text-[11px] uppercase tracking-[0.4em] shadow-[0_30px_60px_rgba(212,175,55,0.2)] disabled:opacity-50"
+                            className="btn-premium !w-full !py-6 !text-[12px] !tracking-[0.4em]"
                         >
                             {isLoading ? 'Salvando...' : 'Publicar Alterações'}
                         </button>

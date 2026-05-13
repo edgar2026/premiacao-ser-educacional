@@ -95,18 +95,18 @@ const AdminPanel: React.FC = () => {
     ].filter(a => a.visible);
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Gestão de Excelência</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Painel de <span className="text-gold-gradient">Controle</span></h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-12">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Gestão de Excelência</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">Painel de Controle</h2>
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Supervisão central de honrarias e mérito institucional Ser Educacional.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/admin/homenageados/novo')}
-                    className="bg-gold hover:bg-gold-light hover:scale-[1.02] active:scale-[0.98] transition-all text-navy-deep px-8 py-5 rounded-full font-bold text-[10px] uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(212,175,55,0.2)] group"
+                    className="btn-premium !px-10 !py-5"
                 >
                     <span className="flex items-center gap-3">
                         <span className="material-symbols-outlined text-lg">person_add</span>
@@ -116,41 +116,43 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className={`grid grid-cols-1 ${isDiretor ? 'md:grid-cols-1 max-w-sm' : 'md:grid-cols-3'} gap-6`}>
+            <div className={`grid grid-cols-1 ${isDiretor ? 'md:grid-cols-1 max-w-sm' : 'md:grid-cols-3'} gap-8`}>
                 {isLoading ? (
                     <div className="col-span-full flex justify-center py-10">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gold"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue"></div>
                     </div>
                 ) : (
                     statsConfig.map((stat, i) => (
-                        <GlassCard
+                        <div
                             key={i}
-                            className="p-8 rounded-3xl group border-white/5 cursor-pointer hover:border-gold/20 transition-all bg-gradient-to-br from-white/[0.02] to-transparent"
+                            className="card-static !p-10 group cursor-pointer hover:border-brand-blue transition-all"
                             onClick={() => stat.link !== '#' && navigate(stat.link)}
                         >
-                            <div className="flex justify-between items-start mb-6">
-                                <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-[0.3em]">{stat.label}</p>
-                                <span className="material-symbols-outlined text-gold/50 group-hover:text-gold transition-colors">{stat.icon}</span>
+                            <div className="flex justify-between items-start mb-8">
+                                <p className="text-[11px] font-[800] text-brand-text-secondary uppercase tracking-[0.3em] opacity-40">{stat.label}</p>
+                                <div className="size-12 rounded-2xl bg-brand-blue/5 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                    <span className="material-symbols-outlined">{stat.icon}</span>
+                                </div>
                             </div>
-                            <div className="flex items-end gap-4">
-                                <span className="text-4xl font-bold font-serif text-off-white italic">{stat.value}</span>
-                                <span className="text-gold text-[8px] font-bold mb-1 px-3 py-1 rounded-full border border-gold/20 bg-gold/5 uppercase tracking-widest">
+                            <div className="flex items-end gap-5">
+                                <span className="text-[56px] font-[800] text-brand-dark leading-none tracking-tighter">{stat.value}</span>
+                                <span className="text-brand-blue text-[10px] font-[800] mb-2 px-4 py-1.5 rounded-full border border-brand-blue/10 bg-brand-blue/5 uppercase tracking-widest">
                                     {stat.change}
                                 </span>
                             </div>
-                        </GlassCard>
+                        </div>
                     ))
                 )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-xl font-serif italic text-off-white">Atividades Recentes</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="card-static !p-12">
+                    <div className="flex justify-between items-center mb-12">
+                        <h3 className="text-[22px] font-[800] text-brand-dark tracking-tight">Atividades Recentes</h3>
                         {!isDiretor && (
                             <button
                                 onClick={() => navigate('/admin/dashboard')}
-                                className="text-gold text-[9px] font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
+                                className="text-brand-blue text-[10px] font-[800] uppercase tracking-widest hover:opacity-70 transition-opacity"
                             >
                                 Ver Dashboard
                             </button>
@@ -161,39 +163,41 @@ const AdminPanel: React.FC = () => {
                             { user: 'Admin Master', action: 'Acessou o painel', target: 'Gestão Central', time: 'Agora' },
                             { user: 'Sistema', action: 'Sincronização concluída', target: 'Supabase Cloud', time: 'Há 1 min' }
                         ].map((activity, i) => (
-                            <div key={i} className="flex gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all">
-                                <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
-                                    <span className="material-symbols-outlined text-lg">history</span>
+                            <div key={i} className="flex gap-5 p-6 rounded-2xl bg-brand-gray/30 border border-brand-gray/50 hover:border-brand-blue/30 transition-all group">
+                                <div className="size-12 rounded-xl bg-brand-blue/10 flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                    <span className="material-symbols-outlined text-xl">history</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-off-white/80"><span className="font-bold text-off-white">{activity.user}</span> {activity.action}</p>
-                                    <p className="text-xs text-gold/60 italic">{activity.target}</p>
-                                    <p className="text-[9px] text-off-white/20 uppercase tracking-tighter mt-1">{activity.time}</p>
+                                    <p className="text-[15px] text-brand-dark leading-tight"><span className="font-[800]">{activity.user}</span> <span className="opacity-60">{activity.action}</span></p>
+                                    <p className="text-[12px] text-brand-blue font-[700] uppercase tracking-wide mt-1">{activity.target}</p>
+                                    <p className="text-[10px] text-brand-text-secondary/40 font-[800] uppercase tracking-widest mt-2">{activity.time}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
 
-                <GlassCard className="p-10 rounded-[3rem] border-white/5">
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-xl font-serif italic text-off-white">Ações Rápidas</h3>
-                        <span className="material-symbols-outlined text-gold/30">bolt</span>
+                <div className="card-static !p-12">
+                    <div className="flex justify-between items-center mb-12">
+                        <h3 className="text-[22px] font-[800] text-brand-dark tracking-tight">Ações Rápidas</h3>
+                        <span className="material-symbols-outlined text-brand-blue/30">bolt</span>
                     </div>
-                    <div className={`grid grid-cols-1 ${isDiretor ? '' : 'sm:grid-cols-2'} gap-6`}>
+                    <div className={`grid grid-cols-1 ${isDiretor ? '' : 'sm:grid-cols-2'} gap-8`}>
                         {quickActions.map((action, i) => (
                             <button
                                 key={i}
                                 onClick={() => navigate(action.link)}
-                                className="p-8 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-gold/30 hover:bg-gold/5 transition-all text-left group"
+                                className="p-10 rounded-3xl bg-brand-gray/30 border border-brand-gray/50 hover:border-brand-blue hover:bg-white hover:shadow-xl transition-all text-left group"
                             >
-                                <span className="material-symbols-outlined text-gold/40 group-hover:text-gold transition-colors mb-4 block text-3xl">{action.icon}</span>
-                                <p className="text-sm font-bold text-off-white">{action.label}</p>
-                                <p className="text-[10px] text-off-white/30 uppercase tracking-widest mt-1">{action.desc}</p>
+                                <div className="size-14 rounded-2xl bg-white flex items-center justify-center text-brand-blue/40 group-hover:text-brand-blue shadow-sm mb-6 transition-all">
+                                    <span className="material-symbols-outlined text-3xl">{action.icon}</span>
+                                </div>
+                                <p className="text-[16px] font-[800] text-brand-dark tracking-tight">{action.label}</p>
+                                <p className="text-[11px] text-brand-text-secondary/60 font-[700] uppercase tracking-widest mt-1.5">{action.desc}</p>
                             </button>
                         ))}
                     </div>
-                </GlassCard>
+                </div>
             </div>
         </div>
     );

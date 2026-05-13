@@ -44,14 +44,14 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, className = 
 
     return (
         <div
-            className={`relative group ${className}`}
+            className={`relative group overflow-hidden rounded-[2rem] border border-brand-gray bg-black ${className}`}
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => setShowControls(false)}
         >
             <video
                 ref={videoRef}
                 src={src}
-                className="w-full rounded-2xl"
+                className="w-full"
                 onClick={togglePlay}
             />
 
@@ -61,8 +61,8 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, className = 
                     }`}
                 onClick={togglePlay}
             >
-                <button className="size-20 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-black/60 hover:border-gold/50 transition-all">
-                    <span className="material-symbols-outlined text-5xl text-white">
+                <button className="size-20 rounded-[1.5rem] bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center hover:bg-white/30 hover:border-brand-blue/50 transition-all shadow-xl">
+                    <span className="material-symbols-outlined text-5xl text-white font-black">
                         {isPlaying ? 'pause' : 'play_arrow'}
                     </span>
                 </button>
@@ -70,23 +70,23 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, className = 
 
             {/* Controles na Parte Inferior */}
             <div
-                className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+                className={`absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-brand-dark/60 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
                     }`}
             >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                     {/* Botão Play/Pause */}
                     <button
                         onClick={togglePlay}
-                        className="text-white hover:text-gold transition-colors"
+                        className="text-white hover:text-brand-blue transition-colors"
                     >
-                        <span className="material-symbols-outlined text-2xl">
+                        <span className="material-symbols-outlined text-3xl font-black">
                             {isPlaying ? 'pause' : 'play_arrow'}
                         </span>
                     </button>
 
                     {/* Controle de Volume */}
-                    <div className="  flex items-center gap-2 group/volume">
-                        <span className="material-symbols-outlined text-white text-xl">
+                    <div className="flex items-center gap-3 group/volume">
+                        <span className="material-symbols-outlined text-white text-2xl font-bold">
                             {volume === 0 ? 'volume_off' : volume < 0.5 ? 'volume_down' : 'volume_up'}
                         </span>
                         <input
@@ -96,18 +96,18 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, className = 
                             step="0.1"
                             value={volume}
                             onChange={handleVolumeChange}
-                            className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer
+                            className="w-24 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-blue
                                 [&::-webkit-slider-thumb]:appearance-none 
-                                [&::-webkit-slider-thumb]:w-3 
-                                [&::-webkit-slider-thumb]:h-3 
+                                [&::-webkit-slider-thumb]:w-4 
+                                [&::-webkit-slider-thumb]:h-4 
                                 [&::-webkit-slider-thumb]:rounded-full 
-                                [&::-webkit-slider-thumb]:bg-gold
+                                [&::-webkit-slider-thumb]:bg-brand-blue
                                 [&::-webkit-slider-thumb]:cursor-pointer
                                 [&::-moz-range-thumb]:border-0
-                                [&::-moz-range-thumb]:w-3 
-                                [&::-moz-range-thumb]:h-3 
+                                [&::-moz-range-thumb]:w-4 
+                                [&::-moz-range-thumb]:h-4 
                                 [&::-moz-range-thumb]:rounded-full 
-                                [&::-moz-range-thumb]:bg-gold
+                                [&::-moz-range-thumb]:bg-brand-blue
                                 [&::-moz-range-thumb]:cursor-pointer"
                         />
                     </div>

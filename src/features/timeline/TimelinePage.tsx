@@ -1,5 +1,5 @@
 import React from 'react';
-import GlassCard from '../../components/ui/GlassCard';
+import { motion } from 'framer-motion';
 
 const TimelinePage: React.FC = () => {
     const milestones = [
@@ -10,44 +10,70 @@ const TimelinePage: React.FC = () => {
     ];
 
     return (
-        <div className="w-full mesh-gradient-premium min-h-screen">
-            <div className="max-w-6xl mx-auto px-6 py-32 animate-fade-in">
-                <div className="text-center mb-28">
-                    <span className="inline-block px-8 py-2.5 mb-10 text-[10px] font-bold tracking-[0.4em] text-gold uppercase border border-gold/30 rounded-full bg-navy-deep/40 backdrop-blur-2xl">
+        <div className="w-full bg-transparent min-h-screen text-brand-dark font-sans relative">
+            {/* Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <img src="/assets/tech_award_bg.png" alt="" className="w-full h-full object-cover opacity-50 mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-b from-bg-main/60 via-bg-main/80 to-bg-main/95"></div>
+            </div>
+
+            <div className="max-w-[1280px] mx-auto px-6 lg:px-[80px] py-32 relative z-10">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-28"
+                >
+                    <span className="inline-block px-6 py-2 mb-8 text-[11px] font-bold tracking-[0.2em] text-brand-blue uppercase bg-brand-blue/5 border border-brand-blue/10">
                         Jornada Histórica
                     </span>
-                    <h1 className="text-6xl md:text-8xl font-bold mb-10 tracking-tighter font-serif text-off-white uppercase">
-                        LINHA DO <span className="text-gold-gradient italic">TEMPO</span>
+                    <h1 className="text-[48px] lg:text-[72px] font-[800] leading-[1] tracking-[-2px] mb-6 text-brand-dark uppercase">
+                        LINHA DO <br />
+                        <span className="text-gradient-main">TEMPO</span>
                     </h1>
-                </div>
+                </motion.div>
 
-                <div className="relative space-y-24 before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-1/2 before:-translate-x-1/2 before:w-[1px] before:bg-gradient-to-b before:from-gold before:via-gold/20 before:to-transparent hidden md:block">
+                <div className="relative space-y-24 before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-1/2 before:-translate-x-1/2 before:w-[2px] before:bg-brand-gray hidden md:block">
                     {milestones.map((m, i) => (
-                        <div key={m.year} className={`relative flex items-center justify-between w-full ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
+                        <motion.div 
+                            key={m.year} 
+                            initial={{ opacity: 0, x: i % 2 === 0 ? 50 : -50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.7 }}
+                            viewport={{ once: true }}
+                            className={`relative flex items-center justify-between w-full ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}
+                        >
                             <div className="w-[45%]">
-                                <GlassCard className="p-10 rounded-[2.5rem] border-white/5 hover:bg-white/[0.05] transition-all duration-700 group">
-                                    <span className="text-gold text-5xl font-serif font-bold mb-6 block group-hover:scale-110 transition-transform">{m.year}</span>
-                                    <h3 className="text-2xl font-serif text-off-white mb-4 italic">{m.title}</h3>
-                                    <p className="text-off-white/50 text-lg font-light leading-relaxed italic">{m.description}</p>
-                                </GlassCard>
+                                <div className="card-premium p-10 group hover:border-brand-blue transition-all duration-500">
+                                    <span className="text-brand-blue text-[48px] font-[800] mb-6 block tracking-tighter group-hover:scale-105 transition-transform">{m.year}</span>
+                                    <h3 className="text-[24px] font-[800] text-brand-dark mb-4 tracking-tight">{m.title}</h3>
+                                    <p className="text-brand-text-secondary text-[16px] leading-[1.8] font-medium">{m.description}</p>
+                                </div>
                             </div>
-                            <div className="absolute left-1/2 -translate-x-1/2 size-4 bg-gold rounded-full shadow-[0_0_20px_rgba(212,175,55,1)] z-10"></div>
+                            <div className="absolute left-1/2 -translate-x-1/2 size-4 bg-brand-blue ring-[8px] ring-white shadow-xl z-10"></div>
                             <div className="w-[45%]"></div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
 
                 {/* Mobile Timeline */}
-                <div className="md:hidden space-y-12 relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-4 before:w-[1px] before:bg-gold/30">
-                    {milestones.map((m) => (
-                        <div key={m.year} className="relative pl-12">
-                            <div className="absolute left-3 top-2 size-3 bg-gold rounded-full shadow-[0_0_15px_rgba(212,175,55,1)]"></div>
-                            <GlassCard className="p-8 rounded-[2rem] border-white/5">
-                                <span className="text-gold text-3xl font-serif font-bold mb-4 block">{m.year}</span>
-                                <h3 className="text-xl font-serif text-off-white mb-2 italic">{m.title}</h3>
-                                <p className="text-off-white/50 text-base font-light leading-relaxed italic">{m.description}</p>
-                            </GlassCard>
-                        </div>
+                <div className="md:hidden space-y-12 relative before:content-[''] before:absolute before:top-0 before:bottom-0 before:left-4 before:w-[2px] before:bg-brand-gray">
+                    {milestones.map((m, i) => (
+                        <motion.div 
+                            key={m.year} 
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5 }}
+                            viewport={{ once: true }}
+                            className="relative pl-12"
+                        >
+                            <div className="absolute left-3 top-2 size-3 bg-brand-blue ring-[6px] ring-white shadow-lg"></div>
+                            <div className="card-premium p-8">
+                                <span className="text-brand-blue text-[32px] font-[800] mb-4 block tracking-tighter">{m.year}</span>
+                                <h3 className="text-[20px] font-[800] text-brand-dark mb-2 tracking-tight">{m.title}</h3>
+                                <p className="text-brand-text-secondary text-[15px] leading-[1.7] font-medium">{m.description}</p>
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>

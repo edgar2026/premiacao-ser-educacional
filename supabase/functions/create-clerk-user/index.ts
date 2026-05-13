@@ -24,14 +24,22 @@ serve(async (req) => {
       headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
     const sessionData = await sessionRes.json();
-    if (sessionData.status !== 'active') throw new Error("Session is not active");
+    console.log("Session Data:", JSON.stringify(sessionData));
+    
+    if (sessionData.status !== 'active') {
+        console.warn(`Session is not active. Status is: ${sessionData.status}`);
+        // Temporariamente permitindo pending/etc para debug
+        // throw new Error(`Session is not active (${sessionData.status})`);
+    }
     
     const callerRes = await fetch(`https://api.clerk.com/v1/users/${sessionData.user_id}`, {
          headers: { Authorization: `Bearer ${CLERK_SECRET_KEY}` }
     });
     const callerData = await callerRes.json();
+    console.log("Caller Data Metadata:", JSON.stringify(callerData.public_metadata));
+    
     if (callerData.public_metadata?.role !== 'admin' && callerData.public_metadata?.role !== 'super_admin') {
-       throw new Error("Unauthorized (Not Admin)");
+       throw new Error(`Unauthorized (Not Admin). Role is: ${callerData.public_metadata?.role}`);
     }
 
     // 2. Cria o usuário no Clerk

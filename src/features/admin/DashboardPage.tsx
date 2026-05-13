@@ -202,104 +202,104 @@ const DashboardPage: React.FC = () => {
     }
 
     return (
-        <div className="space-y-10 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
             {/* Header */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8 mb-6">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Visão Executiva Global</span>
-                    <h2 className="text-4xl md:text-5xl font-bold font-serif italic text-off-white">
-                        Dashboard <span className="text-gold-gradient">Gerencial</span>
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8 mb-8">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Visão Executiva Global</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">
+                        Dashboard Gerencial
                     </h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Monitoramento em tempo real do fluxo de indicações, produtividade e status de toda a rede.
                     </p>
                 </div>
             </div>
 
             {/* Filters Row - Responsive */}
-            <div className="flex flex-col md:flex-row flex-wrap gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:flex-1">
-                    <span className="material-symbols-outlined text-gold/50 text-sm">map</span>
+            <div className="flex flex-col md:flex-row flex-wrap gap-5 bg-white border border-brand-gray p-6 rounded-3xl shadow-sm">
+                <div className="flex items-center gap-3 bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 w-full md:flex-1 group focus-within:border-brand-blue transition-all">
+                    <span className="material-symbols-outlined text-brand-blue/50 text-xl">map</span>
                     <select
-                        className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
+                        className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full"
                         value={filters.regionalId}
                         onChange={(e) => setFilters({ ...filters, regionalId: e.target.value, unitId: 'all' })}
                     >
-                        <option value="all" className="bg-navy-deep">Todas as Regionais</option>
-                        {regionals.map(r => <option key={r.id} value={r.id} className="bg-navy-deep">{r.name}</option>)}
+                        <option value="all">Todas as Regionais</option>
+                        {regionals.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                 </div>
                 
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:flex-1">
-                    <span className="material-symbols-outlined text-gold/50 text-sm">location_city</span>
+                <div className="flex items-center gap-3 bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 w-full md:flex-1 group focus-within:border-brand-blue transition-all">
+                    <span className="material-symbols-outlined text-brand-blue/50 text-xl">location_city</span>
                     <select
-                        className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
+                        className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full"
                         value={filters.unitId}
                         onChange={(e) => setFilters({ ...filters, unitId: e.target.value })}
                     >
-                        <option value="all" className="bg-navy-deep">Todas as Unidades</option>
-                        {filteredUnits.map(u => <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>)}
+                        <option value="all">Todas as Unidades</option>
+                        {filteredUnits.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                 </div>
 
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto">
-                    <span className="material-symbols-outlined text-gold/50 text-sm">filter_list</span>
+                <div className="flex items-center gap-3 bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 w-full md:w-auto group focus-within:border-brand-blue transition-all">
+                    <span className="material-symbols-outlined text-brand-blue/50 text-xl">filter_list</span>
                     <select
-                        className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
+                        className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full"
                         value={filters.status}
                         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                     >
-                        <option value="all" className="bg-navy-deep">Todos os Status</option>
-                        <option value="em_analise" className="bg-navy-deep">Pendentes</option>
-                        <option value="aprovados" className="bg-navy-deep">Aprovados / Publicados</option>
-                        <option value="reprovado" className="bg-navy-deep">Rejeitados</option>
+                        <option value="all">Todos os Status</option>
+                        <option value="em_analise">Pendentes</option>
+                        <option value="aprovados">Aprovados / Publicados</option>
+                        <option value="reprovado">Rejeitados</option>
                     </select>
                 </div>
 
-                <div className="flex items-center gap-3 bg-navy-deep border border-white/10 rounded-xl px-4 py-2 w-full md:w-auto">
-                    <span className="material-symbols-outlined text-gold/50 text-sm">calendar_month</span>
+                <div className="flex items-center gap-3 bg-bg-main border border-brand-gray rounded-2xl px-5 py-3 w-full md:w-auto group focus-within:border-brand-blue transition-all">
+                    <span className="material-symbols-outlined text-brand-blue/50 text-xl">calendar_month</span>
                     <select
-                        className="bg-transparent border-none text-off-white text-xs outline-none focus:ring-0 cursor-pointer w-full"
+                        className="bg-transparent border-none text-brand-dark text-[13px] font-[700] outline-none focus:ring-0 cursor-pointer w-full"
                         value={filters.year}
                         onChange={(e) => setFilters({ ...filters, year: e.target.value === 'all' ? 'all' : Number(e.target.value) })}
                     >
-                        <option value="all" className="bg-navy-deep">Todo o Período</option>
+                        <option value="all">Todo o Período</option>
                         {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
-                            <option key={y} value={y} className="bg-navy-deep">{y}</option>
+                            <option key={y} value={y}>{y}</option>
                         ))}
                     </select>
                 </div>
             </div>
 
             {/* KPIs Grid - Empilhados no mobile */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-gold/50 col-span-2 md:col-span-1 text-center md:text-left">
-                    <p className="text-[10px] font-bold text-off-white/40 uppercase tracking-widest mb-2">Total Geral</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-off-white italic">{metrics.total}</span>
-                </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-yellow-500">
-                    <p className="text-[10px] font-bold text-yellow-500/80 uppercase tracking-widest mb-2">Pendentes</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-yellow-400 italic">{metrics.pendentes}</span>
-                </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-blue-500">
-                    <p className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest mb-2">Aprovados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-blue-400 italic">{metrics.aprovados}</span>
-                </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-green-500">
-                    <p className="text-[10px] font-bold text-green-500/80 uppercase tracking-widest mb-2">Publicados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-green-400 italic">{metrics.publicados}</span>
-                </GlassCard>
-                <GlassCard className="p-4 sm:p-6 rounded-[2rem] border-white/5 border-l-4 border-l-red-500">
-                    <p className="text-[10px] font-bold text-red-500/80 uppercase tracking-widest mb-2">Rejeitados</p>
-                    <span className="text-3xl sm:text-4xl font-bold font-serif text-red-400 italic">{metrics.reprovados}</span>
-                </GlassCard>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div className="card-static !p-6 border-l-4 border-l-brand-blue/50 col-span-2 md:col-span-1">
+                    <p className="text-[10px] font-[800] text-brand-text-secondary uppercase tracking-widest mb-3 opacity-60">Total Geral</p>
+                    <span className="text-[40px] font-[800] text-brand-dark leading-none">{metrics.total}</span>
+                </div>
+                <div className="card-static !p-6 border-l-4 border-l-yellow-500">
+                    <p className="text-[10px] font-[800] text-yellow-600 uppercase tracking-widest mb-3 opacity-60">Pendentes</p>
+                    <span className="text-[40px] font-[800] text-yellow-500 leading-none">{metrics.pendentes}</span>
+                </div>
+                <div className="card-static !p-6 border-l-4 border-l-blue-500">
+                    <p className="text-[10px] font-[800] text-blue-600 uppercase tracking-widest mb-3 opacity-60">Aprovados</p>
+                    <span className="text-[40px] font-[800] text-blue-500 leading-none">{metrics.aprovados}</span>
+                </div>
+                <div className="card-static !p-6 border-l-4 border-l-green-500">
+                    <p className="text-[10px] font-[800] text-green-600 uppercase tracking-widest mb-3 opacity-60">Publicados</p>
+                    <span className="text-[40px] font-[800] text-green-500 leading-none">{metrics.publicados}</span>
+                </div>
+                <div className="card-static !p-6 border-l-4 border-l-red-500">
+                    <p className="text-[10px] font-[800] text-red-600 uppercase tracking-widest mb-3 opacity-60">Rejeitados</p>
+                    <span className="text-[40px] font-[800] text-red-500 leading-none">{metrics.reprovados}</span>
+                </div>
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Pie Chart */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 flex flex-col items-center overflow-x-auto custom-scrollbar">
-                    <h3 className="text-xl font-serif italic text-off-white w-full text-left mb-6">Distribuição de Status</h3>
+                <div className="card-static !p-8 flex flex-col items-center overflow-x-auto custom-scrollbar">
+                    <h3 className="text-[20px] font-[800] text-brand-dark w-full text-left mb-8 tracking-tight">Distribuição de Status</h3>
                     <div className="h-[250px] w-full min-w-[200px]">
                         {statusPieData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
@@ -317,116 +317,119 @@ const DashboardPage: React.FC = () => {
                                         ))}
                                     </Pie>
                                     <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#0A1128', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                        itemStyle={{ color: '#fff' }}
+                                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        itemStyle={{ color: '#1E293B', fontWeight: 'bold' }}
                                     />
-                                    <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[10px] text-off-white/60 uppercase">{value}</span>} />
+                                    <Legend verticalAlign="bottom" height={36} formatter={(value) => <span className="text-[10px] text-brand-text-secondary font-[800] uppercase tracking-widest">{value}</span>} />
                                 </PieChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-off-white/20 italic text-sm mt-20">Sem dados suficientes.</p>}
+                        ) : <p className="text-brand-text-secondary/40 italic text-sm mt-20">Sem dados suficientes.</p>}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Line Chart */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 lg:col-span-2 overflow-x-auto custom-scrollbar">
-                    <h3 className="text-xl font-serif italic text-off-white mb-6">Evolução de Cadastros</h3>
+                <div className="card-static !p-8 lg:col-span-2 overflow-x-auto custom-scrollbar">
+                    <h3 className="text-[20px] font-[800] text-brand-dark mb-8 tracking-tight">Evolução de Cadastros</h3>
                     <div className="h-[250px] w-full min-w-[400px]">
                         {evolutionData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={evolutionData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                    <XAxis dataKey="period" stroke="#ffffff40" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#ffffff40" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                                    <XAxis dataKey="period" stroke="#94A3B8" tick={{ fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10, fontWeight: 700 }} tickLine={false} axisLine={false} />
                                     <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#0A1128', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                        itemStyle={{ color: '#D4AF37', fontWeight: 'bold' }}
-                                        labelStyle={{ color: '#ffffff40', marginBottom: '4px' }}
+                                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        itemStyle={{ color: '#1D4ED8', fontWeight: 'bold' }}
                                     />
-                                    <Line type="monotone" dataKey="count" name="Cadastros" stroke="#D4AF37" strokeWidth={3} dot={{ r: 4, fill: '#D4AF37', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" dataKey="count" name="Cadastros" stroke="#1D4ED8" strokeWidth={4} dot={{ r: 5, fill: '#1D4ED8', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8 }} />
                                 </LineChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-off-white/20 italic text-sm mt-20 text-center">Nenhum dado temporal disponível.</p>}
+                        ) : <p className="text-brand-text-secondary/40 italic text-sm mt-20 text-center">Nenhum dado temporal disponível.</p>}
                     </div>
-                </GlassCard>
+                </div>
             </div>
 
             {/* Rankings & Bar Chart */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Bar Chart Units */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5 lg:col-span-2 overflow-x-auto custom-scrollbar">
-                    <h3 className="text-xl font-serif italic text-off-white mb-6">Cadastros por Unidade (Top 8)</h3>
+                <div className="card-static !p-8 lg:col-span-2 overflow-x-auto custom-scrollbar">
+                    <h3 className="text-[20px] font-[800] text-brand-dark mb-8 tracking-tight">Cadastros por Unidade (Top 8)</h3>
                     <div className="h-[280px] w-full min-w-[350px]">
                         {unitsBarData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={unitsBarData} layout="vertical" margin={{ left: 80, right: 30, top: 5, bottom: 5 }}>
                                     <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#ffffff80', fontSize: 10, fontWeight: 500 }} width={120} />
+                                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 10, fontWeight: 700 }} width={120} />
                                     <RechartsTooltip 
-                                        cursor={{ fill: '#ffffff05' }}
-                                        contentStyle={{ backgroundColor: '#0A1128', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                        itemStyle={{ color: '#D4AF37', fontWeight: 'bold' }}
+                                        cursor={{ fill: '#F1F5F9' }}
+                                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        itemStyle={{ color: '#1D4ED8', fontWeight: 'bold' }}
                                     />
-                                    <Bar dataKey="count" name="Total" fill="#D4AF37" radius={[0, 8, 8, 0]} barSize={16}>
-                                        <LabelList dataKey="count" position="right" fill="#ffffff80" fontSize={11} fontWeight="bold" />
+                                    <Bar dataKey="count" name="Total" fill="#1D4ED8" radius={[0, 8, 8, 0]} barSize={16}>
+                                        <LabelList dataKey="count" position="right" fill="#64748B" fontSize={11} fontWeight="bold" />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-off-white/20 italic text-sm text-center mt-20">Sem dados suficientes.</p>}
+                        ) : <p className="text-brand-text-secondary/40 italic text-sm text-center mt-20">Sem dados suficientes.</p>}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Top Directors Ranking */}
-                <GlassCard className="p-6 sm:p-8 rounded-[2.5rem] border-white/5">
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="material-symbols-outlined text-gold">workspace_premium</span>
-                        <h3 className="text-xl font-serif italic text-off-white">Top Diretores</h3>
+                <div className="card-static !p-8">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="size-10 rounded-xl bg-brand-blue/10 flex items-center justify-center text-brand-blue">
+                            <span className="material-symbols-outlined">workspace_premium</span>
+                        </div>
+                        <h3 className="text-[20px] font-[800] text-brand-dark tracking-tight">Top Diretores</h3>
                     </div>
                     <div className="space-y-4">
                         {topDirectors.length > 0 ? (
                             topDirectors.map((director, i) => (
-                                <div key={i} className="flex justify-between items-center p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-gold/30 transition-all">
-                                    <div className="flex items-center gap-3">
-                                        <div className="size-8 rounded-full bg-gold/10 flex items-center justify-center text-gold font-bold text-xs shrink-0">
+                                <div key={i} className="flex justify-between items-center p-5 rounded-2xl bg-bg-main border border-brand-gray hover:border-brand-blue/30 transition-all group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="size-9 rounded-full bg-white border border-brand-gray flex items-center justify-center text-brand-blue font-[800] text-[13px] shrink-0 shadow-sm group-hover:bg-brand-blue group-hover:text-white transition-all">
                                             {i + 1}º
                                         </div>
-                                        <span className="text-sm font-bold text-off-white truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[150px]">{director.name}</span>
+                                        <span className="text-[14px] font-[800] text-brand-dark truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[150px]">{director.name}</span>
                                     </div>
-                                    <span className="text-gold font-black">{director.count}</span>
+                                    <span className="text-brand-blue font-[900] text-[18px]">{director.count}</span>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-off-white/20 italic text-sm text-center py-10">Nenhum dado produtivo encontrado.</p>
+                            <p className="text-brand-text-secondary/40 italic text-sm text-center py-10">Nenhum dado produtivo encontrado.</p>
                         )}
                     </div>
-                </GlassCard>
+                </div>
             </div>
 
             {/* Análise Estratégica Avançada */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 {/* Evolution Chart */}
-                <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5">
-                    <div className="flex items-center gap-3 mb-8">
-                        <span className="material-symbols-outlined text-blue-400">trending_up</span>
-                        <h3 className="text-2xl font-serif italic text-off-white">Evolução Mensal</h3>
+                <div className="card-static !p-10">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <span className="material-symbols-outlined">trending_up</span>
+                        </div>
+                        <h3 className="text-[22px] font-[800] text-brand-dark tracking-tight">Evolução Mensal</h3>
                     </div>
                     <div className="h-[300px] w-full">
                         {evolutionData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={evolutionData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
                                     <XAxis 
                                         dataKey="period" 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        tick={{ fill: '#ffffff40', fontSize: 10 }}
+                                        tick={{ fill: '#64748B', fontSize: 10, fontWeight: 700 }}
                                         tickFormatter={(val) => {
                                             const [y, m] = val.split('-');
                                             return `${m}/${y.slice(2)}`;
                                         }}
                                     />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff40', fontSize: 10 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 10, fontWeight: 700 }} />
                                     <RechartsTooltip 
-                                        contentStyle={{ backgroundColor: '#0A1128', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
                                         itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
                                     />
                                     <Line 
@@ -440,38 +443,40 @@ const DashboardPage: React.FC = () => {
                                     />
                                 </LineChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-off-white/20 italic text-sm text-center py-20">Sem histórico disponível.</p>}
+                        ) : <p className="text-brand-text-secondary/40 italic text-sm text-center py-20">Sem histórico disponível.</p>}
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Regional Ranking */}
-                <GlassCard className="p-6 sm:p-8 rounded-[3rem] border-white/5">
-                    <div className="flex items-center gap-3 mb-8">
-                        <span className="material-symbols-outlined text-gold">map</span>
-                        <h3 className="text-2xl font-serif italic text-off-white">Performance por Regional</h3>
+                <div className="card-static !p-10">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div className="size-10 rounded-xl bg-brand-blue/10 flex items-center justify-center text-brand-blue">
+                            <span className="material-symbols-outlined">map</span>
+                        </div>
+                        <h3 className="text-[22px] font-[800] text-brand-dark tracking-tight">Performance por Regional</h3>
                     </div>
-                    <div className="space-y-6 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                    <div className="space-y-8 max-h-[300px] overflow-y-auto custom-scrollbar pr-4">
                         {regionalRanking.length > 0 ? (
                             regionalRanking.map((reg, i) => {
                                 const percentage = Math.round((reg.count / Math.max(metrics.total, 1)) * 100);
                                 return (
                                     <div key={i} className="group">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-bold text-off-white group-hover:text-gold transition-colors">{reg.name}</span>
-                                            <span className="text-xs font-mono text-off-white/40">{reg.count} registros</span>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-[15px] font-[800] text-brand-dark group-hover:text-brand-blue transition-colors">{reg.name}</span>
+                                            <span className="text-[12px] font-[900] text-brand-blue bg-brand-blue/5 px-3 py-1 rounded-lg">{reg.count} registros</span>
                                         </div>
-                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-3 w-full bg-brand-gray rounded-full overflow-hidden">
                                             <div 
-                                                className="h-full bg-gold rounded-full transition-all duration-1000"
+                                                className="h-full bg-brand-blue rounded-full transition-all duration-1000 shadow-sm"
                                                 style={{ width: `${percentage}%` }}
                                             />
                                         </div>
                                     </div>
                                 );
                             })
-                        ) : <p className="text-off-white/20 italic text-sm text-center py-20">Nenhuma regional ativa.</p>}
+                        ) : <p className="text-brand-text-secondary/40 italic text-sm text-center py-20">Nenhuma regional ativa.</p>}
                     </div>
-                </GlassCard>
+                </div>
             </div>
 
 

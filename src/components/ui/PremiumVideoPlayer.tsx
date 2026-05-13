@@ -53,8 +53,8 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
 
     if (youtubeId) {
         return (
-            <div className={`relative group overflow-hidden rounded-[2.5rem] glass-card p-2 border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)] ${className}`}>
-                <div className="relative aspect-video bg-navy-deep rounded-[2.2rem] overflow-hidden">
+            <div className={`relative group overflow-hidden rounded-[2.5rem] bg-white p-2 border border-brand-gray shadow-2xl ${className}`}>
+                <div className="relative aspect-video bg-black rounded-[2.2rem] overflow-hidden">
                     <iframe
                         src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0&modestbranding=1`}
                         className="w-full h-full"
@@ -69,11 +69,11 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
 
     return (
         <div
-            className={`relative group overflow-hidden rounded-[2.5rem] glass-card p-2 border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)] ${className}`}
+            className={`relative group overflow-hidden rounded-[2.5rem] bg-white p-2 border border-brand-gray shadow-2xl ${className}`}
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => setShowControls(false)}
         >
-            <div className="relative aspect-video bg-navy-deep rounded-[2.2rem] overflow-hidden">
+            <div className="relative aspect-video bg-black rounded-[2.2rem] overflow-hidden">
                 <video
                     ref={videoRef}
                     src={src}
@@ -85,12 +85,12 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
 
                 {/* Botão Play/Pause no Centro */}
                 {(!isPlaying || showControls) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-navy-deep/20 backdrop-blur-[2px] z-10">
+                    <div className="absolute inset-0 flex items-center justify-center bg-brand-dark/20 backdrop-blur-[2px] z-10">
                         <button
                             onClick={togglePlay}
-                            className="size-24 rounded-full bg-white/10 backdrop-blur-3xl border border-white/20 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-500 group/play"
+                            className="size-24 rounded-full bg-white/20 backdrop-blur-3xl border border-white/30 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-500 group/play"
                         >
-                            <span className="material-symbols-outlined text-white text-5xl fill-1 group-hover/play:text-gold transition-colors">
+                            <span className="material-symbols-outlined text-white text-5xl font-black group-hover/play:text-brand-blue transition-colors">
                                 {isPlaying ? 'pause' : 'play_arrow'}
                             </span>
                         </button>
@@ -98,28 +98,28 @@ const PremiumVideoPlayer: React.FC<PremiumVideoPlayerProps> = ({ src, poster, cl
                 )}
 
                 {/* Controles Simplificados */}
-                <div className={`absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-navy-deep/90 via-navy-deep/40 to-transparent transition-opacity duration-500 z-20 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-brand-dark/80 via-brand-dark/20 to-transparent transition-opacity duration-500 z-20 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="flex items-center justify-between">
                         {/* Botão Play/Pause Esquerda */}
-                        <button onClick={togglePlay} className="text-white hover:text-gold transition-colors">
-                            <span className="material-symbols-outlined text-3xl fill-1">
+                        <button onClick={togglePlay} className="text-white hover:text-brand-blue transition-colors">
+                            <span className="material-symbols-outlined text-4xl font-black">
                                 {isPlaying ? 'pause' : 'play_arrow'}
                             </span>
                         </button>
 
-                        {/* Controle de Volume, Resolução e Tela Cheia Direita */}
-                        <div className="flex items-center gap-4">
-                            <button className="flex items-center gap-1 px-2 py-1 rounded border border-white/20 text-[10px] font-bold text-gold hover:bg-white/10 transition-colors">
-                                <span className="material-symbols-outlined text-sm">hd</span>
+                        {/* Controle de Volume Direita */}
+                        <div className="flex items-center gap-6">
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/30 text-[11px] font-[800] text-white hover:bg-white/20 transition-colors uppercase tracking-widest">
+                                <span className="material-symbols-outlined text-lg">hd</span>
                                 HD
                             </button>
-                            <button onClick={toggleMute} className="text-white/80 hover:text-gold transition-colors">
-                                <span className="material-symbols-outlined text-2xl">
+                            <button onClick={toggleMute} className="text-white/80 hover:text-brand-blue transition-colors">
+                                <span className="material-symbols-outlined text-3xl font-bold">
                                     {isMuted ? 'volume_off' : 'volume_up'}
                                 </span>
                             </button>
-                            <button onClick={toggleFullScreen} className="text-white/80 hover:text-gold transition-colors">
-                                <span className="material-symbols-outlined text-2xl">fullscreen</span>
+                            <button onClick={toggleFullScreen} className="text-white/80 hover:text-brand-blue transition-colors">
+                                <span className="material-symbols-outlined text-3xl font-bold">fullscreen</span>
                             </button>
                         </div>
                     </div>

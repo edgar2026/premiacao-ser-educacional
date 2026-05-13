@@ -247,25 +247,25 @@ const UsersAdminPage: React.FC = () => {
             header: 'Usuário',
             accessor: (u: Profile) => (
                 <div className="flex items-center gap-5">
-                    <div className="size-10 rounded-full bg-gold/5 text-gold border border-gold/20 flex items-center justify-center overflow-hidden">
+                    <div className="size-12 rounded-2xl bg-brand-blue/5 text-brand-blue border border-brand-blue/10 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
                         {u.avatar_url ? (
                             <img src={u.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                            <span className="material-symbols-outlined">person</span>
+                            <span className="material-symbols-outlined text-2xl">person</span>
                         )}
                     </div>
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                            <span className="font-bold text-off-white text-md">
+                            <span className="font-[800] text-brand-dark text-[15px] leading-tight">
                                 {u.full_name || 'Usuário Novo / Sem Nome'}
                             </span>
                             {u.ativo === false && (
-                                <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-bold uppercase tracking-tighter border border-red-500/30">
+                                <span className="px-2 py-0.5 rounded-lg bg-red-50 text-red-500 text-[9px] font-[800] uppercase tracking-wider border border-red-100">
                                     Desativado
                                 </span>
                             )}
                         </div>
-                        <span className="text-[11px] text-off-white/40">
+                        <span className="text-[11px] text-brand-text-secondary/60 font-medium mt-0.5">
                             {u.username}
                         </span>
                     </div>
@@ -276,33 +276,33 @@ const UsersAdminPage: React.FC = () => {
             header: 'Papel e Unidade',
             accessor: (u: Profile) => {
                 const r = u.role;
-                let roleBadge = <span className="px-3 py-1 bg-white/10 text-white/50 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Sem Cargo</span>;
+                let roleBadge = <span className="px-3 py-1 bg-brand-gray text-brand-text-secondary/40 border border-brand-gray/50 rounded-lg text-[10px] font-[800] uppercase tracking-wider">Sem Cargo</span>;
                 
                 if (r === 'admin' || r === 'super_admin') {
-                    roleBadge = <span className="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Admin</span>;
+                    roleBadge = <span className="px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-lg text-[10px] font-[800] uppercase tracking-wider">Admin</span>;
                 } else if (r === 'diretor_executivo') {
-                    roleBadge = <span className="px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Executivo</span>;
+                    roleBadge = <span className="px-3 py-1 bg-purple-50 text-purple-600 border border-purple-100 rounded-lg text-[10px] font-[800] uppercase tracking-wider">Executivo</span>;
                 } else if (r === 'diretor') {
-                    roleBadge = <span className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Diretor Unidade</span>;
+                    roleBadge = <span className="px-3 py-1 bg-brand-blue/5 text-brand-blue border border-brand-blue/10 rounded-lg text-[10px] font-[800] uppercase tracking-wider">Diretor Unidade</span>;
                 } else if (r === 'public') {
-                    roleBadge = <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider animate-pulse">Acesso Revogado (Público)</span>;
+                    roleBadge = <span className="px-3 py-1 bg-red-50 text-red-400 border border-red-100 rounded-lg text-[10px] font-[800] uppercase tracking-wider italic">Acesso Revogado</span>;
                 }
                 
                 const unitName = units.find(unit => unit.id === u.unit_id)?.name;
                 const showUnit = r !== 'super_admin' && r !== 'admin' && r !== 'diretor_executivo' && unitName;
 
                 return (
-                    <div className="flex flex-col items-start gap-1">
+                    <div className="flex flex-col items-start gap-1.5">
                         {roleBadge}
                         {showUnit && (
-                            <span className="text-[10px] text-off-white/40 italic flex items-center gap-1 mt-1">
-                                <span className="material-symbols-outlined text-[12px]">location_on</span>
+                            <span className="text-[11px] text-brand-text-secondary/60 font-[700] flex items-center gap-1.5 px-1">
+                                <span className="material-symbols-outlined text-[14px]">location_on</span>
                                 {unitName}
                             </span>
                         )}
                         {(r === 'super_admin' || r === 'admin' || r === 'diretor_executivo') && (
-                             <span className="text-[10px] text-gold/40 italic flex items-center gap-1 mt-1 font-bold tracking-tighter uppercase">
-                                <span className="material-symbols-outlined text-[12px]">public</span>
+                             <span className="text-[10px] text-brand-blue/60 font-[800] tracking-wider uppercase flex items-center gap-1.5 px-1">
+                                <span className="material-symbols-outlined text-[14px]">public</span>
                                 Acesso Global
                             </span>
                         )}
@@ -330,121 +330,124 @@ const UsersAdminPage: React.FC = () => {
                         });
                         setIsEditModalOpen(true);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white hover:border-blue-400 font-bold transition-all duration-300 text-xs flex items-center gap-1"
+                    className="size-10 rounded-xl flex items-center justify-center text-brand-text-secondary/40 hover:text-brand-blue hover:bg-brand-blue/5 transition-all border border-transparent hover:border-brand-blue/20"
+                    title="Editar"
                 >
-                    <span className="material-symbols-outlined text-[14px]">edit</span>
-                    Editar
+                    <span className="material-symbols-outlined text-[20px]">edit</span>
                 </button>
                 <button
                     onClick={() => {
                         setSelectedUser(u);
                         setIsDeleteModalOpen(true);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-red-900/40 text-red-400 border border-red-900/50 hover:bg-red-500 hover:text-white hover:border-red-400 font-bold transition-colors text-xs flex items-center gap-1 ml-2"
+                    className="size-10 rounded-xl flex items-center justify-center text-brand-text-secondary/20 hover:text-red-600 hover:bg-red-50 transition-all border border-transparent hover:border-red-200"
+                    title="Excluir"
                 >
-                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                    <span className="material-symbols-outlined text-[20px]">delete</span>
                 </button>
             </div>
         );
     };
 
     return (
-        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-20 lg:pt-8">
-            <div className="flex flex-wrap justify-between items-end gap-8 mb-16">
-                <div className="space-y-4">
-                    <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] block">Controle de Acesso</span>
-                    <h2 className="text-5xl font-bold font-serif text-off-white italic">Usuários</h2>
-                    <p className="text-off-white/40 max-w-2xl text-lg font-light italic">
+        <div className="space-y-12 animate-fade-in pb-20 px-6 md:px-10 lg:px-16 pt-16">
+            <div className="flex flex-wrap justify-between items-end gap-8 mb-12">
+                <div className="space-y-3">
+                    <span className="text-brand-blue text-[11px] font-[800] uppercase tracking-[0.4em] block">Controle de Acesso</span>
+                    <h2 className="text-[48px] font-[800] text-brand-dark tracking-tight leading-none">Usuários</h2>
+                    <p className="text-brand-text-secondary max-w-2xl text-[16px] font-medium opacity-60">
                         Gerencie as permissões e papéis dos usuários do sistema.
                     </p>
                 </div>
                 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                     <button 
                         onClick={handleSyncUsers}
-                        className="px-5 py-3 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-white hover:bg-blue-500/20 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all shadow-lg shadow-blue-500/5"
+                        className="px-6 py-3.5 rounded-2xl bg-brand-blue/5 border border-brand-blue/10 text-brand-blue hover:bg-brand-blue hover:text-white font-[800] tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all shadow-sm"
                         title="Sincroniza todos os usuários do Clerk para o Banco de Dados"
                     >
-                        <span className={`material-symbols-outlined text-[16px] ${isLoading ? 'animate-spin' : ''}`}>sync</span>
+                        <span className={`material-symbols-outlined text-[18px] ${isLoading ? 'animate-spin' : ''}`}>sync</span>
                         Sincronizar Clerk
                     </button>
 
                     <button 
                         onClick={fetchUsers}
-                        className="px-5 py-3 rounded-full bg-white/5 border border-white/10 text-off-white/60 hover:text-white hover:bg-white/10 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all"
+                        className="px-6 py-3.5 rounded-2xl bg-white border border-brand-gray text-brand-text-secondary hover:border-brand-blue hover:text-brand-blue font-[800] tracking-widest text-[10px] uppercase flex items-center gap-2 transition-all shadow-sm"
                     >
-                        <span className={`material-symbols-outlined text-[16px] ${isLoading ? 'animate-spin' : ''}`}>refresh</span>
+                        <span className={`material-symbols-outlined text-[18px] ${isLoading ? 'animate-spin' : ''}`}>refresh</span>
                         Atualizar Lista
                     </button>
 
                     <button 
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="group relative px-6 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-widest text-[10px] uppercase overflow-hidden flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg shadow-gold/20"
+                        className="btn-premium !px-8 !py-4"
                     >
-                        <span className="material-symbols-outlined text-lg">person_add</span>
-                        <span className="relative z-10 hidden sm:inline">Cadastrar Usuário</span>
+                        <span className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-lg">person_add</span>
+                            <span className="relative z-10 hidden sm:inline">Cadastrar Usuário</span>
+                        </span>
                     </button>
                 </div>
             </div>
 
             {isLoading ? (
                 <div className="flex justify-center py-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
+                    <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-brand-blue border-r-transparent"></div>
                 </div>
             ) : (
                 <DataTable
                     data={usersList}
                     columns={columns}
                     actions={actions}
-                    searchPlaceholder="Buscar por nome ou email..."
+                    searchPlaceholder="Buscar usuários por nome ou email..."
                 />
             )}
 
             {/* Modal de Criação de Usuário */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-navy-deep/90 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
-                    <div className="relative bg-navy-deep rounded-[2rem] border border-white/10 w-full max-w-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-scale-in">
-                        <div className="p-8">
-                            <h3 className="text-2xl font-serif text-gold mb-6 italic">Criar Novo Usuário</h3>
-                            <form onSubmit={handleCreateUser} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                    <div className="absolute inset-0 bg-brand-dark/40 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)} />
+                    <div className="relative bg-white rounded-[2.5rem] border border-brand-gray w-full max-w-lg overflow-hidden shadow-2xl animate-scale-in">
+                        <div className="p-10">
+                            <h3 className="text-[28px] font-[800] text-brand-dark mb-8 tracking-tight leading-none">Criar Novo Usuário</h3>
+                            <form onSubmit={handleCreateUser} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Nome</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Nome</label>
                                         <input 
                                             type="text" required
                                             value={newUserForm.firstName} onChange={e => setNewUserForm({...newUserForm, firstName: e.target.value})}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Sobrenome</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Sobrenome</label>
                                         <input 
                                             type="text" required
                                             value={newUserForm.lastName} onChange={e => setNewUserForm({...newUserForm, lastName: e.target.value})}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Email Institucional</label>
+                                    <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Email Institucional</label>
                                     <input 
                                         type="email" required
                                         value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})}
-                                        className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                        className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Senha Inicial</label>
+                                    <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Senha Inicial</label>
                                     <input 
                                         type="text" required minLength={8}
                                         value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})}
-                                        className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                        className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo / Permissão</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Cargo / Permissão</label>
                                         <select 
                                             value={newUserForm.role}
                                             onChange={(e) => {
@@ -455,35 +458,35 @@ const UsersAdminPage: React.FC = () => {
                                                     unitId: (newRole === 'super_admin' || newRole === 'diretor_executivo') ? '' : newUserForm.unitId
                                                 });
                                             }}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none cursor-pointer transition-all font-[700]"
                                         >
-                                            <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
-                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo (Global)</option>
-                                            <option value="super_admin" className="bg-navy-deep">Administrador (Global)</option>
+                                            <option value="diretor">Diretor de Unidade</option>
+                                            <option value="diretor_executivo">Diretor Executivo (Global)</option>
+                                            <option value="super_admin">Administrador (Global)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Unidade</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Unidade</label>
                                         <select 
                                             value={newUserForm.unitId}
                                             onChange={(e) => setNewUserForm({...newUserForm, unitId: e.target.value})}
                                             disabled={newUserForm.role !== 'diretor'}
                                             required={newUserForm.role === 'diretor'}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer disabled:opacity-30 transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none cursor-pointer disabled:opacity-30 transition-all font-[700]"
                                         >
-                                            <option value="" className="bg-navy-deep">Selecione...</option>
+                                            <option value="">Selecione...</option>
                                             {units.map(u => (
-                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                                <option key={u.id} value={u.id}>{u.name}</option>
                                             ))}
                                         </select>
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-3 border-t border-white/5 mt-4">
-                                    <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-3 rounded-full text-white/40 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors">
+                                <div className="pt-8 flex justify-end gap-4 border-t border-brand-gray mt-6">
+                                    <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-3.5 rounded-2xl text-brand-text-secondary font-[800] text-[11px] uppercase tracking-widest hover:text-brand-dark transition-colors">
                                         Cancelar
                                     </button>
-                                    <button type="submit" className="px-8 py-3 rounded-full bg-gold text-navy-deep font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-gold/20">
+                                    <button type="submit" className="btn-premium !px-8 !py-3.5">
                                         Criar Cadastro
                                     </button>
                                 </div>
@@ -492,46 +495,45 @@ const UsersAdminPage: React.FC = () => {
                     </div>
                 </div>
             )}
-
-            {/* Modal de Edição de Usuário */}
+              {/* Modal de Edição de Usuário */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-navy-deep/90 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
-                    <div className="relative bg-navy-deep rounded-[2rem] border border-white/10 w-full max-w-lg overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-scale-in">
-                        <div className="p-8">
-                            <h3 className="text-2xl font-serif text-gold mb-6 italic">Editar Usuário</h3>
-                            <form onSubmit={handleUpdateUser} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                    <div className="absolute inset-0 bg-brand-dark/40 backdrop-blur-md" onClick={() => setIsEditModalOpen(false)} />
+                    <div className="relative bg-white rounded-[2.5rem] border border-brand-gray w-full max-w-lg overflow-hidden shadow-2xl animate-scale-in">
+                        <div className="p-10">
+                            <h3 className="text-[28px] font-[800] text-brand-dark mb-8 tracking-tight leading-none">Editar Usuário</h3>
+                            <form onSubmit={handleUpdateUser} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Nome</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Nome</label>
                                         <input 
                                             type="text" required
                                             value={editUserForm.firstName} onChange={e => setEditUserForm({...editUserForm, firstName: e.target.value})}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Sobrenome</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Sobrenome</label>
                                         <input 
                                             type="text" required
                                             value={editUserForm.lastName} onChange={e => setEditUserForm({...editUserForm, lastName: e.target.value})}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none transition-all font-medium"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Email</label>
+                                    <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Email</label>
                                     <input 
                                         type="email" required
                                         value={editUserForm.email} onChange={e => setEditUserForm({...editUserForm, email: e.target.value})}
-                                        className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white/50 bg-black/20 outline-none cursor-not-allowed"
+                                        className="w-full bg-bg-main/50 border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark/40 outline-none cursor-not-allowed font-medium"
                                         disabled
                                         title="O E-mail de login é imutável por questões de segurança"
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Cargo / Permissão</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Cargo / Permissão</label>
                                         <select 
                                             value={editUserForm.role}
                                             onChange={(e) => {
@@ -542,35 +544,35 @@ const UsersAdminPage: React.FC = () => {
                                                     unitId: (newRole === 'super_admin' || newRole === 'diretor_executivo') ? '' : editUserForm.unitId
                                                 });
                                             }}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none cursor-pointer transition-all font-[700]"
                                         >
-                                            <option value="diretor" className="bg-navy-deep">Diretor de Unidade</option>
-                                            <option value="diretor_executivo" className="bg-navy-deep">Diretor Executivo (Global)</option>
-                                            <option value="super_admin" className="bg-navy-deep">Administrador (Global)</option>
-                                            <option value="public" className="bg-navy-deep text-red-400">Público (Revogar Acesso)</option>
+                                            <option value="diretor">Diretor de Unidade</option>
+                                            <option value="diretor_executivo">Diretor Executivo (Global)</option>
+                                            <option value="super_admin">Administrador (Global)</option>
+                                            <option value="public" className="text-red-500">Público (Revogar Acesso)</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/40">Unidade</label>
+                                        <label className="text-[11px] font-[800] uppercase tracking-widest text-brand-text-secondary/60 ml-1">Unidade</label>
                                         <select 
                                             value={editUserForm.unitId}
                                             onChange={(e) => setEditUserForm({...editUserForm, unitId: e.target.value})}
                                             disabled={editUserForm.role === 'super_admin' || editUserForm.role === 'diretor_executivo'}
-                                            className="w-full bg-white/[0.03] border border-white/10 py-3 px-4 rounded-xl text-white focus:border-gold/50 outline-none cursor-pointer transition-all disabled:opacity-30"
+                                            className="w-full bg-bg-main border border-brand-gray py-4 px-5 rounded-2xl text-brand-dark focus:border-brand-blue/50 outline-none cursor-pointer transition-all disabled:opacity-30 font-[700]"
                                         >
-                                            <option value="" className="bg-navy-deep">Nenhuma (Global)</option>
+                                            <option value="">Nenhuma (Global)</option>
                                             {units.map(u => (
-                                                <option key={u.id} value={u.id} className="bg-navy-deep">{u.name}</option>
+                                                <option key={u.id} value={u.id}>{u.name}</option>
                                             ))}
                                         </select>
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-3 border-t border-white/5 mt-4">
-                                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 rounded-full text-white/40 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-colors">
+                                <div className="pt-8 flex justify-end gap-4 border-t border-brand-gray mt-6">
+                                    <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-3.5 rounded-2xl text-brand-text-secondary font-[800] text-[11px] uppercase tracking-widest hover:text-brand-dark transition-colors">
                                         Cancelar
                                     </button>
-                                    <button type="submit" className="px-8 py-3 rounded-full bg-blue-500 text-white font-bold tracking-[0.2em] text-[10px] uppercase hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">
+                                    <button type="submit" className="btn-premium !px-8 !py-3.5 bg-brand-blue text-white shadow-brand-blue/20">
                                         Forçar Alteração
                                     </button>
                                 </div>
@@ -579,6 +581,7 @@ const UsersAdminPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
 
             <ConfirmModal
                 isOpen={isDeleteModalOpen}
